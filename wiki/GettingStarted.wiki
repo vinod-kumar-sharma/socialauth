@@ -7,7 +7,14 @@ Following steps are needed to be set up before we can start anything
 
   * Public domain - Have a public domain ready for testing. You should have a public domain because most of the providers require a public domain to be specified when you register an application with them. You can do some testing with localhost as follows:
 
-  * Consumer key and secret - Get your consumer keys and secrets by registering with a provider. For example Facebook, twitter, Google, Yahoo or Hotmail. (OpenID does not require this)
+  * Consumer key and secret - Get your consumer keys and secrets by registering with any provider given below. OpenID does not require this step.
+
+    # Google - http://code.google.com/apis/accounts/docs/RegistrationForWebAppsAuto.html
+    # Yahoo - https://developer.apps.yahoo.com/dashboard/createKey.html
+    # Twitter - http://twitter.com/apps
+    # Facebook - http://www.facebook.com/developers/apps.php
+    # Hotmail - http://msdn.microsoft.com/en-us/library/cc287659.aspx
+
 
   * Create a properties like the sample [SampleProperties oauth_consumer.properties] given here
 
