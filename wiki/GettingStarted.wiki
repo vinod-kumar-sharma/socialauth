@@ -15,6 +15,7 @@ Following steps are needed to be set up before we can start anything
     # Facebook - http://www.facebook.com/developers/apps.php
     # Hotmail - http://msdn.microsoft.com/en-us/library/cc287659.aspx
 
+http://code.google.com/p/socialauth/source/browse/wiki/images/yahoo.png
 
   * Create a properties like the sample [SampleProperties oauth_consumer.properties] using the consumer key and secrets obtained above.
 
