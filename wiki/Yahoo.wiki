@@ -1,0 +1,4 @@
+#summary step by step guide for obtaining consumer key and secret
+
+= Step 1 =
+http://socialauth.googlecode.com/svn/wiki/images/yahoo.png
