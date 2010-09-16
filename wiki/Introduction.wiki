@@ -21,14 +21,3 @@ So what we implemented is a wrapper that leverages these existing libraries, and
 
 ==How it works==
 Following is a step by step description of how it works
-  # User clicks on a button corresponding to Facebook, Twitter or Yahoo.
-
-  # Your application gets an instance of AuthProvider and calls the getLoginRedirectURL() method on it to obtain a URL. While calling this method, you also pass in a URL of your own application to which the user will be redirected after authentication.
-
-  # Your application redirects the user to the above URL, which opens up a Facebook / Twitter / Yahoo page where the user enters a username / password
-
-  # The user fills in the username / password, and the provider redirects the user back to your application.
-
-  # Once the control is back to your application, you need to call the verifyResponse() method of the same AuthProvider instance passing along the HTTPRequest object that has been obtained.
-
-  # Now you can call other methods like updateStatus() on the provider to update the status or getContactList() to get the list of contacts 
