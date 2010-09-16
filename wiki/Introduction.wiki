@@ -20,6 +20,7 @@ There many practical challenges that we faced while doing the implementation of 
 So what we implemented is a wrapper that leverages these existing libraries, and works out of the box without requiring you to face the above challenges. You get the same interface to deal with integration of every provider. Not all features may be implemented though, for example, you can’t update your status on Hotmail and you can’t import contacts from Facebook yet. Some of the limitations are inherent, for example Twitter doesn’t give out the email address while giving other user details.
 
 ==How it works==
+Following is a step by step description of how it works
   # User clicks on a button corresponding to Facebook, Twitter or Yahoo.
 
   # Your application gets an instance of AuthProvider and calls the getLoginRedirectURL() method on it to obtain a URL. While calling this method, you also pass in a URL of your own application to which the user will be redirected after authentication.
