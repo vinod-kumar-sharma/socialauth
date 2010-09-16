@@ -19,7 +19,7 @@ Following steps are needed to be set up before we can start anything
 
 == Implementation ==
 
-  * User chooses provider - Create a page where you ask the user to choose a provider. When the user clicks on a provider, you should create an instance of the AuthProvider in your handling code and redirect to the URL obtained by calling the function getLoginRedirectURL()
+  * User chooses provider - Create a page where you ask the user to choose a provider. When the user clicks on a provider, you should create an instance of the !AuthProvider in your handling code and redirect to the URL obtained by calling the function getLoginRedirectURL()
 
 {{{
   // id can have values "facebook", "twitter", "yahoo" etc. or the OpenID URL
