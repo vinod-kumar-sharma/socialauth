@@ -1,15 +1,15 @@
-#summary One-sentence summary of this page.
+#summary Introduction to the library
 
 = Introduction =
 
-==What is SocialAuth?==
+==What is SocialAuth==
 SocialAuth is a Java library that can be used for multiple purposes. You can use it in your web application to authenticate your users through external oAuth providers like Facebook / Twitter / Yahoo, as well as through OpenID providers like myopenid.com.
 
 Second case is where you would like your users to be spared the cumbersome process of entering their registration information. All you need to do is create a page where users can click on buttons for Facebook / Twitter / Yahoo or Gmail or other supported providers. Just call SocialAuth and you can get all their profile details.
 
 Third case is where you need to import contacts of users from the social sites. The library allows you to import contacts from some providers like Google, Yahoo and Hotmail. Support for importing contacts from other providers will be added soon.
 
-==Why SocialAuth?==
+==Why SocialAuth==
 There are so many libraries out there which implement OpenID and oAuth, so why another library? 
 There many practical challenges that we faced while doing the implementation of above use cases. None of them is insurmountable but the developer could spend a couple of weeks solving these, which we actually did and hence decided to make things better for the community. 
   * There are many libraries for implementing Open ID and many for implementing oAuth. It becomes a difficult exercise to choose one that will do the integration quickly with the providers you want.
@@ -18,3 +18,16 @@ There many practical challenges that we faced while doing the implementation of 
   * Getting the actual data, for example contacts of a user is out of the scope of these protocols and hence the libraries cannot implement this functionality.
 
 So what we implemented is a wrapper that leverages these existing libraries, and works out of the box without requiring you to face the above challenges. You get the same interface to deal with integration of every provider. Not all features may be implemented though, for example, you can’t update your status on Hotmail and you can’t import contacts from Facebook yet. Some of the limitations are inherent, for example Twitter doesn’t give out the email address while giving other user details.
+
+==How it works==
+  # User clicks on a button corresponding to Facebook, Twitter or Yahoo.
+
+  # Your application gets an instance of AuthProvider and calls the getLoginRedirectURL() method on it to obtain a URL. While calling this method, you also pass in a URL of your own application to which the user will be redirected after authentication.
+
+  # Your application redirects the user to the above URL, which opens up a Facebook / Twitter / Yahoo page where the user enters a username / password
+
+  # The user fills in the username / password, and the provider redirects the user back to your application.
+
+  # Once the control is back to your application, you need to call the verifyResponse() method of the same AuthProvider instance passing along the HTTPRequest object that has been obtained.
+
+  # Now you can call other methods like updateStatus() on the provider to update the status or getContactList() to get the list of contacts 
