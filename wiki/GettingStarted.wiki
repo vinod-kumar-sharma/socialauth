@@ -9,7 +9,7 @@ Following steps are needed to be set up before we can start anything
 
   * Consumer key and secret - Get your consumer keys and secrets by registering with a provider. For example Facebook, twitter, Google, Yahoo or Hotmail. (OpenID does not require this)
 
-  * Create a properties like the [SampleProperties sample oauth_consumer.properties] given here
+  * Create a properties like the sample [SampleProperties oauth_consumer.properties] given here
 
 == Implementation ==
 
