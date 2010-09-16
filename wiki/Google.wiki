@@ -1,0 +1,3 @@
+#summary One-sentence summary of this page.
+http://socialauth.googlecode.com/svn/wiki/images/google-step1.png
+http://socialauth.googlecode.com/svn/wiki/images/google-step2.png
