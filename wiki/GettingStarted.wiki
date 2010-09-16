@@ -9,19 +9,11 @@ Following steps are needed to be set up before we can start anything
 
   * Consumer key and secret - Get your consumer keys and secrets by registering with any provider given below. OpenID does not require this step.
 
-    # Google - http://code.google.com/apis/accounts/docs/RegistrationForWebAppsAuto.html
-http://socialauth.googlecode.com/svn/wiki/images/google-step1.png
-http://socialauth.googlecode.com/svn/wiki/images/google-step2.png
-
-    # Yahoo - https://developer.apps.yahoo.com/dashboard/createKey.html
-http://socialauth.googlecode.com/svn/wiki/images/yahoo.png
-
-    # Twitter - http://twitter.com/apps
-    # Facebook - http://www.facebook.com/developers/apps.php
-    # Hotmail - http://msdn.microsoft.com/en-us/library/cc287659.aspx
-http://socialauth.googlecode.com/svn/wiki/images/hotmail.png
-
-
+    # Google [Google (show screenshot)] - http://code.google.com/apis/accounts/docs/RegistrationForWebAppsAuto.html 
+    # Yahoo [Yahoo (show screenshot)] - https://developer.apps.yahoo.com/dashboard/createKey.html
+    # Twitter [Twitter (show screenshot)] - http://twitter.com/apps
+    # Facebook [Facebook (show screenshot)] - http://www.facebook.com/developers/apps.php
+    # Hotmail [Hotmail (show screenshot)] - http://msdn.microsoft.com/en-us/library/cc287659.aspx
   * Create a properties like the sample [SampleProperties oauth_consumer.properties] using the consumer key and secrets obtained above.
 
 
