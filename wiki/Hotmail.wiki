@@ -1,0 +1,7 @@
+#summary step by step guide for obtaining consumer key and secret
+
+= Step 1 =
+http://socialauth.googlecode.com/svn/wiki/images/hotmail.png
+
+= Step 2 =
+http://socialauth.googlecode.com/svn/wiki/images/hotmail-step2.png
