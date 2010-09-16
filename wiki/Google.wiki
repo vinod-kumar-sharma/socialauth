@@ -1,3 +1,6 @@
-#summary One-sentence summary of this page.
+#summary step by step guide for obtaining consumer key and consumer secret.
+= Step 1=
 http://socialauth.googlecode.com/svn/wiki/images/google-step1.png
+
+= Step 2=
 http://socialauth.googlecode.com/svn/wiki/images/google-step2.png
