@@ -16,7 +16,8 @@ Following steps are needed to be set up before we can start anything
     # Hotmail - http://msdn.microsoft.com/en-us/library/cc287659.aspx
 
 
-  * Create a properties like the sample [SampleProperties oauth_consumer.properties] given here
+  * Create a properties like the sample [SampleProperties oauth_consumer.properties] using the consumer key and secrets obtained above.
+
 
 == Implementation ==
 
