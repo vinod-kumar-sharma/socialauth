@@ -1,0 +1,44 @@
+#summary Getting Started with implementing SocialAuth
+
+= Getting Started =
+
+== Prerequisites ==
+Following steps are needed to be set up before we can start anything
+
+  * Public domain - Have a public domain ready for testing. You should have a public domain because most of the providers require a public domain to be specified when you register an application with them. You can do some testing with localhost as follows:
+
+  * Consumer key and secret - Get your consumer keys and secrets by registering with a provider. For example Facebook, twitter, Google, Yahoo or Hotmail. (OpenID does not require this)
+
+  * Create a properties like the sample properties given here
+
+== Implementation ==
+
+  * User chooses provider - Create a page where you ask the user to choose a provider. When the user clicks on a provider, you should create an instance of the AuthProvider in your handling code and redirect to the URL obtained by calling the function getLoginRedirectURL()
+
+{{{
+  // id can have values "facebook", "twitter", "yahoo" etc. or the OpenID URL
+  provider = AuthProviderFactory.getInstance(id);
+
+  // URL of YOUR application which will be called after authentication
+  String returnToUrl = "http://opensource.brickred.com/socialauthdemo/socialAuthSuccessAction.do";
+
+  // Provider URL to which you should redirect for authentication
+  String url = provider.getLoginRedirectURL(returnToUrl);
+}}}
+
+  * Provider redirects back - When you redirect the user to the provider URL, the provider would validate the user, either by asking for username / password or by existing session and will then redirect the user back to you application URL mentioned above, i.e. "http://opensource.brickred.com/socialauthdemo/socialAuthSuccessAction.do". Now you can obtain any profile information using the following code
+
+{{{
+
+  // verify the authentication
+  Profile p = provider.verifyResponse(request, returnToUrl);
+
+  // you can obtain profile information
+  System.out.println(p.getFirstName());
+
+  // OR also obtain list of contacts
+  List<Profile> contactsList = provider.getContactList();
+		
+}}}
+
+That is all you have to do, really !
