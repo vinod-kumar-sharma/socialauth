@@ -180,7 +180,7 @@ public class YahooImpl implements AuthProvider
 
 		UrlEncodedParameterMap serviceParams = new UrlEncodedParameterMap(
 				"http://social.yahooapis.com/v1/user/"
-				+ user.getAttribute("xoauth_yahoo_guid") + "/contacts;count=max");
+				+ token.getAttribute("xoauth_yahoo_guid") + "/contacts;count=max");
 		NonceAndTimestamp nts = SimpleNonceAndTimestamp.getDefault();
 		Signature sig = __yahoo.getSignature();
 
