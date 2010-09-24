@@ -157,7 +157,7 @@ public class HotmailImpl implements AuthProvider {
 
 
 	public void updateStatus(final String msg) {
-		System.out.println("WARN: not implemented");
+		System.out.println("WARNING: not implemented");
 	}
 
 }
