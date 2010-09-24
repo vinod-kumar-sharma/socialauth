@@ -1,0 +1,143 @@
+/*
+ ===========================================================================
+ Copyright (c) 2010 BrickRed Technologies Limited
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sub-license, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+ ===========================================================================
+
+ */
+
+package org.brickred.socialauth.provider;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpClient;
+import org.apache.commons.httpclient.methods.GetMethod;
+import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.Profile;
+import org.brickred.socialauth.util.XMLParseUtil;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
+
+import com.dyuproject.oauth.Endpoint;
+
+/**
+ * Implementation of Hotmail provider. This implementation is based on
+ * the sample provided by Microsoft. Currently no elements in profile
+ * are available and this implements only getContactList() properly
+ * 
+ * 
+ * @author Abhinav Maheshwari
+ * @author abhinavm@brickred.com
+ *
+ */
+
+public class HotmailImpl implements AuthProvider {
+
+	private WindowsLiveLogin.ConsentToken token;
+	private String appid;
+	private String secret;
+	private final Endpoint __hotmail;
+	private WindowsLiveLogin wll;
+
+	public HotmailImpl(final Properties props) {
+		__hotmail = Endpoint.load(props, "consent.live.com");
+		secret = __hotmail.getConsumerSecret();
+		appid = __hotmail.getConsumerKey();
+	}
+
+	public List<Profile> getContactList() {
+		String location = new BigInteger(token.getLocationID(), 16)
+		.toString(10);
+		HttpClient client = new HttpClient();
+		String header = "DelegatedToken dt=\"" + token.getDelegationToken()
+		+ "\"";
+		String u = "https://livecontacts.services.live.com/users/@C@"
+			+ location + "/LiveContacts/";
+		GetMethod get = new GetMethod(u);
+		get.addRequestHeader(new Header("Authorization", header));
+		List<Profile> plist = new ArrayList<Profile>();
+		try {
+			client.executeMethod(get);
+			System.out.println(get.getStatusCode() + "-----"
+					+ get.getStatusLine());
+			Element root = XMLParseUtil.loadXmlResource(get
+					.getResponseBodyAsStream());
+			NodeList contactsList = root.getElementsByTagName("Contacts");
+			if (contactsList != null && contactsList.getLength() > 0) {
+				for (int i = 0; i < contactsList.getLength(); i++) {
+					Element contacts = (Element) contactsList.item(i);
+					NodeList contactList = contacts
+					.getElementsByTagName("Contact");
+					if (contactList != null && contactList.getLength() > 0) {
+						for (int j = 0; j < contactList.getLength(); j++) {
+							Element contact = (Element) contactList.item(j);
+							String fname = XMLParseUtil.getElementData(contact,
+							"FirstName");
+							String lname = XMLParseUtil.getElementData(contact,
+							"LastName");
+							String dispName = XMLParseUtil.getElementData(
+									contact, "DisplayName");
+							String address = XMLParseUtil.getElementData(
+									contact, "Address");
+							if (address != null && address.length() > 0) {
+								Profile p = new Profile();
+								p.setFirstName(fname);
+								p.setLastName(lname);
+								p.setEmail(address);
+								p.setDisplayName(dispName);
+								System.out.println(p.toString());
+								plist.add(p);
+							}
+						}
+					}
+				}
+			} else {
+				System.out.println("no contacts found");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return plist;
+	}
+
+	public String getLoginRedirectURL(final String redirectUri)
+	throws Exception {
+		wll = new WindowsLiveLogin(appid, secret, "wsignin1.0", false,
+				redirectUri, redirectUri);
+		String consentUrl = wll.getConsentUrl("Contacts.View").toString();
+		return consentUrl;
+	}
+
+	public void updateStatus(final String msg) {
+	}
+
+	public Profile verifyResponse(final HttpServletRequest request) {
+		token = wll.processConsent(request.getParameterMap());
+		Profile p = new Profile();
+		p.setValidatedId(token.getLocationID());
+		return p;
+	}
+}
