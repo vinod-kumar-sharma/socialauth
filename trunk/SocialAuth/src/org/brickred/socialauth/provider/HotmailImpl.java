@@ -49,8 +49,7 @@ import com.dyuproject.oauth.Endpoint;
  * are available and this implements only getContactList() properly
  * 
  * 
- * @author Abhinav Maheshwari
- * @author abhinavm@brickred.com
+ * @author tarunn@brickred.com
  *
  */
 
@@ -68,6 +67,44 @@ public class HotmailImpl implements AuthProvider {
 		appid = __hotmail.getConsumerKey();
 	}
 
+	/**
+	 * This is the most important action. It redirects the browser to an
+	 * appropriate URL which will be used for authentication with the provider
+	 * that has been set using setId()
+	 * 
+	 * @throws Exception
+	 */
+	
+	public String getLoginRedirectURL(final String redirectUri)
+	throws Exception {
+		wll = new WindowsLiveLogin(appid, secret, "wsignin1.0", false,
+				redirectUri, redirectUri);
+		String consentUrl = wll.getConsentUrl("Contacts.View").toString();
+		return consentUrl;
+	}
+	
+	/**
+	 * Verifies the user when the external provider redirects back to our
+	 * application.
+	 * 
+	 * @return Profile object containing the profile information
+	 * @param request Request object the request is received from the provider
+	 * @throws Exception
+	 */
+	
+	public Profile verifyResponse(final HttpServletRequest request) {
+		token = wll.processConsent(request.getParameterMap());
+		Profile p = new Profile();
+		p.setValidatedId(token.getLocationID());
+		return p;
+	}
+	
+	/**
+	 * Gets the list of contacts of the user and their email.
+	 * @return List of profile objects representing Contacts. Only name and email
+	 * will be available
+	 */
+	
 	public List<Profile> getContactList() {
 		String location = new BigInteger(token.getLocationID(), 16)
 		.toString(10);
@@ -81,8 +118,6 @@ public class HotmailImpl implements AuthProvider {
 		List<Profile> plist = new ArrayList<Profile>();
 		try {
 			client.executeMethod(get);
-			System.out.println(get.getStatusCode() + "-----"
-					+ get.getStatusLine());
 			Element root = XMLParseUtil.loadXmlResource(get
 					.getResponseBodyAsStream());
 			NodeList contactsList = root.getElementsByTagName("Contacts");
@@ -108,14 +143,11 @@ public class HotmailImpl implements AuthProvider {
 								p.setLastName(lname);
 								p.setEmail(address);
 								p.setDisplayName(dispName);
-								System.out.println(p.toString());
 								plist.add(p);
 							}
 						}
 					}
 				}
-			} else {
-				System.out.println("no contacts found");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -123,21 +155,9 @@ public class HotmailImpl implements AuthProvider {
 		return plist;
 	}
 
-	public String getLoginRedirectURL(final String redirectUri)
-	throws Exception {
-		wll = new WindowsLiveLogin(appid, secret, "wsignin1.0", false,
-				redirectUri, redirectUri);
-		String consentUrl = wll.getConsentUrl("Contacts.View").toString();
-		return consentUrl;
-	}
 
 	public void updateStatus(final String msg) {
+		System.out.println("WARN: not implemented");
 	}
 
-	public Profile verifyResponse(final HttpServletRequest request) {
-		token = wll.processConsent(request.getParameterMap());
-		Profile p = new Profile();
-		p.setValidatedId(token.getLocationID());
-		return p;
-	}
 }
