@@ -26,7 +26,6 @@
 package org.brickred.socialauth.provider;
 
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Properties;
 
@@ -49,8 +48,10 @@ import org.openid4java.message.ax.FetchResponse;
 import org.openid4java.server.RealmVerifier;
 
 /**
- * Modified version of org.jboss.seam.security.openid.OpenId
- * This version ask the OpenID provider to disclose the user name and email address
+ * Implementation of Open ID provider. Currently only name and
+ * email has been implemented as part of profile. Other functionality
+ * like updating status and importing contacts is not available
+ * for generic Open ID providers
  */
 public class OpenIdImpl implements AuthProvider {
 
@@ -64,8 +65,15 @@ public class OpenIdImpl implements AuthProvider {
 		discovered = null;
 	}
 
-	public String getLoginRedirectURL(final String redirect_uri) throws IOException {
-		return authRequest(props.getProperty("id"), redirect_uri);
+	/**
+	 * This is the most important action. It redirects the browser to an
+	 * appropriate URL which will be used for authentication with the provider
+	 * that has been set using setId()
+	 * 
+	 * @throws Exception
+	 */	
+	public String getLoginRedirectURL(final String redirectUri) throws IOException {
+		return authRequest(props.getProperty("id"), redirectUri);
 	}
 
 	private String authRequest(final String userSuppliedString, final String returnToUrl)
@@ -139,6 +147,15 @@ public class OpenIdImpl implements AuthProvider {
 		return null;
 	}
 
+	/**
+	 * Verifies the user when the external provider redirects back to our
+	 * application.
+	 * 
+	 * @return Profile object containing the profile information
+	 * @param request Request object the request is received from the provider
+	 * @throws Exception
+	 */
+
 	public Profile verifyResponse(final HttpServletRequest httpReq)
 	{
 		try {
@@ -197,16 +214,23 @@ public class OpenIdImpl implements AuthProvider {
 				return p;
 			}
 		} catch (OpenIDException e) {
-			// present error to the user
+			e.printStackTrace();
 		}
 
 		return null;
 	}
 
+	/**
+	 * Updating status is not available for generic Open ID providers.
+	 */
 	public void updateStatus(final String msg) {
 		System.out.println("WARNING: Not implemented");
 	}
 
+	/**
+	 * Contact list is not available for generic Open ID providers.
+	 * @return null
+	 */
 	public List<Profile> getContactList() {
 		return null;
 	}
