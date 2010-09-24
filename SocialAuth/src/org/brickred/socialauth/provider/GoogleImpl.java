@@ -286,13 +286,10 @@ public class GoogleImpl implements AuthProvider
 						p.setLastName(lname);
 						p.setEmail(address);
 						p.setDisplayName(dispName);
-						System.out.println(p.toString());
 						plist.add(p);
 					}
 				}
-			} else {
-				System.out.println("no contacts found");
-			}
+			} 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
