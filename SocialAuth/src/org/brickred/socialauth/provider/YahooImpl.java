@@ -60,7 +60,8 @@ import com.dyuproject.util.http.HttpConnector.Parameter;
 import com.dyuproject.util.http.HttpConnector.Response;
 
 /**
- * Provider implementation for Yahoo
+ * Provider implementation for Yahoo. This uses the oAuth API
+ * provided by Yahoo
  * 
  * @author abhinavm@brickred.com
  * @author tarunn@brickred.com
@@ -78,6 +79,14 @@ public class YahooImpl implements AuthProvider
 		__consumer = Consumer.getInstance();
 	}
 
+	/**
+	 * This is the most important action. It redirects the browser to an
+	 * appropriate URL which will be used for authentication with the provider
+	 * that has been set using setId()
+	 * 
+	 * @throws Exception
+	 */
+	
 	public String getLoginRedirectURL(final String returnTo) throws IOException {
 		try {
 			token = new Token(__yahoo.getConsumerKey());
@@ -100,6 +109,15 @@ public class YahooImpl implements AuthProvider
 		return null;
 	}
 
+	/**
+	 * Verifies the user when the external provider redirects back to our
+	 * application.
+	 * 
+	 * @return Profile object containing the profile information
+	 * @param request Request object the request is received from the provider
+	 * @throws Exception
+	 */
+	
 	public Profile verifyResponse(final HttpServletRequest request)
 	{
 		try {
@@ -176,6 +194,12 @@ public class YahooImpl implements AuthProvider
 	}
 	
 	
+	/**
+	 * Gets the list of contacts of the user and their email.
+	 * @return List of profile objects representing Contacts. Only name and email
+	 * will be available
+	 */
+	
 	public List<Profile> getContactList() {
 
 		UrlEncodedParameterMap serviceParams = new UrlEncodedParameterMap(
@@ -234,8 +258,6 @@ public class YahooImpl implements AuthProvider
 						}
 					}
 				}
-			} else {
-				System.out.println("no contacts found");
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -243,6 +265,12 @@ public class YahooImpl implements AuthProvider
 		return plist;
 	}
 
+	/**
+	 * Updates the status on the chosen provider if available. This is not 
+	 * implemented for yahoo currently
+	 * @param msg Message to be shown as user's status
+	 */
+	
 	public void updateStatus(final String msg) {
 		System.out.println("WARNING: Not implemented");
 	}
