@@ -147,7 +147,6 @@ public class GoogleImpl implements AuthProvider
 			UrlEncodedParameterMap params = RelyingParty.getAuthUrlMap(user,
 					trustRoot,
 					realm, returnTo);
-			System.err.println("pre-authenticate user: " + user.getClaimedId());
 			listeners.onPreAuthenticate(user, null, params);
 
 			return params.toStringRFC3986();
