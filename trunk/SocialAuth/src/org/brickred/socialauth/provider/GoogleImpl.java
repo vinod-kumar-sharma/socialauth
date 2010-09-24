@@ -74,7 +74,7 @@ public class GoogleImpl implements AuthProvider
 	static final String GOOGLE_OPENID_SERVER = "https://www.google.com/accounts/o8/ud";
 	static final String OAUTH_SCOPE = "http://www.google.com/m8/feeds/";
 	final Endpoint __google;
-	final String CONTACTS_FEED_URL = "http://www.google.com/m8/feeds/contacts/default/full";
+	final String CONTACTS_FEED_URL = "http://www.google.com/m8/feeds/contacts/default/full/?max-results=1000";
 	private OpenIdUser user;
 	private Token token;
 	private ListenerCollection listeners;
