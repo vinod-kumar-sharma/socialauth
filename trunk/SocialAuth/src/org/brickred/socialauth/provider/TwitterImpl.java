@@ -42,21 +42,19 @@ import twitter4j.http.RequestToken;
 import com.dyuproject.oauth.Endpoint;
 
 /**
- * Twitter implementation of the provider. This is completely
- * based on the twitter4j library.
+ * Twitter implementation of the provider. This is completely based on the
+ * twitter4j library.
  * 
- * @author Abhinav Maheshwari
  * @author abhinavm@brickred.com
- *
+ * 
  */
 
 public class TwitterImpl implements AuthProvider {
 
-	final Endpoint __twitter;
+	private final Endpoint __twitter;
 
 	private Twitter twitter;
 	private RequestToken requestToken;
-
 
 	public TwitterImpl(final Properties props) {
 		__twitter = Endpoint.load(props, "twitter.com");
@@ -66,6 +64,14 @@ public class TwitterImpl implements AuthProvider {
 		String consumer_secret = __twitter.getConsumerSecret();
 		twitter.setOAuthConsumer(consumer_key, consumer_secret);
 	}
+
+	/**
+	 * This is the most important action. It redirects the browser to an
+	 * appropriate URL which will be used for authentication with the provider
+	 * that has been set using setId()
+	 * 
+	 * @throws Exception
+	 */
 
 	public String getLoginRedirectURL(final String redirect_uri) {
 		try {
@@ -77,8 +83,17 @@ public class TwitterImpl implements AuthProvider {
 		}
 	}
 
-	public Profile verifyResponse(final HttpServletRequest request)
-	{
+	/**
+	 * Verifies the user when the external provider redirects back to our
+	 * application.
+	 * 
+	 * @return Profile object containing the profile information
+	 * @param request
+	 *            Request object the request is received from the provider
+	 * @throws Exception
+	 */
+
+	public Profile verifyResponse(final HttpServletRequest request) {
 		String verifier = request.getParameter("oauth_verifier");
 		try {
 			twitter.getOAuthAccessToken(requestToken, verifier);
@@ -96,6 +111,13 @@ public class TwitterImpl implements AuthProvider {
 		return null;
 	}
 
+	/**
+	 * Updates the status on Twitter.
+	 * 
+	 * @param msg
+	 *            Message to be shown as user's status
+	 */
+
 	public void updateStatus(final String msg) {
 		try {
 			twitter.updateStatus(msg);
@@ -103,6 +125,13 @@ public class TwitterImpl implements AuthProvider {
 			e.printStackTrace();
 		}
 	}
+
+	/**
+	 * Gets the list of followers of the user and their email. this will be
+	 * implemented later
+	 * 
+	 * @return null
+	 */
 
 	public List<Profile> getContactList() {
 		return null;
