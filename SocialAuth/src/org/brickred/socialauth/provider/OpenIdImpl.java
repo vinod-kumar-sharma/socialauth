@@ -86,13 +86,6 @@ public class OpenIdImpl implements AuthProvider {
 			// attempt to associate with the OpenID provider
 			// and retrieve one service endpoint for authentication
 			discovered = manager.associate(discoveries);
-
-			//// store the discovery information in the user's session
-			// httpReq.getSession().setAttribute("openid-disc", discovered);
-
-			RealmVerifier verifier = new RealmVerifier();
-			verifier.setEnforceRpId(false);
-			manager.setRealmVerifier(verifier);
 			
 			//// store the discovery information in the user's session
 			// httpReq.getSession().setAttribute("openid-disc", discovered);
