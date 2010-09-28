@@ -1,0 +1,98 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:rich="http://richfaces.org/rich"
+	xmlns:s="http://jboss.com/products/seam/taglib"
+	xmlns:a="http://richfaces.org/a4j"
+	xmlns:c="http://java.sun.com/jstl/core">
+
+<ui:composition template="template.xhtml">
+
+	<ui:define name="mainForm">
+		<h:form>
+			<h:commandLink action="#{socialauthenticator .mainPage}" value="Back" actionListener="socialauth.logout" />
+		</h:form><br/><br/>
+		<c:if test="${not empty socialauth.profile}">
+			<table cellspacing="1" border="1" bgcolor="e5e5e5"
+				width="50%">
+				<tr class="sectiontableheader">
+					<th>${msg.get("label.field")}</th>
+					<th>${msg.get("label.value")}</th>
+				</tr>
+				<tr class="sectiontableentry1">
+					<td>${msg.get("label.email")}</td>
+					<td>${socialauth.profile.email}" </td>
+				</tr>
+				<tr class="sectiontableentry2">
+					<td>${msg.get("label.firstName")}</td>
+					<td>${socialauth.profile.firstName}</td>
+				</tr>
+				<tr class="sectiontableentry1">
+					<td>${msg.get("label.lastName")}</td>
+					<td>${socialauth.profile.lastName}</td>
+				</tr>
+				<tr class="sectiontableentry2">
+					<td>${msg.get("label.country")}</td>
+					<td>${socialauth.profile.country}</td>
+				</tr>
+				<tr class="sectiontableentry1">
+					<td>${msg.get("label.language")}</td>
+					<td>${socialauth.profile.language}</td>
+				</tr>
+				<tr class="sectiontableentry2">
+					<td>${msg.get("label.fullName")}</td>
+					<td>${socialauth.profile.fullName}</td>
+				</tr>
+				<tr class="sectiontableentry1">
+					<td>${msg.get("label.displayName")}</td>
+					<td>${socialauth.profile.displayName}</td>
+				</tr>
+				<tr class="sectiontableentry2">
+					<td>${msg.get("label.dob")}</td>
+					<td>${socialauth.profile.dob}</td>
+				</tr>
+				<tr class="sectiontableentry1">
+					<td>${msg.get("label.gender")}</td>
+					<td>${socialauth.profile.gender}</td>
+				</tr>
+				<tr class="sectiontableentry2">
+					<td>${msg.get("label.location")}</td>
+					<td>${socialauth.profile.location}</td>
+				</tr>
+			</table>
+		<br/>
+		<table cellspacing="1" border="1" bgcolor="e5e5e5" width="50%">
+			<caption> Contact List</caption>
+			<tr>
+				<td>${msg.get("label.firstName")}</td>
+				<td>${msg.get("label.lastName")}</td>
+				<td>${msg.get("label.displayName")}</td>
+				<td>${msg.get("label.email")}</td>
+			</tr>	
+			<c:if test="${not empty socialauth.contactList}">
+				<ui:repeat value="#{socialauth.contactList}" var="contact">
+					<tr>
+						<td> ${contact.firstName} </td>
+						<td> ${contact.lastName} </td>
+						<td> ${contact.displayName} </td>
+						<td> ${contact.email} </td>
+					</tr>
+				</ui:repeat>	
+			</c:if>
+			<tr>
+				<td colspan="4">
+					<c:if test="${empty socialauth.contactList}">
+						${msg.get("msg.noContactAvailable")}
+					</c:if>
+				</td>
+			</tr>
+		</table>
+		</c:if>
+	<c:if test="${empty socialauth.profile}">
+		${msg.get("msg.error")}
+	</c:if>
+		
+	</ui:define>
+</ui:composition>
+</html>
