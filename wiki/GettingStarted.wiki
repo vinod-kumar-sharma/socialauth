@@ -3,9 +3,9 @@
 = Getting Started =
 
 == Prerequisites ==
-Following steps are needed to be set up before we can start anything
+Authenticating using the external oAuth providers requires that we register our application with the providers and obtain a key/secret from them that will be configured in our application. So following steps are needed to be set up before we can begin.
 
-  * Public domain - Have a public domain ready for testing. You should have a public domain because most of the providers require a public domain to be specified when you register an application with them. You can do some testing with localhost but it will be quite limited.
+  * Public domain - You will need a public domain for testing. You should have a public domain because most of the providers require a public domain to be specified when you register an application with them. You can do some testing on your development machine but it will be quite limited.
 
   * Consumer key and secret - Get your consumer keys and secrets by registering with any provider given below. OpenID does not require this step.
     # Google [Google (show screenshot)] - http://code.google.com/apis/accounts/docs/RegistrationForWebAppsAuto.html 
