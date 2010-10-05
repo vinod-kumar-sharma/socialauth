@@ -62,31 +62,23 @@ public class CommonAuthenticator {
 
 	public void updateId(ActionEvent ae) {
 		String btnClicked = ae.getComponent().getId();
-		log.info("*************login method called ************" +socialauth.getId() );
-		socialauth.setViewUrl("/success.xhtml");
-		
+			
 		if (btnClicked.indexOf("facebook") != -1){
 			socialauth.setId("facebook");
-			log.info("***facebook*********" +socialauth.getId() );
 		}
 		else if (btnClicked.indexOf("twitter") != -1){
 			socialauth.setId("twitter");
-			log.info("***twitter*********" +socialauth.getId() );
 		}
 		else if (btnClicked.indexOf("yahoo") != -1){
 			socialauth.setId("yahoo");
-			log.info("***yahoo*********" +socialauth.getId() );
 		}
 		else if (btnClicked.indexOf("hotmail") != -1){
 			socialauth.setId("hotmail");
-			log.info("***hotmail*********" +socialauth.getId() );
 		}else if (btnClicked.indexOf("google") != -1){
 			socialauth.setId("google");
-			log.info("***google*********" +socialauth.getId() );
 		}
 		else{
 			socialauth.setId(openID);
-			log.info("***openID*********" +socialauth.getId() );
 		}
 	}
 
