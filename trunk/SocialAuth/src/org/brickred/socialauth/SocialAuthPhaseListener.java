@@ -20,10 +20,12 @@
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
  ===========================================================================
-*/
+ */
 
 package org.brickred.socialauth;
 
+import javax.faces.context.ExternalContext;
+import javax.faces.context.FacesContext;
 import javax.faces.event.PhaseEvent;
 import javax.faces.event.PhaseId;
 import javax.faces.event.PhaseListener;
@@ -35,9 +37,9 @@ import org.jboss.seam.navigation.Pages;
 
 /**
  * Modified version of org.jboss.seam.security.openid.OpenIdPhaseListener. This
- * version is a drop in replacement for the OpenIdPhaseListener that comes bundled
- * with the JBoss Seam framework. This listener is called when the external
- * provider returns the control back to our application
+ * version is a drop in replacement for the OpenIdPhaseListener that comes
+ * bundled with the JBoss Seam framework. This listener is called when the
+ * external provider returns the control back to our application
  */
 @SuppressWarnings("serial")
 public class SocialAuthPhaseListener implements PhaseListener {
@@ -50,9 +52,15 @@ public class SocialAuthPhaseListener implements PhaseListener {
 	 * external provider and verifies if the user is authenticated
 	 */
 	public void beforePhase(PhaseEvent event) {
+
+		FacesContext ctx = FacesContext.getCurrentInstance();
+		ExternalContext ec = ctx.getExternalContext();
+		/* Parameter 'successUrl' is configured in web.xml and it must be same there. 
+		 * */
+		String successUrl = ec.getInitParameter("successUrl");
+
 		String viewId = Pages.getCurrentViewId();
-		SocialAuth open = (SocialAuth) Component.getInstance(SocialAuth.class);
-		String view = open.getViewUrl().split("\\.")[0];
+		String view = successUrl.split("\\.")[0];
 
 		if (viewId == null || !viewId.startsWith(view)) {
 			return;
@@ -65,13 +73,13 @@ public class SocialAuthPhaseListener implements PhaseListener {
 		} catch (Exception e) {
 			log.warn(e);
 		}
-		Pages.handleOutcome(event.getFacesContext(), null, open.getViewUrl());
+		Pages.handleOutcome(event.getFacesContext(), null, successUrl);
 
 	}
 
 	/**
-	 * No implementation is required because we have already redirected to
-	 * the view provided in the SocialAuth component
+	 * No implementation is required because we have already redirected to the
+	 * view provided in the SocialAuth component
 	 */
 	public void afterPhase(PhaseEvent event) {
 	}
