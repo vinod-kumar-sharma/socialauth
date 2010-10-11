@@ -17,7 +17,7 @@ Authenticating using the external oAuth providers requires that we register our 
 
 == Download the jar ==
   # Download the [http://socialauth.googlecode.com/files/socialauth.jar socialauth.jar] 
-  # Download the dependencies from the lib directory of the source
+  # Download the dependencies from the [http://code.google.com/p/socialauth/source/browse/#svn/trunk/SocialAuth/lib lib]
   # Include all the jars in your project
 
 == Implementation ==
