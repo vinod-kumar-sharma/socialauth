@@ -7,6 +7,9 @@ Authenticating using the external oAuth providers requires that we register our 
 
   * Public domain - You will need a public domain for testing. You should have a public domain because most of the providers require a public domain to be specified when you register an application with them. You can do some testing on your development machine but it will be quite limited.
 
+== Obtain consumer keys and secrets ==
+This step is very important and the library will NOT work without this.
+
   * Consumer key and secret - Get your consumer keys and secrets by registering with any provider given below. OpenID does not require this step.
     # Google [Google (show screenshot)] - http://code.google.com/apis/accounts/docs/RegistrationForWebAppsAuto.html 
     # Yahoo [Yahoo (show screenshot)] - https://developer.apps.yahoo.com/dashboard/createKey.html
