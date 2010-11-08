@@ -2,7 +2,7 @@
 
 = Introduction =
 
-This is the step by step guide to show how to develop a Struts application using socialauth library.
+This is the step by step guide to show how to develop a Struts application using socialauth library. If you just want to see the application working, please see our demo
 
 
 = Prerequisties =
@@ -14,4 +14,376 @@ As mentioned in the Getting Started guide, please make sure that you have
 
 = Development =
 
-With the prerequisites
+With the prerequisites out of the way, we are ready to begin development. Since Eclipse is our choice of the development environment, we have shown examples using Eclipse, but you can create your own structure manually as well.
+
+== Step 1. Create the structure ==
+
+Create a dynamic web project and add struts dependencies. You can download struts dependencies from [http://archive.apache.org/dist/struts/struts-1.2.7/ here]. Now your project should look as follows
+
+http://socialauth.googlecode.com/svn/wiki/images/struts-sample-structure.png
+
+The web.xml file doesn't have any special entries other than struts, but reproducing it here for completeness.
+
+{{{
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app id="WebApp_ID" version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+	<display-name>socialauthdemo</display-name>
+	<welcome-file-list>
+		<welcome-file>index.jsp</welcome-file>
+	</welcome-file-list>
+	<servlet>
+		<servlet-name>action</servlet-name>
+		<display-name>socialauthdemo</display-name>
+		<description>Application for socialauth demo</description>
+		<servlet-class>org.apache.struts.action.ActionServlet</servlet-class>
+		<init-param>
+			<param-name>config</param-name>
+			<param-value>/WEB-INF/struts-config.xml</param-value>
+		</init-param>
+		<init-param>
+			<param-name>debug</param-name>
+			<param-value>2</param-value>
+		</init-param>
+		<init-param>
+			<param-name>detail</param-name>
+			<param-value>2</param-value>
+		</init-param>
+		<load-on-startup>2</load-on-startup>
+	</servlet>
+	
+	<servlet-mapping>
+		<servlet-name>action</servlet-name>
+		<url-pattern>*.do</url-pattern>
+	</servlet-mapping>
+		  
+	<taglib>
+		<taglib-uri>struts-bean</taglib-uri>
+	    <taglib-location>/WEB-INF/struts-bean.tld</taglib-location>
+	</taglib>
+ 
+  	<taglib>
+    	<taglib-uri>struts-html</taglib-uri>
+    	<taglib-location>/WEB-INF/struts-html.tld</taglib-location>
+  	</taglib>
+  
+  	<taglib>
+    	<taglib-uri>struts-logic</taglib-uri>
+    	<taglib-location>/WEB-INF/struts-logic.tld</taglib-location>
+  	</taglib>
+  	
+  	<error-page>
+  		<exception-type>java.lang.Exception</exception-type>
+  		<location>/jsp/error.jsp</location>
+  	</error-page>
+  	
+     
+</web-app>
+
+}}}
+
+
+== Step 2. Coding the index page ==
+
+Now let us code the index page with the following code.  In this page, we just create various icons that the user can click upon and attach them with the action that will process the authentication.
+
+{{{
+<html>
+	<head>
+		<title>SocialAuth Demo</title>
+		<script>
+			function validate(obj){
+				var val = obj.id.value;
+				if(trimString(val).length <= 0){
+					alert("Please enter OpenID URL");
+					return false;
+				}else{
+					return true;
+				}
+			}
+			function trimString(tempStr)
+			{
+			   return tempStr.replace(/^\s*|\s*$/g,"");
+			}
+		</script>
+	</head>
+	<body>
+		<table cellpadding="10" cellspacing="10" align="center">
+			<tr><td colspan="5"><h3 align="center">Welcome to Social Auth Demo</h3></td></tr>
+			<tr><td colspan="5"><p align="center">Please click on any icon.</p></td></tr>
+			<tr>
+				<td><a href="socialAuth.do?id=facebook"><img src="images/facebook_icon.png" alt="Facebook" border="0"></img></a></td>
+				<td><a href="socialAuth.do?id=twitter"><img src="images/twitter_icon.png" alt="Twitter" border="0"></img></a></td>
+				<td><a href="socialAuth.do?id=google"><img src="images/gmail-icon.jpg" alt="Gmail" border="0"></img></a></td>
+				<td><a href="socialAuth.do?id=yahoo"><img src="images/yahoomail_icon.jpg" alt="YahooMail" border="0"></img></a></td>
+				<td><a href="socialAuth.do?id=hotmail"><img src="images/hotmail.jpeg" alt="HotMail" border="0"></img></a></td>
+			</tr>
+			<tr>
+				<td colspan="5" align="center">
+					<form action="socialAuth.do" onsubmit="return validate(this);">
+						or enter OpenID url: <input type="text" value="" name="id"/>
+						<input type="submit" value="Submit"/> 
+					</form>
+				</td>
+			</tr>
+			
+		</table>
+	</body>
+</html>
+
+}}}
+
+== Step 3. Creating the form bean ==
+Create a simple form bean that will be used to store the provider into session.
+
+{{{
+package com.auth.form;
+
+import org.apache.struts.action.ActionForm;
+import org.brickred.socialauth.AuthProvider;
+public class AuthForm extends ActionForm {	
+	String id;	
+	AuthProvider provider;	
+	public String getId() {
+		return id;
+	}	
+	public void setId(final String id) {
+		this.id = id;
+	}
+	public AuthProvider getProvider() {
+		return provider;
+	}
+	public void setProvider(final AuthProvider provider) {
+		this.provider = provider;
+	}
+}
+
+}}}
+
+== Step 4. Writing the authentication action ==
+Now we develop the action that is called by the link we created in the step above. This action creates a instance of the requested provider from AuthProviderFactory and calls the getLoginRedirectURL() method to find the URL to redirect to. It also saves the id and instance of requested provider in form bean which has session scope. Finally the action redirects to the URL obtained from the getLoginRedirectURL() and the user sees the login page of facebook, gmail or yahoo.
+
+Please notice that any provider will also need a URL from the application to which it will forward after successful authentication. In the sample below this URL is socialAuthSuccessAction.do which corresponds to another action that we will develop in the next step.
+
+{{{
+package com.auth.actions;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.struts.action.Action;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.apache.struts.util.RequestUtils;
+import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.AuthProviderFactory;
+
+import com.auth.form.AuthForm;
+
+public class SocialAuthenticationAction extends Action {
+
+	final Log LOG = LogFactory.getLog(SocialAuthenticationAction.class);
+
+	@Override
+	public ActionForward execute(final ActionMapping mapping,
+			final ActionForm form, final HttpServletRequest request,
+			final HttpServletResponse response) throws Exception {
+
+		AuthForm authForm = (AuthForm) form;
+		String id = authForm.getId();
+		AuthProvider provider = AuthProviderFactory.getInstance(id);
+		String returnToUrl = RequestUtils.absoluteURL(request,"/socialAuthSuccessAction.do").toString();
+		authForm.setProvider(provider);
+		String url = provider.getLoginRedirectURL(returnToUrl);
+		LOG.info("Redirecting to: " + url);
+		if (url != null) {
+			ActionForward fwd = new ActionForward("openAuthUrl", url, true);
+			return fwd;
+		}
+		return mapping.findForward("failure");
+	}
+}
+
+}}}
+
+== Step 5. Creating the success action ==
+
+Now we create a success action whose path was given in above action. This action verifies the user when the external provider forwards the user back to our application. It gets the instance of the requested provider from session and calls verifyResponse() method and returns profile information. After verification we call the getContactList() method to get the contacts.
+
+{{{
+package com.auth.actions;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.struts.action.Action;
+import org.apache.struts.action.ActionForm;
+import org.apache.struts.action.ActionForward;
+import org.apache.struts.action.ActionMapping;
+import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.Profile;
+
+import com.auth.form.AuthForm;
+
+public class SocialAuthSuccessAction extends Action {
+
+	final Log LOG = LogFactory.getLog(SocialAuthSuccessAction.class);
+	
+	@Override
+	public ActionForward execute(final ActionMapping mapping,
+			final ActionForm form, final HttpServletRequest request,
+			final HttpServletResponse response) throws Exception {
+
+
+		AuthForm authForm = (AuthForm) form;
+		AuthProvider provider = authForm.getProvider();
+		if (provider != null) {
+			Profile profile = provider.verifyResponse(request);
+			List<Profile> contactsList = new ArrayList<Profile>();
+			contactsList = provider.getContactList();
+
+			if (contactsList != null && contactsList.size() > 0) {
+				for (Profile p : contactsList) {
+					if (StringUtils.isEmpty(p.getFirstName())
+							&& StringUtils.isEmpty(p.getLastName())) {
+						p.setFirstName(p.getDisplayName());
+					}
+				}
+			}
+			request.setAttribute("profile", profile);
+			request.setAttribute("contacts", contactsList);
+			return mapping.findForward("success");
+		}
+		// if provider null
+		return mapping.findForward("failure");
+	}
+}
+
+}}}
+
+== Step 6. Displaying the results ==
+
+We use a simple display page to show the results. First, we simply iterate over all the profile information obtained from the provider. Second, we iterate over all contacts obtained from the provider.
+
+{{{
+<html>
+<head>
+	<title>SocialAuth Demo</title>
+	<style>
+		.sectiontableheader {background-color:#C8D7E3;color:#293D6B;font-size:8pt;font-weight:bold;padding:2px;}
+		.sectiontableentry2 {background:none repeat scroll 0 0 #F7F7F7;padding:2px;}
+		.sectiontableentry1 {background:none repeat scroll 0 0 #FFFFF0;padding:2px;}
+	</style>
+</head>
+<body>
+<%@page import="org.brickred.socialauth.Profile,java.util.*;" %>
+<%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ page isELIgnored="false"%>
+<h2 align="center">Authentication has been successful.</h2>
+<br/>
+<div align="center"><a href="index.jsp">Back</a></div>
+<br />
+<h3 align="center">Profile Information</h3>
+<table cellspacing="1" cellspacing="4" border="0" bgcolor="e5e5e5" width="40%" align="center">
+<tr class="sectiontableheader">
+	<th>Profile Field</th>
+	<th>Value</th>
+</tr>
+<tr class="sectiontableentry1">
+	<td>Email:</td>
+	<td><c:out value="${profile.email}"/></td>
+</tr>
+<tr class="sectiontableentry2">
+	<td>First Name:</td>
+	<td><c:out value="${profile.firstName}"/></td>
+</tr>
+<tr class="sectiontableentry1">
+	<td>Last Name:</td>
+	<td><c:out value="${profile.lastName}"/></td>
+</tr>
+<tr class="sectiontableentry2">
+	<td>Country:</td>
+	<td><c:out value="${profile.country}"/></td>
+</tr>
+<tr class="sectiontableentry1">
+	<td>Language:</td>
+	<td><c:out value="${profile.language}"/></td>
+</tr>
+<tr class="sectiontableentry2">
+	<td>Full Name:</td>
+	<td><c:out value="${profile.fullName}"/></td>
+</tr>
+<tr class="sectiontableentry1">
+	<td>Display Name:</td>
+	<td><c:out value="${profile.displayName}"/></td>
+</tr>
+<tr class="sectiontableentry2">
+	<td>DOB:</td>
+	<td><c:out value="${profile.dob}"/></td>
+</tr>
+<tr class="sectiontableentry1">
+	<td>Gender:</td>
+	<td><c:out value="${profile.gender}"/></td>
+</tr>
+<tr class="sectiontableentry2">
+	<td>Location:</td>
+	<td><c:out value="${profile.location}"/></td>
+</tr>
+</table>
+<h3 align="center">Contact Details</h3>
+<table cellspacing="1" cellspacing="4" border="0" bgcolor="e5e5e5" align="center" width="40%">
+	<tr class="sectiontableheader">
+		<th>Name</th>
+		<th>Email</th>
+	</tr>
+	<c:forEach var="contact" items="${contacts}" varStatus="index">
+		<tr class='<c:if test="${index.count % 2 == 0}">sectiontableentry2</c:if><c:if test="${index.count % 2 != 0}">sectiontableentry1</c:if>'>
+			<td><c:out value="${contact.firstName}"/></td>
+			<td><c:out value="${contact.email}"/></td>
+		</tr>
+	</c:forEach>
+</table>
+</body>
+</html>
+
+}}}
+
+== Step 7. Joining it together with struts configuration ==
+Now we join our authentication action and success action to the JSP pages.
+
+{{{
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.2//EN" "http://jakarta.apache.org/struts/dtds/struts-config_1_2.dtd">
+<struts-config>
+
+	<form-beans>
+	    	<form-bean name="authForm" type="com.auth.form.AuthForm" />
+	</form-beans>
+    
+    <action-mappings>
+    
+		<action path="/socialAuth" type="com.auth.actions.SocialAuthenticationAction" name="authForm" scope="session">
+			<forward name="failure" path="/jsp/error.jsp" />
+		</action>
+		
+		<action path="/socialAuthSuccessAction" type="com.auth.actions.SocialAuthSuccessAction" name="authForm" scope="session">
+			<forward name="success" path="/jsp/authSuccess.jsp" />
+			<forward name="failure" path="/jsp/error.jsp" />
+		</action>
+		
+   	</action-mappings>
+
+</struts-config>
+
+}}}
+
+= Conclusion =
+
+You can get the entire source code of the sample by browsing the source code.
+Hope this guide would have been of help. If you have any questions, please file an issue. 
