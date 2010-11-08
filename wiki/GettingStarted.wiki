@@ -53,4 +53,4 @@ This step is very important and the library will NOT work without this.
 		
 }}}
 
-That is all you have to do, really ! We also recommend that you take a look at our [StrutsExample step by step guide] for Struts example to understand better.
+That is all you have to do, really ! We also recommend that you take a look at our [StrutsSample step by step guide] for Struts example to understand better.
