@@ -29,6 +29,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
@@ -39,6 +40,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Profile;
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import com.dyuproject.oauth.Endpoint;
@@ -94,7 +96,7 @@ public class FacebookImpl implements AuthProvider {
 	 * @param request Request object the request is received from the provider
 	 * @throws Exception
 	 */
-	
+
 	public Profile verifyResponse(final HttpServletRequest httpReq)
 	{
 		try {
@@ -192,8 +194,8 @@ public class FacebookImpl implements AuthProvider {
 	 * implemented for all providers.
 	 * @param msg Message to be shown as user's status
 	 */
-	
-	public void updateStatus(String msg) {
+
+	public void updateStatus(final String msg) {
 		HttpClient client = new HttpClient();
 		PostMethod method = new PostMethod("https://graph.facebook.com/me/feed");
 		method.addParameter("access_token", accessToken);
@@ -220,9 +222,25 @@ public class FacebookImpl implements AuthProvider {
 	 * @return List of profile objects representing Contacts. Only name and email
 	 * will be available
 	 */
-	
+
 	public List<Profile> getContactList() {
-		return null;
+		List<Profile> plist = new ArrayList<Profile>();
+		try {
+			JSONObject resp = new JSONObject(IOUtil.urlToString(new URL(
+					__facebook.getAccessTokenUrl() + "/friends?access_token="
+							+ accessToken)));
+			JSONArray data = resp.getJSONArray("data");
+			for (int i = 0; i < data.length(); i++) {
+				JSONObject obj = data.getJSONObject(i);
+				Profile p = new Profile();
+				p.setFirstName(obj.getString("name"));
+				plist.add(p);
+			}
+		} catch (Throwable ex) {
+			ex.printStackTrace();
+			throw new RuntimeException("failed login", ex);
+		}
+		return plist;
 	}
 
 }
