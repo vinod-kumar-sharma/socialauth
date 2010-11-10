@@ -25,7 +25,6 @@
 
 package org.brickred.socialauth.provider;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -74,7 +73,7 @@ public class HotmailImpl implements AuthProvider {
 	 * 
 	 * @throws Exception
 	 */
-	
+
 	public String getLoginRedirectURL(final String redirectUri)
 	throws Exception {
 		wll = new WindowsLiveLogin(appid, secret, "wsignin1.0", false,
@@ -82,7 +81,7 @@ public class HotmailImpl implements AuthProvider {
 		String consentUrl = wll.getConsentUrl("Contacts.View").toString();
 		return consentUrl;
 	}
-	
+
 	/**
 	 * Verifies the user when the external provider redirects back to our
 	 * application.
@@ -91,28 +90,26 @@ public class HotmailImpl implements AuthProvider {
 	 * @param request Request object the request is received from the provider
 	 * @throws Exception
 	 */
-	
+
 	public Profile verifyResponse(final HttpServletRequest request) {
 		token = wll.processConsent(request.getParameterMap());
 		Profile p = new Profile();
 		p.setValidatedId(token.getLocationID());
 		return p;
 	}
-	
+
 	/**
 	 * Gets the list of contacts of the user and their email.
 	 * @return List of profile objects representing Contacts. Only name and email
 	 * will be available
 	 */
-	
+
 	public List<Profile> getContactList() {
-		String location = new BigInteger(token.getLocationID(), 16)
-		.toString(10);
 		HttpClient client = new HttpClient();
 		String header = "DelegatedToken dt=\"" + token.getDelegationToken()
 		+ "\"";
-		String u = "https://livecontacts.services.live.com/users/@C@"
-			+ location + "/LiveContacts/";
+		String u = "https://livecontacts.services.live.com/users/@L@"
+				+ token.getLocationID() + "/LiveContacts/";
 		GetMethod get = new GetMethod(u);
 		get.addRequestHeader(new Header("Authorization", header));
 		List<Profile> plist = new ArrayList<Profile>();
