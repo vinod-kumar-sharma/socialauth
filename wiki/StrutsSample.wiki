@@ -160,7 +160,7 @@ public class AuthForm extends ActionForm {
 }}}
 
 == Step 4. Writing the authentication action ==
-Now we develop the action that is called by the link we created in the step above. This action creates a instance of the requested provider from AuthProviderFactory and calls the getLoginRedirectURL() method to find the URL to redirect to. It also saves the id and instance of requested provider in form bean which has session scope. Finally the action redirects to the URL obtained from the getLoginRedirectURL() and the user sees the login page of facebook, gmail or yahoo.
+Now we develop the action that is called by the link we created in the step above. This action creates a instance of the requested provider from AuthProviderFactory! and calls the getLoginRedirectURL() method to find the URL to redirect to. It also saves the id and instance of requested provider in form bean which has session scope. Finally the action redirects to the URL obtained from the getLoginRedirectURL() and the user sees the login page of facebook, gmail or yahoo.
 
 Please notice that any provider will also need a URL from the application to which it will forward after successful authentication. In the sample below this URL is socialAuthSuccessAction.do which corresponds to another action that we will develop in the next step.
 
