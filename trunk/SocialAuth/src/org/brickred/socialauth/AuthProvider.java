@@ -66,7 +66,7 @@ public interface AuthProvider {
 	 * @throws Exception
 	 */
 	public String getLoginRedirectURL(String redirectUri) throws Exception;
-	
+
 	/**
 	 * Verifies the user when the external provider redirects back to our
 	 * application.
@@ -75,7 +75,7 @@ public interface AuthProvider {
 	 * @param request Request object the request is received from the provider
 	 * @throws Exception
 	 */
-	
+
 	public Profile verifyResponse(HttpServletRequest request) throws Exception;
 
 	/**
@@ -91,6 +91,10 @@ public interface AuthProvider {
 	 * @return List of profile objects representing Contacts. Only name and email
 	 * will be available
 	 */
-	public List<Profile> getContactList();
+	public List<Profile> getContactList() throws Exception;
 
+	/**
+	 * Logout
+	 */
+	public void logout();
 }

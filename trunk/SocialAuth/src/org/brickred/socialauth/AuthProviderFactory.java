@@ -25,9 +25,12 @@
 
 package org.brickred.socialauth;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
+import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.provider.AolImpl;
 import org.brickred.socialauth.provider.FacebookImpl;
 import org.brickred.socialauth.provider.GoogleImpl;
@@ -38,7 +41,7 @@ import org.brickred.socialauth.provider.YahooImpl;
 
 /**
  * This is a factory which creates an instance of the requested provider based
- * on the string passed as id. Currently available providers are given as 
+ * on the string passed as id. Currently available providers are given as
  * static constants. If requested provider id is not matched, it returns the
  * OpenId provider.
  * 
@@ -53,7 +56,7 @@ public class AuthProviderFactory {
 	public static String yahoo = "yahoo";
 	public static String hotmail = "hotmail";
 	public static String aol = "aol";
-		
+
 	/**
 	 * 
 	 * @param id
@@ -66,26 +69,63 @@ public class AuthProviderFactory {
 	 */
 	public static AuthProvider getInstance(final String id)
 	throws Exception {
+		AuthProvider provider = getProvider(id, "oauth_consumer.properties");
+		return provider;
+
+	}
+
+	/**
+	 * 
+	 * @param id
+	 *            the id of requested provider. It can be google, yahoo,
+	 *            hotmail, twitter, facebook.
+	 * @param propertiesFileName
+	 *            file name to read the properties
+	 * @return AuthProvider the instance of requested provider based on given
+	 *         id. If id is a URL it returns the OpenId provider.
+	 * @throws Exception
+	 */
+	public static AuthProvider getInstance(final String id,
+			final String propertiesFileName) throws Exception {
+		AuthProvider provider = getProvider(id, propertiesFileName);
+		return provider;
+
+	}
+
+	private static AuthProvider getProvider(final String id,
+			final String fileName) throws Exception {
 		Properties props = new Properties();
-		InputStream in = AuthProviderFactory.class.getClassLoader()
-		.getResourceAsStream("oauth_consumer.properties");
-		props.load(in);
-		props.setProperty("id", id);
-		if (facebook.equals(id)) {
-			return new FacebookImpl(props);
-		} else if (twitter.equals(id)) {
-			return new TwitterImpl(props);
-		} else if (aol.equals(id)) {
-			return new AolImpl(props);
-		} else if (google.equals(id)) {
-			return new GoogleImpl(props);
-		} else if (yahoo.equals(id)) {
-			return new YahooImpl(props);
-		} else if (hotmail.equals(id)) {
-			return new HotmailImpl(props);
-		} else {
-			return new OpenIdImpl(props);
+		AuthProvider provider;
+		try {
+			InputStream in = AuthProviderFactory.class.getClassLoader()
+			.getResourceAsStream(fileName);
+			props.load(in);
+			props.setProperty("id", id);
+			if (facebook.equals(id)) {
+				provider = new FacebookImpl(props);
+			} else if (twitter.equals(id)) {
+				provider = new TwitterImpl(props);
+			} else if (aol.equals(id)) {
+				provider = new AolImpl(props);
+			} else if (google.equals(id)) {
+				provider = new GoogleImpl(props);
+			} else if (yahoo.equals(id)) {
+				provider = new YahooImpl(props);
+			} else if (hotmail.equals(id)) {
+				provider = new HotmailImpl(props);
+			} else {
+				provider = new OpenIdImpl(props);
+			}
+		} catch (NullPointerException ne) {
+			throw new FileNotFoundException(fileName
+					+ " file is not found in your class path");
+		} catch (IOException ie) {
+			throw new IOException(
+			"Problem in loading the properties from oauth_consumer.properties file");
+		} catch (SocialAuthConfigurationException se) {
+			throw se;
 		}
+		return provider;
 	}
 
 }

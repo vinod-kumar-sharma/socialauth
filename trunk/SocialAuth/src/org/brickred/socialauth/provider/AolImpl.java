@@ -50,7 +50,7 @@ import com.dyuproject.oauth.Endpoint;
 
 /**
  * The implementation for the AOL provider. AOL returns very limited profile
- * information and has no implementation for status updates and getting 
+ * information and has no implementation for status updates and getting
  * contacts. May be removed in future.
  * 
  * @author abhinavm@brickred.com
@@ -153,7 +153,7 @@ public class AolImpl implements AuthProvider {
 	 * @return List of profile objects representing Contacts. Only name and email
 	 * will be available
 	 */
-	
+
 	public List<Profile> getContactList() {
 		List<Profile> plist = new ArrayList<Profile>();
 		try {
@@ -180,16 +180,21 @@ public class AolImpl implements AuthProvider {
 		}
 		return plist;
 	}
-	
+
 	/**
 	 * Updates the status on the chosen provider if available. This may not be
 	 * implemented for all providers.
 	 * @param msg Message to be shown as user's status
 	 */
-	
-	public void updateStatus(String msg) {
+
+	public void updateStatus(final String msg) {
 		Log.warn("Update status not implemented");
 	}
-	
 
+	/**
+	 * Logout
+	 */
+	public void logout() {
+		token = null;
+	}
 }

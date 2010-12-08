@@ -88,6 +88,11 @@ public class Profile {
 	String validatedId;
 
 	/**
+	 * profile image URL
+	 */
+	String profileImageURL;
+
+	/**
 	 * Retrieves the first name
 	 * 
 	 * @return String the first name
@@ -304,6 +309,25 @@ public class Profile {
 	@Override
 	public String toString() {
 		return email;
+	}
+
+	/**
+	 * Retrieves the profile image URL
+	 * 
+	 * @return
+	 */
+	public String getProfileImageURL() {
+		return profileImageURL;
+	}
+
+	/**
+	 * Updates the profile image URL
+	 * 
+	 * @param profileImageURL
+	 *            profile image URL of user
+	 */
+	public void setProfileImageURL(final String profileImageURL) {
+		this.profileImageURL = profileImageURL;
 	}
 
 }
