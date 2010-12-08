@@ -38,8 +38,12 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.PostMethod;
+import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Profile;
+import org.brickred.socialauth.exception.ProviderStateException;
+import org.brickred.socialauth.exception.ServerDataException;
+import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -53,13 +57,14 @@ import com.visural.common.StringUtil;
  * @author Abhinav Maheshwari
  * 
  */
-public class FacebookImpl implements AuthProvider {
+public class FacebookImpl extends AbstractProvider implements AuthProvider {
 
 	private String secret;
 	private String client_id;
 	private String accessToken;
 	private final Endpoint __facebook;
 	private String redirectUri;
+
 
 	/// set this to the list of extended permissions you want
 	private static final String[] perms = new String[] { "publish_stream",
@@ -69,10 +74,22 @@ public class FacebookImpl implements AuthProvider {
 	 * Reads properties provided in the configuration file
 	 * @param props Properties for consumer key
 	 */
-	public FacebookImpl(final Properties props) {
-		__facebook = Endpoint.load(props, "graph.facebook.com");
+	public FacebookImpl(final Properties props) throws Exception {
+		try {
+			__facebook = Endpoint.load(props, "graph.facebook.com");
+		} catch (IllegalStateException e) {
+			throw new SocialAuthConfigurationException(e);
+		}
 		secret = __facebook.getConsumerSecret();
 		client_id = __facebook.getConsumerKey();
+		if (secret.length() <= 0) {
+			throw new SocialAuthConfigurationException(
+			"graph.facebook.com.consumer_secret value is null");
+		}
+		if (client_id.length() <= 0) {
+			throw new SocialAuthConfigurationException(
+			"graph.facebook.com.consumer_key value is null");
+		}
 	}
 
 	/**
@@ -82,6 +99,7 @@ public class FacebookImpl implements AuthProvider {
 	 * 
 	 */
 	public String getLoginRedirectURL(final String redirectUri) {
+		setProviderState(true);
 		this.redirectUri = redirectUri;
 		return __facebook.getAuthorizationUrl() + "?client_id=" +
 		client_id + "&display=page&redirect_uri=" +
@@ -98,7 +116,11 @@ public class FacebookImpl implements AuthProvider {
 	 */
 
 	public Profile verifyResponse(final HttpServletRequest httpReq)
+	throws Exception
 	{
+		if (!isProviderState()) {
+			throw new ProviderStateException();
+		}
 		try {
 			String code = httpReq.getParameter("code");
 			if (code != null && code.length() > 0) {
@@ -164,6 +186,9 @@ public class FacebookImpl implements AuthProvider {
 			if (resp.has("gender")) {
 				p.setGender(resp.getString("gender"));
 			}
+			p.setProfileImageURL("http://graph.facebook.com/"
+					+ resp.getString("id")
+					+ "/picture");
 			String locale = resp.getString("locale");
 			if (locale != null) {
 				String a[] = locale.split("_");
@@ -223,12 +248,16 @@ public class FacebookImpl implements AuthProvider {
 	 * will be available
 	 */
 
-	public List<Profile> getContactList() {
+	public List<Profile> getContactList() throws Exception {
+		if (!isProviderState()) {
+			throw new ProviderStateException();
+		}
 		List<Profile> plist = new ArrayList<Profile>();
+		String contactURL = __facebook.getAccessTokenUrl()
+		+ "/friends?access_token=" + accessToken;
 		try {
 			JSONObject resp = new JSONObject(IOUtil.urlToString(new URL(
-					__facebook.getAccessTokenUrl() + "/friends?access_token="
-							+ accessToken)));
+					contactURL)));
 			JSONArray data = resp.getJSONArray("data");
 			for (int i = 0; i < data.length(); i++) {
 				JSONObject obj = data.getJSONObject(i);
@@ -236,11 +265,17 @@ public class FacebookImpl implements AuthProvider {
 				p.setFirstName(obj.getString("name"));
 				plist.add(p);
 			}
-		} catch (Throwable ex) {
-			ex.printStackTrace();
-			throw new RuntimeException("failed login", ex);
+		} catch (Exception e) {
+			throw new ServerDataException("Problem in getting contacts from "
+					+ contactURL, e);
 		}
 		return plist;
 	}
 
+	/**
+	 * Logout
+	 */
+	public void logout() {
+		accessToken = null;
+	}
 }

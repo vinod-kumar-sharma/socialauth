@@ -34,9 +34,14 @@ import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Profile;
+import org.brickred.socialauth.exception.ProviderStateException;
+import org.brickred.socialauth.exception.ServerDataException;
+import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.util.XMLParseUtil;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.openid4java.consumer.ConsumerException;
 import org.w3c.dom.Element;
@@ -67,7 +72,7 @@ import com.dyuproject.util.http.HttpConnector.Response;
  * @author tarunn@brickred.com
  *
  */
-public class YahooImpl implements AuthProvider
+public class YahooImpl extends AbstractProvider implements AuthProvider
 {
 	private final Endpoint __yahoo;
 	private OpenIdUser user;
@@ -86,27 +91,30 @@ public class YahooImpl implements AuthProvider
 	 * 
 	 * @throws Exception
 	 */
-	
-	public String getLoginRedirectURL(final String returnTo) throws IOException {
+
+	public String getLoginRedirectURL(final String returnTo) throws Exception {
+		setProviderState(true);
+
+		token = new Token(__yahoo.getConsumerKey());
+
+		UrlEncodedParameterMap params = new UrlEncodedParameterMap().add(
+				Constants.OAUTH_CALLBACK, returnTo);
+		Response r;
 		try {
-			token = new Token(__yahoo.getConsumerKey());
-
-			UrlEncodedParameterMap params = new UrlEncodedParameterMap().add(
-					Constants.OAUTH_CALLBACK, returnTo);
-
-			Response r = __consumer.fetchToken(__yahoo, params,
+			r = __consumer.fetchToken(__yahoo, params,
 					TokenExchange.REQUEST_TOKEN, token);
-			if (r.getStatus() == 200 && token.getState() == Token.UNAUTHORIZED) {
-				// unauthorized request token
-				StringBuilder urlBuffer = Transport.buildAuthUrl(__yahoo
-						.getAuthorizationUrl(), token, returnTo);
-				return urlBuffer.toString();
-			}
-
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw e;
 		}
-		return null;
+		if (r.getStatus() == 200 && token.getState() == Token.UNAUTHORIZED) {
+			// unauthorized request token
+			StringBuilder urlBuffer = Transport.buildAuthUrl(__yahoo
+					.getAuthorizationUrl(), token, returnTo);
+			return urlBuffer.toString();
+		} else {
+			throw new SocialAuthConfigurationException();
+		}
+
 	}
 
 	/**
@@ -117,9 +125,12 @@ public class YahooImpl implements AuthProvider
 	 * @param request Request object the request is received from the provider
 	 * @throws Exception
 	 */
-	
+
 	public Profile verifyResponse(final HttpServletRequest request)
-	{
+	throws Exception {
+		if (!isProviderState()) {
+			throw new ProviderStateException();
+		}
 		try {
 			String verifier = request.getParameter(Constants.OAUTH_VERIFIER);
 			if (token.authorize(request.getParameter(Constants.OAUTH_TOKEN),
@@ -161,6 +172,7 @@ public class YahooImpl implements AuthProvider
 			while ((line = reader.readLine()) != null) {
 				sb.append(line).append("\n");
 			}
+			System.out.println("-----------JSON---------" + sb.toString());
 			JSONObject jobj = new JSONObject(sb.toString());
 			if (jobj.has("profile")) {
 				JSONObject pObj = jobj.getJSONObject("profile");
@@ -185,6 +197,28 @@ public class YahooImpl implements AuthProvider
 				if (pObj.has("birthdate")) {
 					profile.setDob(pObj.getString("birthdate"));
 				}
+				if (pObj.has("image")) {
+					JSONObject imgObj = pObj.getJSONObject("image");
+					if (imgObj.has("imageUrl")) {
+						profile
+						.setProfileImageURL(imgObj
+								.getString("imageUrl"));
+					}
+				}
+				if (pObj.has("emails")) {
+					JSONArray earr = pObj.getJSONArray("emails");
+					for (int i = 0; i < earr.length(); i++) {
+						JSONObject eobj = earr.getJSONObject(i);
+						if (eobj.has("primary")
+								&& "true".equals(eobj.getString("primary"))) {
+							if (eobj.has("handle")) {
+								profile.setEmail(eobj.getString("handle"));
+							}
+							break;
+						}
+					}
+				}
+
 			}
 			return profile;
 		} catch (Exception e) {
@@ -192,15 +226,15 @@ public class YahooImpl implements AuthProvider
 		}
 		return null;
 	}
-	
-	
+
+
 	/**
 	 * Gets the list of contacts of the user and their email.
 	 * @return List of profile objects representing Contacts. Only name and email
 	 * will be available
 	 */
-	
-	public List<Profile> getContactList() {
+
+	public List<Profile> getContactList() throws Exception {
 
 		UrlEncodedParameterMap serviceParams = new UrlEncodedParameterMap(
 				"http://social.yahooapis.com/v1/user/"
@@ -215,64 +249,76 @@ public class YahooImpl implements AuthProvider
 						token, nts, sig));
 
 		List<Profile> plist = new ArrayList<Profile>();
+		Response serviceResponse;
+		Element root;
 		try {
-			Response serviceResponse = connector.doGET(serviceParams
+			serviceResponse = connector.doGET(serviceParams
 					.toStringRFC3986(), authorizationHeader);
-			Element root = XMLParseUtil.loadXmlResource(serviceResponse
+		} catch (IOException ie) {
+			throw ie;
+		}
+		try {
+			root = XMLParseUtil.loadXmlResource(serviceResponse
 					.getInputStream());
-			NodeList contactsList = root.getElementsByTagName("contact");
-			if (contactsList != null && contactsList.getLength() > 0) {
-				for (int i = 0; i < contactsList.getLength(); i++) {
-					Element contact = (Element) contactsList.item(i);
-					NodeList fieldList = contact.getElementsByTagName("fields");
-					if (fieldList != null && fieldList.getLength() > 0) {
-						String fname = "";
-						String lname = "";
-						String dispName = "";
-						String address = "";
-						for (int j = 0; j < fieldList.getLength(); j++) {
-							Element field = (Element) fieldList.item(j);
-							String type = XMLParseUtil.getElementData(field,
-							"type");
+		} catch (Exception e) {
+			throw new ServerDataException("Unable to retrieve the contacts.", e);
+		}
+		NodeList contactsList = root.getElementsByTagName("contact");
+		if (contactsList != null && contactsList.getLength() > 0) {
+			for (int i = 0; i < contactsList.getLength(); i++) {
+				Element contact = (Element) contactsList.item(i);
+				NodeList fieldList = contact.getElementsByTagName("fields");
+				if (fieldList != null && fieldList.getLength() > 0) {
+					String fname = "";
+					String lname = "";
+					String dispName = "";
+					String address = "";
+					for (int j = 0; j < fieldList.getLength(); j++) {
+						Element field = (Element) fieldList.item(j);
+						String type = XMLParseUtil.getElementData(field,
+						"type");
 
-							if ("email".equalsIgnoreCase(type)) {
-								address = XMLParseUtil.getElementData(field,
-								"value");
-							} else if ("name".equals(type)) {
-								fname = XMLParseUtil.getElementData(field,
-								"givenName");
-								lname = XMLParseUtil.getElementData(field,
-								"familyName");
-							} else if ("yahooid".equalsIgnoreCase(type)) {
-								dispName = XMLParseUtil.getElementData(field,
-								"value");
-							}
+						if ("email".equalsIgnoreCase(type)) {
+							address = XMLParseUtil.getElementData(field,
+							"value");
+						} else if ("name".equals(type)) {
+							fname = XMLParseUtil.getElementData(field,
+							"givenName");
+							lname = XMLParseUtil.getElementData(field,
+							"familyName");
+						} else if ("yahooid".equalsIgnoreCase(type)) {
+							dispName = XMLParseUtil.getElementData(field,
+							"value");
 						}
-						if (address != null && address.length() > 0) {
-							Profile p = new Profile();
-							p.setFirstName(fname);
-							p.setLastName(lname);
-							p.setEmail(address);
-							p.setDisplayName(dispName);
-							plist.add(p);
-						}
+					}
+					if (address != null && address.length() > 0) {
+						Profile p = new Profile();
+						p.setFirstName(fname);
+						p.setLastName(lname);
+						p.setEmail(address);
+						p.setDisplayName(dispName);
+						plist.add(p);
 					}
 				}
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 		return plist;
 	}
 
 	/**
-	 * Updates the status on the chosen provider if available. This is not 
+	 * Updates the status on the chosen provider if available. This is not
 	 * implemented for yahoo currently
 	 * @param msg Message to be shown as user's status
 	 */
-	
+
 	public void updateStatus(final String msg) {
 		System.out.println("WARNING: Not implemented");
 	}
 
+	/**
+	 * Logout
+	 */
+	public void logout() {
+		token = null;
+	}
 }

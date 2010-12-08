@@ -1,4 +1,4 @@
-/* 
+/*
  ===========================================================================
  Copyright (c) 2010 BrickRed Technologies Limited
 
@@ -19,8 +19,8 @@
  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
- =========================================================================== 
-*/
+ ===========================================================================
+ */
 
 package org.brickred.socialauth;
 
@@ -65,7 +65,7 @@ public class SocialAuth implements Serializable {
 	private static final long serialVersionUID = 1789108831048043099L;
 
 	private transient LogProvider log = Logging
-			.getLogProvider(SocialAuth.class);
+	.getLogProvider(SocialAuth.class);
 
 	private String id;
 	private Profile profile;
@@ -95,7 +95,7 @@ public class SocialAuth implements Serializable {
 	 *            Can either have values facebook, twitter, hotmail, google,
 	 *            yahoo, aol OR an OpenID URL
 	 */
-	public void setId(String id) {
+	public void setId(final String id) {
 		this.id = id;
 	}
 
@@ -106,7 +106,7 @@ public class SocialAuth implements Serializable {
 	 * @param viewUrl
 	 *            Relative URL of the view, for example "/openid.xhtml"
 	 */
-	public void setViewUrl(String viewUrl) {
+	public void setViewUrl(final String viewUrl) {
 		this.viewUrl = viewUrl;
 	}
 
@@ -124,7 +124,7 @@ public class SocialAuth implements Serializable {
 	private String returnToUrl() throws MalformedURLException {
 		FacesContext context = FacesContext.getCurrentInstance();
 		HttpServletRequest request = (HttpServletRequest) context
-				.getExternalContext().getRequest();
+		.getExternalContext().getRequest();
 
 		URL returnToUrl;
 		if (request.getServerPort() == 80) {
@@ -172,7 +172,7 @@ public class SocialAuth implements Serializable {
 	public void verify() throws Exception {
 		log.info("Verifying authentication information from:" + id);
 		ExternalContext context = javax.faces.context.FacesContext
-				.getCurrentInstance().getExternalContext();
+		.getCurrentInstance().getExternalContext();
 		HttpServletRequest request = (HttpServletRequest) context.getRequest();
 
 		profile = provider.verifyResponse(request);
@@ -207,9 +207,9 @@ public class SocialAuth implements Serializable {
 	 * 
 	 * @return Profile of the user
 	 */
-    public Profile getProfile() {
-        return profile;
-    }
+	public Profile getProfile() {
+		return profile;
+	}
 
 	/**
 	 * Status of the user to be updated on a provider like Facebook or Twitter.
@@ -227,7 +227,7 @@ public class SocialAuth implements Serializable {
 	 * 
 	 * @param status
 	 */
-	public void setStatus(String status) {
+	public void setStatus(final String status) {
 		this.status = status;
 	}
 
@@ -246,7 +246,7 @@ public class SocialAuth implements Serializable {
 	 * 
 	 * @return list of contacts
 	 */
-	public List<Profile> getContactList() {
+	public List<Profile> getContactList() throws Exception {
 		return provider.getContactList();
 	}
 }

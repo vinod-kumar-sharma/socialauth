@@ -33,8 +33,12 @@ import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Profile;
+import org.brickred.socialauth.exception.ProviderStateException;
+import org.brickred.socialauth.exception.SocialAuthConfigurationException;
+import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.util.XMLParseUtil;
 import org.openid4java.consumer.ConsumerException;
 import org.w3c.dom.Element;
@@ -67,7 +71,7 @@ import com.dyuproject.util.http.HttpConnector.Response;
  * @author abhinavm@brickred.com
  * 
  */
-public class GoogleImpl implements AuthProvider
+public class GoogleImpl extends AbstractProvider implements AuthProvider
 {
 
 	static final String GOOGLE_IDENTIFIER = "https://www.google.com/accounts/o8/id";
@@ -125,7 +129,7 @@ public class GoogleImpl implements AuthProvider
 	}
 
 	public String getLoginRedirectURL(final String returnTo) throws IOException {
-
+		setProviderState(true);
 		String errorMsg = OpenIdServletFilter.DEFAULT_ERROR_MSG;
 		try {
 
@@ -164,7 +168,10 @@ public class GoogleImpl implements AuthProvider
 
 
 	public Profile verifyResponse(final HttpServletRequest request)
-	{
+	throws Exception {
+		if (!isProviderState()) {
+			throw new ProviderStateException();
+		}
 		try {
 			RelyingParty _relyingParty = RelyingParty.getInstance();
 			request.setAttribute(OpenIdUser.ATTR_NAME, user);
@@ -212,13 +219,14 @@ public class GoogleImpl implements AuthProvider
 
 							}
 						} catch (IOException e) {
-							e.printStackTrace();
+							throw new SocialAuthException(
+									"Unable to retrieve the token", e);
 						}
 					}
 
 					Map<String, String> info = (Map<String, String>) user
 					.getAttribute("info");
-					
+
 					Profile p = new Profile();
 					p.setEmail(info.get(EMAIL));
 					p.setFirstName(info.get(FIRST_NAME));
@@ -235,7 +243,7 @@ public class GoogleImpl implements AuthProvider
 				}
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new SocialAuthException(e);
 		}
 		return null;
 	}
@@ -244,8 +252,11 @@ public class GoogleImpl implements AuthProvider
 		System.out.println("WARNING: Not implemented");
 	}
 
-	public List<Profile> getContactList() {
-
+	public List<Profile> getContactList() throws Exception {
+		if(token == null){
+			throw new SocialAuthConfigurationException(
+					"Either you dont have permission to get the contacts OR application keys are wrong in properties file");
+		}
 		UrlEncodedParameterMap serviceParams = new UrlEncodedParameterMap(
 				CONTACTS_FEED_URL);
 		NonceAndTimestamp nts = SimpleNonceAndTimestamp.getDefault();
@@ -258,40 +269,48 @@ public class GoogleImpl implements AuthProvider
 						token, nts, sig));
 
 		List<Profile> plist = new ArrayList<Profile>();
+		Response serviceResponse;
+		Element root;
 		try {
-			Response serviceResponse = connector.doGET(serviceParams
+			serviceResponse = connector.doGET(serviceParams
 					.toStringRFC3986(), authorizationHeader);
-			Element root = XMLParseUtil.loadXmlResource(serviceResponse
+		} catch (IOException ie) {
+			throw ie;
+		}
+
+		try {
+			root = XMLParseUtil.loadXmlResource(serviceResponse
 					.getInputStream());
-			NodeList contactsList = root.getElementsByTagName("entry");
-			if (contactsList != null && contactsList.getLength() > 0) {
-				for (int i = 0; i < contactsList.getLength(); i++) {
-					Element contact = (Element) contactsList.item(i);
-					String fname = "";
-					NodeList l = contact.getElementsByTagNameNS(
-							"http://schemas.google.com/g/2005", "email");
-					String address = null;
-					if (l != null && l.getLength() > 0) {
-						Element e = (Element) l.item(0);
-						if (e != null) {
-							address = e.getAttribute("address");
-						}
-					}
-					String lname = "";
-					String dispName = XMLParseUtil.getElementData(contact,
-					"title");
-					if (address != null && address.length() > 0) {
-						Profile p = new Profile();
-						p.setFirstName(fname);
-						p.setLastName(lname);
-						p.setEmail(address);
-						p.setDisplayName(dispName);
-						plist.add(p);
+		} catch (Exception e) {
+			throw new SocialAuthException(
+					"Unable to retrieve the contacts.", e);
+		}
+		NodeList contactsList = root.getElementsByTagName("entry");
+		if (contactsList != null && contactsList.getLength() > 0) {
+			for (int i = 0; i < contactsList.getLength(); i++) {
+				Element contact = (Element) contactsList.item(i);
+				String fname = "";
+				NodeList l = contact.getElementsByTagNameNS(
+						"http://schemas.google.com/g/2005", "email");
+				String address = null;
+				if (l != null && l.getLength() > 0) {
+					Element e = (Element) l.item(0);
+					if (e != null) {
+						address = e.getAttribute("address");
 					}
 				}
-			} 
-		} catch (Exception e) {
-			e.printStackTrace();
+				String lname = "";
+				String dispName = XMLParseUtil.getElementData(contact,
+				"title");
+				if (address != null && address.length() > 0) {
+					Profile p = new Profile();
+					p.setFirstName(fname);
+					p.setLastName(lname);
+					p.setEmail(address);
+					p.setDisplayName(dispName);
+					plist.add(p);
+				}
+			}
 		}
 		return plist;
 	}
@@ -316,4 +335,10 @@ public class GoogleImpl implements AuthProvider
 				connector);
 	}
 
+	/**
+	 * Logout
+	 */
+	public void logout() {
+		token = null;
+	}
 }

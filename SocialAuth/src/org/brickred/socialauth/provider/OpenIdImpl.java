@@ -31,8 +31,10 @@ import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Profile;
+import org.brickred.socialauth.exception.ProviderStateException;
 import org.openid4java.OpenIDException;
 import org.openid4java.consumer.ConsumerException;
 import org.openid4java.consumer.ConsumerManager;
@@ -52,7 +54,7 @@ import org.openid4java.message.ax.FetchResponse;
  * like updating status and importing contacts is not available
  * for generic Open ID providers
  */
-public class OpenIdImpl implements AuthProvider {
+public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 
 	private ConsumerManager manager;
 	private DiscoveryInformation discovered;
@@ -70,8 +72,9 @@ public class OpenIdImpl implements AuthProvider {
 	 * that has been set using setId()
 	 * 
 	 * @throws Exception
-	 */	
+	 */
 	public String getLoginRedirectURL(final String redirectUri) throws IOException {
+		setProviderState(true);
 		return authRequest(props.getProperty("id"), redirectUri);
 	}
 
@@ -85,7 +88,7 @@ public class OpenIdImpl implements AuthProvider {
 			// attempt to associate with the OpenID provider
 			// and retrieve one service endpoint for authentication
 			discovered = manager.associate(discoveries);
-			
+
 			//// store the discovery information in the user's session
 			// httpReq.getSession().setAttribute("openid-disc", discovered);
 
@@ -149,7 +152,10 @@ public class OpenIdImpl implements AuthProvider {
 	 */
 
 	public Profile verifyResponse(final HttpServletRequest httpReq)
-	{
+	throws Exception {
+		if (!isProviderState()) {
+			throw new ProviderStateException();
+		}
 		try {
 			// extract the parameters from the authentication response
 			// (which comes in as a HTTP request from the OpenID provider)
@@ -181,7 +187,7 @@ public class OpenIdImpl implements AuthProvider {
 					FetchResponse fetchResp = (FetchResponse) authSuccess
 					.getExtension(AxMessage.OPENID_NS_AX);
 
-					
+
 					p.setEmail(fetchResp.getAttributeValue("email"));
 					p.setFirstName(fetchResp.getAttributeValue("firstname"));
 					p.setLastName(fetchResp.getAttributeValue("lastname"));
@@ -206,7 +212,7 @@ public class OpenIdImpl implements AuthProvider {
 				return p;
 			}
 		} catch (OpenIDException e) {
-			e.printStackTrace();
+			throw e;
 		}
 
 		return null;
@@ -225,5 +231,12 @@ public class OpenIdImpl implements AuthProvider {
 	 */
 	public List<Profile> getContactList() {
 		return null;
+	}
+
+	/**
+	 * Logout
+	 */
+	public void logout() {
+		discovered = null;
 	}
 }

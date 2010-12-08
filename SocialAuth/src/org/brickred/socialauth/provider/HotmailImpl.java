@@ -34,8 +34,12 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
+import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Profile;
+import org.brickred.socialauth.exception.ProviderStateException;
+import org.brickred.socialauth.exception.ServerDataException;
+import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.util.XMLParseUtil;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -52,7 +56,7 @@ import com.dyuproject.oauth.Endpoint;
  *
  */
 
-public class HotmailImpl implements AuthProvider {
+public class HotmailImpl extends AbstractProvider implements AuthProvider {
 
 	private WindowsLiveLogin.ConsentToken token;
 	private String appid;
@@ -76,6 +80,7 @@ public class HotmailImpl implements AuthProvider {
 
 	public String getLoginRedirectURL(final String redirectUri)
 	throws Exception {
+		setProviderState(true);
 		wll = new WindowsLiveLogin(appid, secret, "wsignin1.0", false,
 				redirectUri, redirectUri);
 		String consentUrl = wll.getConsentUrl("Contacts.View").toString();
@@ -91,7 +96,11 @@ public class HotmailImpl implements AuthProvider {
 	 * @throws Exception
 	 */
 
-	public Profile verifyResponse(final HttpServletRequest request) {
+	public Profile verifyResponse(final HttpServletRequest request)
+	throws Exception {
+		if (!isProviderState()) {
+			throw new ProviderStateException();
+		}
 		token = wll.processConsent(request.getParameterMap());
 		Profile p = new Profile();
 		p.setValidatedId(token.getLocationID());
@@ -104,50 +113,54 @@ public class HotmailImpl implements AuthProvider {
 	 * will be available
 	 */
 
-	public List<Profile> getContactList() {
+	public List<Profile> getContactList() throws Exception {
 		HttpClient client = new HttpClient();
 		String header = "DelegatedToken dt=\"" + token.getDelegationToken()
 		+ "\"";
 		String u = "https://livecontacts.services.live.com/users/@L@"
-				+ token.getLocationID() + "/LiveContacts/";
+			+ token.getLocationID() + "/LiveContacts/";
 		GetMethod get = new GetMethod(u);
 		get.addRequestHeader(new Header("Authorization", header));
 		List<Profile> plist = new ArrayList<Profile>();
+		Element root;
 		try {
 			client.executeMethod(get);
-			Element root = XMLParseUtil.loadXmlResource(get
-					.getResponseBodyAsStream());
-			NodeList contactsList = root.getElementsByTagName("Contacts");
-			if (contactsList != null && contactsList.getLength() > 0) {
-				for (int i = 0; i < contactsList.getLength(); i++) {
-					Element contacts = (Element) contactsList.item(i);
-					NodeList contactList = contacts
-					.getElementsByTagName("Contact");
-					if (contactList != null && contactList.getLength() > 0) {
-						for (int j = 0; j < contactList.getLength(); j++) {
-							Element contact = (Element) contactList.item(j);
-							String fname = XMLParseUtil.getElementData(contact,
-							"FirstName");
-							String lname = XMLParseUtil.getElementData(contact,
-							"LastName");
-							String dispName = XMLParseUtil.getElementData(
-									contact, "DisplayName");
-							String address = XMLParseUtil.getElementData(
-									contact, "Address");
-							if (address != null && address.length() > 0) {
-								Profile p = new Profile();
-								p.setFirstName(fname);
-								p.setLastName(lname);
-								p.setEmail(address);
-								p.setDisplayName(dispName);
-								plist.add(p);
-							}
+		} catch (Exception e) {
+			throw new SocialAuthException("Error while calling a URL: " + u, e);
+		}
+		try {
+			root = XMLParseUtil.loadXmlResource(get.getResponseBodyAsStream());
+		} catch (Exception e) {
+			throw new ServerDataException("Unable to retrieve the contacts.", e);
+		}
+		NodeList contactsList = root.getElementsByTagName("Contacts");
+		if (contactsList != null && contactsList.getLength() > 0) {
+			for (int i = 0; i < contactsList.getLength(); i++) {
+				Element contacts = (Element) contactsList.item(i);
+				NodeList contactList = contacts
+				.getElementsByTagName("Contact");
+				if (contactList != null && contactList.getLength() > 0) {
+					for (int j = 0; j < contactList.getLength(); j++) {
+						Element contact = (Element) contactList.item(j);
+						String fname = XMLParseUtil.getElementData(contact,
+						"FirstName");
+						String lname = XMLParseUtil.getElementData(contact,
+						"LastName");
+						String dispName = XMLParseUtil.getElementData(
+								contact, "DisplayName");
+						String address = XMLParseUtil.getElementData(
+								contact, "Address");
+						if (address != null && address.length() > 0) {
+							Profile p = new Profile();
+							p.setFirstName(fname);
+							p.setLastName(lname);
+							p.setEmail(address);
+							p.setDisplayName(dispName);
+							plist.add(p);
 						}
 					}
 				}
 			}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 		return plist;
 	}
@@ -157,4 +170,10 @@ public class HotmailImpl implements AuthProvider {
 		System.out.println("WARNING: not implemented");
 	}
 
+	/**
+	 * Logout
+	 */
+	public void logout() {
+		token = null;
+	}
 }

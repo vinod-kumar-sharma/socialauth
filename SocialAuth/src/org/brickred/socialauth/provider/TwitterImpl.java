@@ -25,14 +25,18 @@
 
 package org.brickred.socialauth.provider;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Profile;
+import org.brickred.socialauth.exception.ProviderStateException;
 
+import twitter4j.IDs;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
@@ -49,7 +53,7 @@ import com.dyuproject.oauth.Endpoint;
  * 
  */
 
-public class TwitterImpl implements AuthProvider {
+public class TwitterImpl extends AbstractProvider implements AuthProvider {
 
 	private final Endpoint __twitter;
 
@@ -74,6 +78,7 @@ public class TwitterImpl implements AuthProvider {
 	 */
 
 	public String getLoginRedirectURL(final String redirect_uri) {
+		setProviderState(true);
 		try {
 			requestToken = twitter.getOAuthRequestToken(redirect_uri);
 			return requestToken.getAuthenticationURL();
@@ -93,7 +98,11 @@ public class TwitterImpl implements AuthProvider {
 	 * @throws Exception
 	 */
 
-	public Profile verifyResponse(final HttpServletRequest request) {
+	public Profile verifyResponse(final HttpServletRequest request)
+	throws Exception {
+		if (!isProviderState()) {
+			throw new ProviderStateException();
+		}
 		String verifier = request.getParameter("oauth_verifier");
 		try {
 			twitter.getOAuthAccessToken(requestToken, verifier);
@@ -104,11 +113,11 @@ public class TwitterImpl implements AuthProvider {
 			p.setFullName(twitterUser.getName());
 			p.setLocation(twitterUser.getLocation());
 			p.setLanguage(twitterUser.getLang());
+			p.setProfileImageURL(twitterUser.getProfileImageURL().toString());
 			return p;
 		} catch (TwitterException e) {
-			e.printStackTrace();
+			throw e;
 		}
-		return null;
 	}
 
 	/**
@@ -133,8 +142,48 @@ public class TwitterImpl implements AuthProvider {
 	 * @return null
 	 */
 
-	public List<Profile> getContactList() {
-		return null;
+	public List<Profile> getContactList() throws Exception {
+		IDs ids = twitter.getFriendsIDs();
+		int idsarr[] = ids.getIDs();
+		int flength = idsarr.length;
+		List<Profile> plist = new ArrayList<Profile>();
+		if (flength > 0) {
+			List<User> ulist = new ArrayList<User>();
+			if (flength > 100) {
+				int i = flength / 100;
+				int temparr[];
+				for (int j = 1; j <= i; j++) {
+					temparr = new int[100];
+					for (int k = (j - 1) * 100, c = 0; k < j * 100; k++, c++) {
+						temparr[c] = idsarr[k];
+					}
+					ulist.addAll(twitter.lookupUsers(temparr));
+				}
+				if (flength > i * 100) {
+					temparr = new int[flength - i * 100];
+					for (int k = i * 100, c = 0; k < flength; k++, c++) {
+						temparr[c] = idsarr[k];
+					}
+					ulist.addAll(twitter.lookupUsers(temparr));
+				}
+			} else {
+				ulist.addAll(twitter.lookupUsers(idsarr));
+			}
+			for (User u : ulist) {
+				Profile p = new Profile();
+				p.setFirstName(u.getName());
+				p.setEmail(u.getScreenName());
+				plist.add(p);
+			}
+		}
+		return plist;
+	}
+
+	/**
+	 * Logout
+	 */
+	public void logout() {
+		twitter = null;
 	}
 
 }
