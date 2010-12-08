@@ -7,7 +7,7 @@ This is the step by step guide to show how to develop a Struts application using
 
 = Prerequisties =
 
-As mentioned in the [Getting Started] guide, please make sure that you have
+As mentioned in the [GettingStarted] guide, please make sure that you have
   * Access to a public domain to test the application
   * Registered your application with the providers you want to integrate
   * Created a oauth_consumer.properties file using the keys obtained by registering your applications
