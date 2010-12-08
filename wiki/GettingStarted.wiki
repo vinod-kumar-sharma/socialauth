@@ -25,7 +25,9 @@ This step is very important and the library will NOT work without this.
 
 == Implementation ==
 
-  * User chooses provider - Create a page where you ask the user to choose a provider. When the user clicks on a provider, you should create an instance of the !AuthProvider in your handling code and redirect to the URL obtained by calling the function getLoginRedirectURL()
+Using the socialauth.jar consists of two main steps:
+
+  * User chooses provider - Create a page where you ask the user to choose a provider. When the user clicks on a provider, you should create an instance of the !AuthProvider in your handling code and redirect to the URL obtained by calling the function getLoginRedirectURL(). Remember to store it into the session.
 
 {{{
   // id can have values "facebook", "twitter", "yahoo" etc. or the OpenID URL
@@ -36,11 +38,17 @@ This step is very important and the library will NOT work without this.
 
   // Provider URL to which you should redirect for authentication
   String url = provider.getLoginRedirectURL(returnToUrl);
+
+  // Store in session
+  session.setAttribute("SocialAuth", provider);
 }}}
 
   * Provider redirects back - When you redirect the user to the provider URL, the provider would validate the user, either by asking for username / password or by existing session and will then redirect the user back to you application URL mentioned above, i.e. "http://opensource.brickred.com/socialauthdemo/socialAuthSuccessAction.do". Now you can obtain any profile information using the following code
 
 {{{
+
+  // get the provider from session
+  AuthProvider provider = (AuthProvider)session.getAttribute("SocialAuth");
 
   // verify the authentication
   Profile p = provider.verifyResponse(request, returnToUrl);
@@ -53,4 +61,4 @@ This step is very important and the library will NOT work without this.
 		
 }}}
 
-That is all you have to do, really ! We also recommend that you take a look at our [StrutsSample step by step guide] for Struts example to understand better.
+That is all you have to do, really. But this is just a code snippet that we put in to show you how this works. Now we recommend that you take a look at our [StrutsSample step by step guide] for Struts example to understand better.
