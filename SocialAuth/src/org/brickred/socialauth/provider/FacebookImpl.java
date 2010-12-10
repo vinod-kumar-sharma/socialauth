@@ -40,6 +40,7 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
@@ -248,11 +249,11 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider {
 	 * will be available
 	 */
 
-	public List<Profile> getContactList() throws Exception {
+	public List<Contact> getContactList() throws Exception {
 		if (!isProviderState()) {
 			throw new ProviderStateException();
 		}
-		List<Profile> plist = new ArrayList<Profile>();
+		List<Contact> plist = new ArrayList<Contact>();
 		String contactURL = __facebook.getAccessTokenUrl()
 		+ "/friends?access_token=" + accessToken;
 		try {
@@ -261,7 +262,7 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider {
 			JSONArray data = resp.getJSONArray("data");
 			for (int i = 0; i < data.length(); i++) {
 				JSONObject obj = data.getJSONObject(i);
-				Profile p = new Profile();
+				Contact p = new Contact();
 				p.setFirstName(obj.getString("name"));
 				plist.add(p);
 			}
