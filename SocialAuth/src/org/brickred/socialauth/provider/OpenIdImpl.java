@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
 import org.openid4java.OpenIDException;
@@ -229,7 +230,7 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 	 * Contact list is not available for generic Open ID providers.
 	 * @return null
 	 */
-	public List<Profile> getContactList() {
+	public List<Contact> getContactList() {
 		return null;
 	}
 
