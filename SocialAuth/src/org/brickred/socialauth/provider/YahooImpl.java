@@ -36,6 +36,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
@@ -234,7 +235,7 @@ public class YahooImpl extends AbstractProvider implements AuthProvider
 	 * will be available
 	 */
 
-	public List<Profile> getContactList() throws Exception {
+	public List<Contact> getContactList() throws Exception {
 
 		UrlEncodedParameterMap serviceParams = new UrlEncodedParameterMap(
 				"http://social.yahooapis.com/v1/user/"
@@ -248,7 +249,7 @@ public class YahooImpl extends AbstractProvider implements AuthProvider
 				HttpAuthTransport.getAuthHeaderValue(serviceParams, __yahoo,
 						token, nts, sig));
 
-		List<Profile> plist = new ArrayList<Profile>();
+		List<Contact> plist = new ArrayList<Contact>();
 		Response serviceResponse;
 		Element root;
 		try {
@@ -273,14 +274,20 @@ public class YahooImpl extends AbstractProvider implements AuthProvider
 					String lname = "";
 					String dispName = "";
 					String address = "";
+					List<String> emailArr = new ArrayList<String>();
 					for (int j = 0; j < fieldList.getLength(); j++) {
 						Element field = (Element) fieldList.item(j);
 						String type = XMLParseUtil.getElementData(field,
 						"type");
 
 						if ("email".equalsIgnoreCase(type)) {
-							address = XMLParseUtil.getElementData(field,
-							"value");
+							if (address.length() > 0) {
+								emailArr.add(XMLParseUtil.getElementData(field,
+								"value"));
+							} else {
+								address = XMLParseUtil.getElementData(field,
+								"value");
+							}
 						} else if ("name".equals(type)) {
 							fname = XMLParseUtil.getElementData(field,
 							"givenName");
@@ -292,11 +299,20 @@ public class YahooImpl extends AbstractProvider implements AuthProvider
 						}
 					}
 					if (address != null && address.length() > 0) {
-						Profile p = new Profile();
+						Contact p = new Contact();
 						p.setFirstName(fname);
 						p.setLastName(lname);
 						p.setEmail(address);
 						p.setDisplayName(dispName);
+						if (emailArr.size() > 0) {
+							String arr[] = new String[emailArr.size()];
+							int k = 0;
+							for (String s : emailArr) {
+								arr[k] = s;
+								k++;
+							}
+							p.setOtherEmails(arr);
+						}
 						plist.add(p);
 					}
 				}
