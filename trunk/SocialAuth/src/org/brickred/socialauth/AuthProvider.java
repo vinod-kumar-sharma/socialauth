@@ -91,7 +91,7 @@ public interface AuthProvider {
 	 * @return List of profile objects representing Contacts. Only name and email
 	 * will be available
 	 */
-	public List<Profile> getContactList() throws Exception;
+	public List<Contact> getContactList() throws Exception;
 
 	/**
 	 * Logout
