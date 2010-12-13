@@ -35,6 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
@@ -252,10 +253,10 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider
 		System.out.println("WARNING: Not implemented");
 	}
 
-	public List<Profile> getContactList() throws Exception {
+	public List<Contact> getContactList() throws Exception {
 		if(token == null){
 			throw new SocialAuthConfigurationException(
-					"Either you dont have permission to get the contacts OR application keys are wrong in properties file");
+			"Either you dont have permission to get the contacts OR application keys are wrong in properties file");
 		}
 		UrlEncodedParameterMap serviceParams = new UrlEncodedParameterMap(
 				CONTACTS_FEED_URL);
@@ -268,7 +269,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider
 				HttpAuthTransport.getAuthHeaderValue(serviceParams, __google,
 						token, nts, sig));
 
-		List<Profile> plist = new ArrayList<Profile>();
+		List<Contact> plist = new ArrayList<Contact>();
 		Response serviceResponse;
 		Element root;
 		try {
@@ -293,21 +294,32 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider
 				NodeList l = contact.getElementsByTagNameNS(
 						"http://schemas.google.com/g/2005", "email");
 				String address = null;
+				String emailArr[] = null;
 				if (l != null && l.getLength() > 0) {
-					Element e = (Element) l.item(0);
-					if (e != null) {
-						address = e.getAttribute("address");
+					Element el = (Element) l.item(0);
+					if (el != null) {
+						address = el.getAttribute("address");
+					}
+					if (l.getLength() > 1) {
+						emailArr = new String[l.getLength() - 1];
+						for (int k = 1; k < l.getLength(); k++) {
+							Element e = (Element) l.item(k);
+							if (e != null) {
+								emailArr[k - 1] = e.getAttribute("address");
+							}
+						}
 					}
 				}
 				String lname = "";
 				String dispName = XMLParseUtil.getElementData(contact,
 				"title");
 				if (address != null && address.length() > 0) {
-					Profile p = new Profile();
+					Contact p = new Contact();
 					p.setFirstName(fname);
 					p.setLastName(lname);
 					p.setEmail(address);
 					p.setDisplayName(dispName);
+					p.setOtherEmails(emailArr);
 					plist.add(p);
 				}
 			}
