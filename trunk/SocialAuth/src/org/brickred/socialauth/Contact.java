@@ -1,0 +1,160 @@
+package org.brickred.socialauth;
+
+/**
+ * Data bean for contact information.
+ * 
+ * @author tarunn@brickred.com
+ * 
+ */
+public class Contact {
+	/**
+	 * Email
+	 */
+	String email;
+
+	/**
+	 * First Name
+	 */
+	String firstName;
+
+	/**
+	 * Last Name
+	 */
+	String lastName;
+
+	/**
+	 * Display Name
+	 */
+	String displayName;
+
+	/**
+	 * Other emails array.
+	 */
+	String otherEmails[];
+
+	/**
+	 * Retrieves the first name
+	 * 
+	 * @return String the first name
+	 */
+	public String getFirstName() {
+		return firstName;
+	}
+
+	/**
+	 * Updates the first name
+	 * 
+	 * @param firstName
+	 *            the first name of user
+	 */
+	public void setFirstName(final String firstName) {
+		this.firstName = firstName;
+	}
+
+	/**
+	 * Retrieves the last name
+	 * 
+	 * @return String the last name
+	 */
+	public String getLastName() {
+		return lastName;
+	}
+
+	/**
+	 * Updates the last name
+	 * 
+	 * @param lastName
+	 *            the last name of user
+	 */
+	public void setLastName(final String lastName) {
+		this.lastName = lastName;
+	}
+
+	/**
+	 * Returns the email address.
+	 * 
+	 * @return email address of the user
+	 */
+	public String getEmail() {
+		return email;
+	}
+
+	/**
+	 * Updates the email
+	 * 
+	 * @param email
+	 *            the email of user
+	 */
+	public void setEmail(final String email) {
+		this.email = email;
+	}
+
+	/**
+	 * Retrieves the display name
+	 * 
+	 * @return String the display name
+	 */
+	public String getDisplayName() {
+		return displayName;
+	}
+
+	/**
+	 * Updates the display name
+	 * 
+	 * @param displayName
+	 *            the display name of user
+	 */
+	public void setDisplayName(final String displayName) {
+		this.displayName = displayName;
+	}
+
+	/**
+	 * Retrieves the contact person emails
+	 * 
+	 * @return
+	 */
+	public String[] getOtherEmails() {
+		return otherEmails;
+	}
+
+	/**
+	 * 
+	 * @param otherEmails
+	 *            array of emails, if contact person has more than one email
+	 *            then it contains rest of the emails except first one
+	 */
+	public void setOtherEmails(final String[] otherEmails) {
+		this.otherEmails = otherEmails;
+	}
+
+	/**
+	 * Retrieves the profile info as a string
+	 * 
+	 * @return String
+	 */
+	@Override
+	public String toString() {
+		StringBuilder result = new StringBuilder();
+		String NEW_LINE = System.getProperty("line.separator");
+		result.append(this.getClass().getName() + " Object {" + NEW_LINE);
+		result.append(" email: " + email + NEW_LINE);
+		result.append(" firstName: " + firstName + NEW_LINE);
+		result.append(" lastName: " + lastName + NEW_LINE);
+		result.append(" displayName: " + displayName + NEW_LINE);
+		result.append(" otherEmails: " );
+		if (otherEmails != null) {
+			StringBuilder estr = new StringBuilder();
+			for(String str:otherEmails){
+				if (estr.length() > 0) {
+					estr.append(" , ");
+				}
+				estr.append(str);
+			}
+			result.append(estr.toString());
+		}
+		result.append(NEW_LINE);
+		result.append("}");
+		return result.toString();
+	}
+
+}
