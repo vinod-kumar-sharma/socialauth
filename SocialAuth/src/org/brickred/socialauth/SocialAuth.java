@@ -246,7 +246,7 @@ public class SocialAuth implements Serializable {
 	 * 
 	 * @return list of contacts
 	 */
-	public List<Profile> getContactList() throws Exception {
+	public List<Contact> getContactList() throws Exception {
 		return provider.getContactList();
 	}
 }
