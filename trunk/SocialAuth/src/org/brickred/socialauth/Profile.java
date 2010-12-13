@@ -301,15 +301,6 @@ public class Profile {
 		this.location = location;
 	}
 
-	/**
-	 * Retrieves the profile info as a string
-	 * 
-	 * @return String
-	 */
-	@Override
-	public String toString() {
-		return email;
-	}
 
 	/**
 	 * Retrieves the profile image URL
@@ -330,4 +321,31 @@ public class Profile {
 		this.profileImageURL = profileImageURL;
 	}
 
+	/**
+	 * Retrieves the profile info as a string
+	 * 
+	 * @return String
+	 */
+	@Override
+	public String toString() {
+		StringBuilder result = new StringBuilder();
+		String NEW_LINE = System.getProperty("line.separator");
+		result.append(this.getClass().getName() + " Object {" + NEW_LINE);
+		result.append(" email: " + email + NEW_LINE);
+		result.append(" firstName: " + firstName + NEW_LINE);
+		result.append(" lastName: " + lastName + NEW_LINE);
+		result.append(" country: " + country + NEW_LINE);
+		result.append(" language: " + language + NEW_LINE);
+		result.append(" fullName: " + fullName + NEW_LINE);
+		result.append(" displayName: " + displayName + NEW_LINE);
+		result.append(" dob: " + dob + NEW_LINE);
+		result.append(" gender: " + gender + NEW_LINE);
+		result.append(" location: " + location + NEW_LINE);
+		result.append(" validatedId: " + validatedId + NEW_LINE);
+		result.append(" profileImageURL: " + profileImageURL + NEW_LINE);
+		result.append("}");
+
+		return result.toString();
+
+	}
 }
