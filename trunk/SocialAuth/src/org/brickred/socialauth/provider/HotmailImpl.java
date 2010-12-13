@@ -36,6 +36,7 @@ import org.apache.commons.httpclient.HttpClient;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
@@ -113,7 +114,7 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider {
 	 * will be available
 	 */
 
-	public List<Profile> getContactList() throws Exception {
+	public List<Contact> getContactList() throws Exception {
 		HttpClient client = new HttpClient();
 		String header = "DelegatedToken dt=\"" + token.getDelegationToken()
 		+ "\"";
@@ -121,7 +122,7 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider {
 			+ token.getLocationID() + "/LiveContacts/";
 		GetMethod get = new GetMethod(u);
 		get.addRequestHeader(new Header("Authorization", header));
-		List<Profile> plist = new ArrayList<Profile>();
+		List<Contact> plist = new ArrayList<Contact>();
 		Element root;
 		try {
 			client.executeMethod(get);
@@ -151,7 +152,7 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider {
 						String address = XMLParseUtil.getElementData(
 								contact, "Address");
 						if (address != null && address.length() > 0) {
-							Profile p = new Profile();
+							Contact p = new Contact();
 							p.setFirstName(fname);
 							p.setLastName(lname);
 							p.setEmail(address);
