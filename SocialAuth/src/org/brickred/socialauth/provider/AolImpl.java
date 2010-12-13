@@ -43,6 +43,7 @@ import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 
 import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Profile;
 import org.mortbay.log.Log;
 
@@ -154,8 +155,8 @@ public class AolImpl implements AuthProvider {
 	 * will be available
 	 */
 
-	public List<Profile> getContactList() {
-		List<Profile> plist = new ArrayList<Profile>();
+	public List<Contact> getContactList() {
+		List<Contact> plist = new ArrayList<Contact>();
 		try {
 			// HttpClient client = new HttpClient();
 
