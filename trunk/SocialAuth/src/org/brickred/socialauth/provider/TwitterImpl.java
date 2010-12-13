@@ -33,6 +33,7 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
 
@@ -142,11 +143,11 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider {
 	 * @return null
 	 */
 
-	public List<Profile> getContactList() throws Exception {
+	public List<Contact> getContactList() throws Exception {
 		IDs ids = twitter.getFriendsIDs();
 		int idsarr[] = ids.getIDs();
 		int flength = idsarr.length;
-		List<Profile> plist = new ArrayList<Profile>();
+		List<Contact> plist = new ArrayList<Contact>();
 		if (flength > 0) {
 			List<User> ulist = new ArrayList<User>();
 			if (flength > 100) {
@@ -170,7 +171,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider {
 				ulist.addAll(twitter.lookupUsers(idsarr));
 			}
 			for (User u : ulist) {
-				Profile p = new Profile();
+				Contact p = new Contact();
 				p.setFirstName(u.getName());
 				p.setEmail(u.getScreenName());
 				plist.add(p);
