@@ -57,6 +57,8 @@ public interface AuthProvider {
 	String POSTCODE = "postcode";
 	String FIRST_NAME = "firstname";
 	String LAST_NAME = "lastname";
+	int AUTHENTICATION_ONLY = 1;
+	int ALL_PERMISSIONS = 2;
 
 	/**
 	 * This is the most important action. It redirects the browser to an
@@ -83,7 +85,7 @@ public interface AuthProvider {
 	 * implemented for all providers.
 	 * @param msg Message to be shown as user's status
 	 */
-	public void updateStatus(String msg);
+	public void updateStatus(String msg) throws Exception;
 
 	/**
 	 * Gets the list of contacts of the user and their email. this may not
