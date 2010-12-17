@@ -41,7 +41,6 @@ import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.util.XMLParseUtil;
-import org.openid4java.consumer.ConsumerException;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
@@ -83,10 +82,24 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider
 	private OpenIdUser user;
 	private Token token;
 	private ListenerCollection listeners;
+	private int scope;
 
-	public GoogleImpl(final Properties props) throws ConsumerException {
-		__google = Endpoint.load(props, "www.google.com");
+	public GoogleImpl(final Properties props, final int scope) throws Exception {
 
+		try {
+			__google = Endpoint.load(props, "www.google.com");
+		} catch (IllegalStateException e) {
+			throw new SocialAuthConfigurationException(e);
+		}
+		if (__google.getConsumerSecret().length() == 0) {
+			throw new SocialAuthConfigurationException(
+			"www.google.com.consumer_secret value is null");
+		}
+		if (__google.getConsumerKey().length() == 0) {
+			throw new SocialAuthConfigurationException(
+			"www.google.com.consumer_key value is null");
+		}
+		this.scope = scope;
 		listeners = new ListenerCollection();
 		listeners.addListener(new SRegExtension().addExchange(EMAIL)
 				.addExchange(COUNTRY).addExchange(LANGUAGE).addExchange(
