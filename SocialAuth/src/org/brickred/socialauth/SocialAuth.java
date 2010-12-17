@@ -235,7 +235,7 @@ public class SocialAuth implements Serializable {
 	 * Updates the status on the given provider. Exception will be thrown if the
 	 * provider does not provide this facility
 	 */
-	public void updateStatus() {
+	public void updateStatus() throws Exception {
 		provider.updateStatus(status);
 	}
 
