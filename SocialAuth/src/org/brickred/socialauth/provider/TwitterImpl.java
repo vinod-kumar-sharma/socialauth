@@ -36,6 +36,7 @@ import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
+import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 
 import twitter4j.IDs;
 import twitter4j.Twitter;
@@ -60,13 +61,29 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider {
 
 	private Twitter twitter;
 	private RequestToken requestToken;
+	private int scope;
 
-	public TwitterImpl(final Properties props) {
-		__twitter = Endpoint.load(props, "twitter.com");
-		TwitterFactory factory = new TwitterFactory();
-		twitter = factory.getInstance();
+	public TwitterImpl(final Properties props, final int scope)
+			throws Exception {
+		try {
+			__twitter = Endpoint.load(props, "twitter.com");
+		} catch (IllegalStateException e) {
+			throw new SocialAuthConfigurationException(e);
+		}
 		String consumer_key = __twitter.getConsumerKey();
 		String consumer_secret = __twitter.getConsumerSecret();
+		if (consumer_secret.length() == 0) {
+			throw new SocialAuthConfigurationException(
+			"twitter.com.consumer_secret value is null");
+		}
+		if (consumer_key.length() == 0) {
+			throw new SocialAuthConfigurationException(
+			"twitter.com.consumer_key value is null");
+		}
+		this.scope = scope;
+		TwitterFactory factory = new TwitterFactory();
+		twitter = factory.getInstance();
+
 		twitter.setOAuthConsumer(consumer_key, consumer_secret);
 	}
 
