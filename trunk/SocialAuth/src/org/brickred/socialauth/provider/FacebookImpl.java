@@ -45,6 +45,7 @@ import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
+import org.brickred.socialauth.exception.SocialAuthException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -65,6 +66,7 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider {
 	private String accessToken;
 	private final Endpoint __facebook;
 	private String redirectUri;
+	private int scope;
 
 
 	/// set this to the list of extended permissions you want
@@ -73,14 +75,22 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider {
 
 	/**
 	 * Reads properties provided in the configuration file
-	 * @param props Properties for consumer key
+	 * 
+	 * @param props
+	 *            Properties for consumer key
+	 * @param scope
+	 *            scope is a permission setting. It can be
+	 *            AuthProvider.AUTHENTICATION_ONLY or
+	 *            AuthProvider.ALL_PERMISSIONS
 	 */
-	public FacebookImpl(final Properties props) throws Exception {
+	public FacebookImpl(final Properties props, final int scope)
+			throws Exception {
 		try {
 			__facebook = Endpoint.load(props, "graph.facebook.com");
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
+		this.scope = scope;
 		secret = __facebook.getConsumerSecret();
 		client_id = __facebook.getConsumerKey();
 		if (secret.length() <= 0) {
@@ -122,38 +132,38 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider {
 		if (!isProviderState()) {
 			throw new ProviderStateException();
 		}
+		String code = httpReq.getParameter("code");
+		if (code == null || code.length() == 0) {
+			throw new SocialAuthException("Verification code is null");
+		}
 		try {
-			String code = httpReq.getParameter("code");
-			if (code != null && code.length() > 0) {
-				String authURL = getAuthURL(code);
-				URL url = new URL(authURL);
-				try {
-					String result = readURL(url);
-					Integer expires = null;
-					String[] pairs = result.split("&");
-					for (String pair : pairs) {
-						String[] kv = pair.split("=");
-						if (kv.length != 2) {
-							throw new RuntimeException("Unexpected auth response");
-						} else {
-							if (kv[0].equals("access_token")) {
-								accessToken = kv[1];
-							}
-							if (kv[0].equals("expires")) {
-								expires = Integer.valueOf(kv[1]);
-							}
+			String authURL = getAuthURL(code);
+			URL url = new URL(authURL);
+			try {
+				String result = readURL(url);
+				Integer expires = null;
+				String[] pairs = result.split("&");
+				for (String pair : pairs) {
+					String[] kv = pair.split("=");
+					if (kv.length != 2) {
+						throw new RuntimeException("Unexpected auth response");
+					} else {
+						if (kv[0].equals("access_token")) {
+							accessToken = kv[1];
+						}
+						if (kv[0].equals("expires")) {
+							expires = Integer.valueOf(kv[1]);
 						}
 					}
-					if (accessToken != null && expires != null) {
-						return authFacebookLogin(accessToken, expires);
-					} else {
-						throw new RuntimeException("Access token and expires not found");
-					}
-				} catch (IOException e) {
-					throw new RuntimeException(e);
 				}
+				if (accessToken != null && expires != null) {
+					return authFacebookLogin(accessToken, expires);
+				} else {
+					throw new RuntimeException("Access token and expires not found");
+				}
+			} catch (IOException e) {
+				throw new RuntimeException(e);
 			}
-
 
 		} catch (Exception e) {
 			e.printStackTrace();
