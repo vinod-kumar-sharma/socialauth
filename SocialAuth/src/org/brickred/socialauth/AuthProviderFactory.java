@@ -56,7 +56,7 @@ public class AuthProviderFactory {
 	public static String yahoo = "yahoo";
 	public static String hotmail = "hotmail";
 	public static String aol = "aol";
-
+	private static String propFileName = "oauth_consumer.properties";
 	/**
 	 * 
 	 * @param id
@@ -69,7 +69,8 @@ public class AuthProviderFactory {
 	 */
 	public static AuthProvider getInstance(final String id)
 	throws Exception {
-		AuthProvider provider = getProvider(id, "oauth_consumer.properties");
+		AuthProvider provider = getProvider(id, propFileName,
+				AuthProvider.ALL_PERMISSIONS);
 		return provider;
 
 	}
@@ -87,13 +88,56 @@ public class AuthProviderFactory {
 	 */
 	public static AuthProvider getInstance(final String id,
 			final String propertiesFileName) throws Exception {
-		AuthProvider provider = getProvider(id, propertiesFileName);
+		AuthProvider provider = getProvider(id, propertiesFileName,
+				AuthProvider.ALL_PERMISSIONS);
+		return provider;
+
+	}
+
+	/**
+	 * 
+	 * @param id
+	 *            the id of requested provider. It can be google, yahoo,
+	 *            hotmail, twitter, facebook.
+	 * @param scope
+	 *            scope is a permission setting. It can be
+	 *            AuthProvider.AUTHENTICATION_ONLY or
+	 *            AuthProvider.ALL_PERMISSIONS
+	 * @return AuthProvider the instance of requested provider based on given
+	 *         id. If id is a URL it returns the OpenId provider.
+	 * @throws Exception
+	 */
+	public static AuthProvider getInstance(final String id, final int scope)
+	throws Exception {
+		AuthProvider provider = getProvider(id, propFileName, scope);
+		return provider;
+
+	}
+
+	/**
+	 * 
+	 * @param id
+	 *            the id of requested provider. It can be google, yahoo,
+	 *            hotmail, twitter, facebook.
+	 * @param scope
+	 *            scope is a permission setting. It can be
+	 *            AuthProvider.AUTHENTICATION_ONLY or
+	 *            AuthProvider.ALL_PERMISSIONS
+	 * @param propertiesFileName
+	 *            file name to read the properties
+	 * @return AuthProvider the instance of requested provider based on given
+	 *         id. If id is a URL it returns the OpenId provider.
+	 * @throws Exception
+	 */
+	public static AuthProvider getInstance(final String id,
+			final String propertiesFileName, final int scope) throws Exception {
+		AuthProvider provider = getProvider(id, propertiesFileName, scope);
 		return provider;
 
 	}
 
 	private static AuthProvider getProvider(final String id,
-			final String fileName) throws Exception {
+			final String fileName, final int scope) throws Exception {
 		Properties props = new Properties();
 		AuthProvider provider;
 		try {
@@ -102,17 +146,17 @@ public class AuthProviderFactory {
 			props.load(in);
 			props.setProperty("id", id);
 			if (facebook.equals(id)) {
-				provider = new FacebookImpl(props);
+				provider = new FacebookImpl(props, scope);
 			} else if (twitter.equals(id)) {
-				provider = new TwitterImpl(props);
+				provider = new TwitterImpl(props, scope);
 			} else if (aol.equals(id)) {
 				provider = new AolImpl(props);
 			} else if (google.equals(id)) {
-				provider = new GoogleImpl(props);
+				provider = new GoogleImpl(props, scope);
 			} else if (yahoo.equals(id)) {
-				provider = new YahooImpl(props);
+				provider = new YahooImpl(props, scope);
 			} else if (hotmail.equals(id)) {
-				provider = new HotmailImpl(props);
+				provider = new HotmailImpl(props, scope);
 			} else {
 				provider = new OpenIdImpl(props);
 			}
