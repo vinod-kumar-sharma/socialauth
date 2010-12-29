@@ -25,18 +25,24 @@
 
 package org.brickred.socialauth.provider;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
+import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
+import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
+import org.brickred.socialauth.exception.SocialAuthException;
 
 import twitter4j.IDs;
 import twitter4j.Twitter;
@@ -55,18 +61,26 @@ import com.dyuproject.oauth.Endpoint;
  * 
  */
 
-public class TwitterImpl extends AbstractProvider implements AuthProvider {
+public class TwitterImpl extends AbstractProvider implements AuthProvider,
+Serializable {
 
-	private final Endpoint __twitter;
+	private static final long serialVersionUID = 1908393649053616794L;
+	transient final Log LOG = LogFactory.getLog(TwitterImpl.class);
+	transient private Endpoint __twitter;
+	transient private boolean unserializedFlag;
 
 	private Twitter twitter;
 	private RequestToken requestToken;
-	private int scope;
+	private Permission scope;
+	private Properties properties;
+	private boolean isVerify;
 
-	public TwitterImpl(final Properties props, final int scope)
-			throws Exception {
+
+	public TwitterImpl(final Properties props)
+	throws Exception {
 		try {
 			__twitter = Endpoint.load(props, "twitter.com");
+			this.properties = props;
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
@@ -80,7 +94,6 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider {
 			throw new SocialAuthConfigurationException(
 			"twitter.com.consumer_key value is null");
 		}
-		this.scope = scope;
 		TwitterFactory factory = new TwitterFactory();
 		twitter = factory.getInstance();
 
@@ -95,14 +108,17 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider {
 	 * @throws Exception
 	 */
 
-	public String getLoginRedirectURL(final String redirect_uri) {
+	public String getLoginRedirectURL(final String redirect_uri)
+	throws Exception {
+		LOG.info("Determining URL for redirection");
 		setProviderState(true);
 		try {
 			requestToken = twitter.getOAuthRequestToken(redirect_uri);
-			return requestToken.getAuthenticationURL();
+			String url = requestToken.getAuthenticationURL();
+			LOG.info("Redirection to following URL should happen : " + url);
+			return url;
 		} catch (Exception e) {
-			e.printStackTrace();
-			return null;
+			throw new SocialAuthException(e);
 		}
 	}
 
@@ -118,12 +134,18 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider {
 
 	public Profile verifyResponse(final HttpServletRequest request)
 	throws Exception {
+		LOG.info("Retrieving Access Token in verify response function");
 		if (!isProviderState()) {
 			throw new ProviderStateException();
+		}
+		if (!unserializedFlag) {
+			restore();
 		}
 		String verifier = request.getParameter("oauth_verifier");
 		try {
 			twitter.getOAuthAccessToken(requestToken, verifier);
+			isVerify = true;
+			LOG.debug("Obtaining user profile");
 			Profile p = new Profile();
 			p.setValidatedId(String.valueOf(twitter.getId()));
 			p.setDisplayName(twitter.getScreenName());
@@ -132,6 +154,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider {
 			p.setLocation(twitterUser.getLocation());
 			p.setLanguage(twitterUser.getLang());
 			p.setProfileImageURL(twitterUser.getProfileImageURL().toString());
+			LOG.debug("User profile : " + p.toString());
 			return p;
 		} catch (TwitterException e) {
 			throw e;
@@ -143,27 +166,42 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider {
 	 * 
 	 * @param msg
 	 *            Message to be shown as user's status
+	 * @throws Exception
 	 */
 
-	public void updateStatus(final String msg) {
+	public void updateStatus(final String msg) throws Exception {
+		LOG.info("Updatting status " + msg);
+		if (!isVerify) {
+			throw new SocialAuthException(
+			"Please call verifyResponse function first to get Access Token");
+		}
+		if (msg == null || msg.trim().length() == 0) {
+			throw new ServerDataException("Status cannot be blank");
+		}
 		try {
 			twitter.updateStatus(msg);
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new SocialAuthException(e);
 		}
 	}
 
 	/**
-	 * Gets the list of followers of the user and their email. this will be
-	 * implemented later
+	 * Gets the list of followers of the user and their screen name.
 	 * 
-	 * @return null
+	 * @return List of contact objects representing Contacts. Only name and
+	 *         screen name will be available
 	 */
 
 	public List<Contact> getContactList() throws Exception {
+		if (!isVerify) {
+			throw new SocialAuthException(
+			"Please call verifyResponse function first to get Access Token");
+		}
+		LOG.info("Fetching user contacts");
 		IDs ids = twitter.getFriendsIDs();
 		int idsarr[] = ids.getIDs();
 		int flength = idsarr.length;
+		LOG.debug("Contacts found : " + flength);
 		List<Contact> plist = new ArrayList<Contact>();
 		if (flength > 0) {
 			List<User> ulist = new ArrayList<User>();
@@ -204,4 +242,22 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider {
 		twitter = null;
 	}
 
+	/**
+	 * 
+	 * @param p
+	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
+	 *            Permission.ALL, Permission.DEFAULT
+	 */
+	public void setPermission(final Permission p) {
+		LOG.debug("Permission requested : " + p.toString());
+		this.scope = p;
+	}
+
+	private void restore() throws Exception {
+		try {
+			__twitter = Endpoint.load(this.properties, "twitter.com");
+		} catch (IllegalStateException e) {
+			throw new SocialAuthConfigurationException(e);
+		}
+	}
 }
