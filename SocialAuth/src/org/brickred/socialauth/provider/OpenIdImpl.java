@@ -31,6 +31,8 @@ import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
@@ -57,6 +59,8 @@ import org.openid4java.message.ax.FetchResponse;
  */
 public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 
+	transient final Log LOG = LogFactory.getLog(OpenIdImpl.class);
+
 	private ConsumerManager manager;
 	private DiscoveryInformation discovered;
 	private Properties props;
@@ -76,7 +80,9 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 	 */
 	public String getLoginRedirectURL(final String redirectUri) throws IOException {
 		setProviderState(true);
-		return authRequest(props.getProperty("id"), redirectUri);
+		String url = authRequest(props.getProperty("id"), redirectUri);
+		LOG.info("Redirection to following URL should happen : " + url);
+		return url;
 	}
 
 	private String authRequest(final String userSuppliedString, final String returnToUrl)
@@ -179,6 +185,7 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 			// examine the verification result and extract the verified identifier
 			Identifier verified = verification.getVerifiedId();
 			if (verified != null) {
+				LOG.debug("Verified Id : " + verified.getIdentifier());
 				Profile p = new Profile();
 				p.setValidatedId(verified.getIdentifier());
 				AuthSuccess authSuccess =
@@ -223,7 +230,8 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 	 * Updating status is not available for generic Open ID providers.
 	 */
 	public void updateStatus(final String msg) {
-		System.out.println("WARNING: Not implemented");
+		LOG.debug("Update status is not implemented for OpenId");
+		LOG.info("Update status is not implemented for OpenId");
 	}
 
 	/**
@@ -231,6 +239,8 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 	 * @return null
 	 */
 	public List<Contact> getContactList() {
+		LOG.debug("Contacts are not available in OpenId");
+		LOG.info("Contacts are not available in OpenId");
 		return null;
 	}
 
