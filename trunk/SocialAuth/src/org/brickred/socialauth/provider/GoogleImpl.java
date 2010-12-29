@@ -26,6 +26,7 @@
 package org.brickred.socialauth.provider;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,11 +34,15 @@ import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
+import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
+import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.util.XMLParseUtil;
@@ -52,7 +57,6 @@ import com.dyuproject.oauth.SimpleNonceAndTimestamp;
 import com.dyuproject.oauth.Token;
 import com.dyuproject.oauth.TokenExchange;
 import com.dyuproject.oauth.Transport;
-import com.dyuproject.openid.OpenIdServletFilter;
 import com.dyuproject.openid.OpenIdUser;
 import com.dyuproject.openid.RelyingParty;
 import com.dyuproject.openid.YadisDiscovery;
@@ -71,23 +75,31 @@ import com.dyuproject.util.http.HttpConnector.Response;
  * @author abhinavm@brickred.com
  * 
  */
-public class GoogleImpl extends AbstractProvider implements AuthProvider
+public class GoogleImpl extends AbstractProvider implements AuthProvider,
+Serializable
 {
+	private static final long serialVersionUID = -6075582192266022341L;
+	private static final String GOOGLE_IDENTIFIER = "https://www.google.com/accounts/o8/id";
+	private static final String GOOGLE_OPENID_SERVER = "https://www.google.com/accounts/o8/ud";
+	private static final String OAUTH_SCOPE = "http://www.google.com/m8/feeds/";
+	private static final String CONTACTS_FEED_URL = "http://www.google.com/m8/feeds/contacts/default/full/?max-results=1000";
 
-	static final String GOOGLE_IDENTIFIER = "https://www.google.com/accounts/o8/id";
-	static final String GOOGLE_OPENID_SERVER = "https://www.google.com/accounts/o8/ud";
-	static final String OAUTH_SCOPE = "http://www.google.com/m8/feeds/";
-	final Endpoint __google;
-	final String CONTACTS_FEED_URL = "http://www.google.com/m8/feeds/contacts/default/full/?max-results=1000";
+	transient final Log LOG = LogFactory.getLog(GoogleImpl.class);
+	transient private Endpoint __google;
+	transient private ListenerCollection listeners;
+	transient private boolean unserializedFlag;
+
 	private OpenIdUser user;
 	private Token token;
-	private ListenerCollection listeners;
-	private int scope;
+	private Permission scope;
+	private Properties properties;
+	private boolean isVerify;
 
-	public GoogleImpl(final Properties props, final int scope) throws Exception {
+	public GoogleImpl(final Properties props) throws Exception {
 
 		try {
 			__google = Endpoint.load(props, "www.google.com");
+			this.properties = props;
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
@@ -99,99 +111,76 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider
 			throw new SocialAuthConfigurationException(
 			"www.google.com.consumer_key value is null");
 		}
-		this.scope = scope;
-		listeners = new ListenerCollection();
-		listeners.addListener(new SRegExtension().addExchange(EMAIL)
-				.addExchange(COUNTRY).addExchange(LANGUAGE).addExchange(
-						FULL_NAME).addExchange(NICK_NAME).addExchange(DOB)
-						.addExchange(GENDER).addExchange(POSTCODE));
-		listeners.addListener(new AxSchemaExtension().addExchange(EMAIL)
-				.addExchange(FIRST_NAME).addExchange(LAST_NAME).addExchange(
-						COUNTRY).addExchange(LANGUAGE).addExchange(FULL_NAME)
-						.addExchange(NICK_NAME).addExchange(DOB).addExchange(GENDER)
-						.addExchange(POSTCODE));
-		listeners.addListener(new RelyingParty.Listener() {
-			public void onDiscovery(final OpenIdUser user,
-					final HttpServletRequest request) {
-				System.err.println("discovered user: " + user.getClaimedId());
-			}
-
-			public void onPreAuthenticate(final OpenIdUser user,
-					final HttpServletRequest request,
-					final UrlEncodedParameterMap params) {
-
-				params.add("openid.ns.oauth", EXT_NAMESPACE);
-				params.put("openid.oauth.consumer", __google.getConsumerKey());
-				params.put("openid.oauth.scope", OAUTH_SCOPE);
-
-				System.err.println("pre-authenticate user: "
-						+ user.getClaimedId());
-
-			}
-
-			public void onAuthenticate(final OpenIdUser user,
-					final HttpServletRequest request) {
-
-			}
-
-			public void onAccess(final OpenIdUser user,
-					final HttpServletRequest request) {
-				System.err.println("user access: " + user.getIdentity());
-				System.err.println("info: " + user.getAttribute("info"));
-			}
-		});
+		unserializedFlag = true;
+		addListenerCollection();
 	}
 
-	public String getLoginRedirectURL(final String returnTo) throws IOException {
+	/**
+	 * This is the most important action. It redirects the browser to an
+	 * appropriate URL which will be used for authentication with the provider
+	 * that has been set using setId()
+	 * 
+	 * @throws Exception
+	 */
+	public String getLoginRedirectURL(final String returnTo) throws Exception {
+
+		LOG.info("Determining URL for redirection");
+		RelyingParty _relyingParty = RelyingParty.getInstance();
+		// we expect it to be google so skip discovery to speed up the
+		// openid process
+
+		LOG
+		.debug("Preparing listeneres for OpenID authentication using dyuproject.");
+		user = OpenIdUser.populate(GOOGLE_IDENTIFIER,
+				YadisDiscovery.IDENTIFIER_SELECT, GOOGLE_OPENID_SERVER);
+		user.setAttribute("google_scope", OAUTH_SCOPE);
+		user.setAttribute("google_type", "contacts");
+
+		// associate and authenticate user
+		StringBuffer url = new StringBuffer(returnTo);
+		String trustRoot = url.substring(0, url.indexOf("/", 9));
+		String realm = url.substring(0, url.lastIndexOf("/"));
+
+		_relyingParty.getOpenIdContext().getAssociation().associate(user,
+				_relyingParty.getOpenIdContext());
+		UrlEncodedParameterMap params = RelyingParty.getAuthUrlMap(user,
+				trustRoot,
+				realm, returnTo);
+		listeners.onPreAuthenticate(user, null, params);
 		setProviderState(true);
-		String errorMsg = OpenIdServletFilter.DEFAULT_ERROR_MSG;
-		try {
+		LOG.info("Redirection to following URL should happen : "
+				+ params.toStringRFC3986());
+		return params.toStringRFC3986();
 
-			RelyingParty _relyingParty = RelyingParty.getInstance();
-			// we expect it to be google so skip discovery to speed up the
-			// openid process
-			user = OpenIdUser.populate(GOOGLE_IDENTIFIER,
-					YadisDiscovery.IDENTIFIER_SELECT, GOOGLE_OPENID_SERVER);
-			user.setAttribute("google_scope", OAUTH_SCOPE);
-			user.setAttribute("google_type", "contacts");
-
-			// associate and authenticate user
-			StringBuffer url = new StringBuffer(returnTo);
-			String trustRoot = url.substring(0, url.indexOf("/", 9));
-			String realm = url.substring(0, url.lastIndexOf("/"));
-
-			_relyingParty.getOpenIdContext().getAssociation().associate(user,
-					_relyingParty.getOpenIdContext());
-			UrlEncodedParameterMap params = RelyingParty.getAuthUrlMap(user,
-					trustRoot,
-					realm, returnTo);
-			listeners.onPreAuthenticate(user, null, params);
-
-			return params.toStringRFC3986();
-
-
-
-		} catch (Exception e) {
-			e.printStackTrace();
-			errorMsg = OpenIdServletFilter.DEFAULT_ERROR_MSG;
-		}
-		return null;
 	}
 
-
-
-
+	/**
+	 * Verifies the user when the external provider redirects back to our
+	 * application.
+	 * 
+	 * @return Profile object containing the profile information
+	 * @param request
+	 *            Request object the request is received from the provider
+	 * @throws Exception
+	 */
 	public Profile verifyResponse(final HttpServletRequest request)
 	throws Exception {
+		LOG.info("Verifying the authentication response from provider");
 		if (!isProviderState()) {
 			throw new ProviderStateException();
 		}
+		if (!unserializedFlag) {
+			LOG.debug("Restoring from serialized state");
+			restore();
+		}
 		try {
+			LOG.debug("Running OpenID discovery");
 			RelyingParty _relyingParty = RelyingParty.getInstance();
 			request.setAttribute(OpenIdUser.ATTR_NAME, user);
 			user = _relyingParty.discover(request);
 
 			if (user.isAssociated() && RelyingParty.isAuthResponse(request)) {
+				LOG.debug("Verifying OpenID authentication");
 				// verify authentication
 
 				if (_relyingParty.getOpenIdContext().getAssociation()
@@ -205,10 +194,10 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider
 					Map<String, String> axschema = AxSchemaExtension
 					.remove(user);
 					if (sreg != null && !sreg.isEmpty()) {
-						System.err.println("sreg: " + sreg);
+						LOG.debug("sreg: " + sreg);
 						user.setAttribute("info", sreg);
 					} else if (axschema != null && !axschema.isEmpty()) {
-						System.err.println("axschema: " + axschema);
+						LOG.debug("axschema: " + axschema);
 						user.setAttribute("info", axschema);
 					}
 					String alias = user.getExtension(EXT_NAMESPACE);
@@ -216,6 +205,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider
 						String requestToken = request
 						.getParameter("openid." + alias
 								+ ".request_token");
+						LOG.debug("Obtained request token :" + requestToken);
 						token = new Token(__google.getConsumerKey(),
 								requestToken, null, Token.AUTHORIZED);
 						UrlEncodedParameterMap accessTokenParams = new UrlEncodedParameterMap();
@@ -230,29 +220,38 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider
 										.getKey());
 								user.setAttribute("token_s", token
 										.getSecret());
+								isVerify = true;
 
+							} else {
+								throw new SocialAuthException(
+										"Unable to retrieve the access token. Status: "
+										+ accessTokenResponse
+										.getStatus());
 							}
 						} catch (IOException e) {
 							throw new SocialAuthException(
-									"Unable to retrieve the token", e);
+									"Unable to retrieve the access token", e);
 						}
 					}
 
-					Map<String, String> info = (Map<String, String>) user
-					.getAttribute("info");
-
+					LOG.debug("Obtaining profile from OpenID response");
 					Profile p = new Profile();
-					p.setEmail(info.get(EMAIL));
-					p.setFirstName(info.get(FIRST_NAME));
-					p.setLastName(info.get(LAST_NAME));
-					p.setCountry(info.get(COUNTRY));
-					p.setLanguage(info.get(LANGUAGE));
-					p.setFullName(info.get(FULL_NAME));
-					p.setDisplayName(info.get(NICK_NAME));
-					p.setLocation(info.get(POSTCODE));
-					p.setDob(info.get(DOB));
-					p.setGender(info.get(GENDER));
-					p.setValidatedId(user.getIdentifier());
+					if (user.getAttribute("info") != null) {
+						Map<String, String> info = (Map<String, String>) user
+						.getAttribute("info");
+
+						p.setEmail(info.get(EMAIL));
+						p.setFirstName(info.get(FIRST_NAME));
+						p.setLastName(info.get(LAST_NAME));
+						p.setCountry(info.get(COUNTRY));
+						p.setLanguage(info.get(LANGUAGE));
+						p.setFullName(info.get(FULL_NAME));
+						p.setDisplayName(info.get(NICK_NAME));
+						p.setLocation(info.get(POSTCODE));
+						p.setDob(info.get(DOB));
+						p.setGender(info.get(GENDER));
+						p.setValidatedId(user.getIdentifier());
+					}
 					return p;
 				}
 			}
@@ -263,13 +262,27 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider
 	}
 
 	public void updateStatus(final String msg) {
-		System.out.println("WARNING: Not implemented");
+		LOG.warn("WARNING: Not implemented for Google");
 	}
 
+	/**
+	 * Gets the list of contacts of the user and their email.
+	 * 
+	 * @return List of contact objects representing Contacts. Only name and
+	 *         email will be available
+	 * 
+	 * @throws Exception
+	 */
 	public List<Contact> getContactList() throws Exception {
-		if(token == null){
+		LOG.info("Fetching contacts from " + CONTACTS_FEED_URL);
+		if (!isVerify) {
+			throw new SocialAuthException(
+			"Please call verifyResponse function first to get Access Token");
+		}
+		if (token == null) {
 			throw new SocialAuthConfigurationException(
-			"Either you dont have permission to get the contacts OR application keys are wrong in properties file");
+					"Application keys are not correct. "
+					+ "The server running the application should be same that was registered to get the keys.");
 		}
 		UrlEncodedParameterMap serviceParams = new UrlEncodedParameterMap(
 				CONTACTS_FEED_URL);
@@ -289,18 +302,22 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider
 			serviceResponse = connector.doGET(serviceParams
 					.toStringRFC3986(), authorizationHeader);
 		} catch (IOException ie) {
-			throw ie;
+			throw new SocialAuthException(
+					"Failed to retrieve the contacts from " + CONTACTS_FEED_URL,
+					ie);
 		}
 
 		try {
 			root = XMLParseUtil.loadXmlResource(serviceResponse
 					.getInputStream());
 		} catch (Exception e) {
-			throw new SocialAuthException(
-					"Unable to retrieve the contacts.", e);
+			throw new ServerDataException(
+					"Failed to parse the contacts from response."
+					+ CONTACTS_FEED_URL, e);
 		}
 		NodeList contactsList = root.getElementsByTagName("entry");
 		if (contactsList != null && contactsList.getLength() > 0) {
+			LOG.debug("Found contacts : " + contactsList.getLength());
 			for (int i = 0; i < contactsList.getLength(); i++) {
 				Element contact = (Element) contactsList.item(i);
 				String fname = "";
@@ -336,11 +353,14 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider
 					plist.add(p);
 				}
 			}
+		} else {
+			LOG.debug("No contacts were obtained from the feed : "
+					+ CONTACTS_FEED_URL);
 		}
 		return plist;
 	}
 
-	public Response fetchToken(final TokenExchange exchange,
+	private Response fetchToken(final TokenExchange exchange,
 			final UrlEncodedParameterMap params, final Endpoint endpoint,
 			final Token token) throws IOException {
 		// via GET, POST or Authorization
@@ -365,5 +385,68 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider
 	 */
 	public void logout() {
 		token = null;
+	}
+
+	/**
+	 * 
+	 * @param p
+	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
+	 *            Permission.ALL, Permission.DEFAULT
+	 */
+	public void setPermission(final Permission p) {
+		LOG.debug("Permission requested : " + p.toString());
+		this.scope = p;
+	}
+
+	private void restore() throws Exception {
+		try {
+			__google = Endpoint.load(this.properties, "www.google.com");
+		} catch (IllegalStateException e) {
+			throw new SocialAuthConfigurationException(e);
+		}
+		addListenerCollection();
+	}
+
+	private void addListenerCollection() throws Exception {
+		listeners = new ListenerCollection();
+		listeners.addListener(new SRegExtension().addExchange(EMAIL)
+				.addExchange(COUNTRY).addExchange(LANGUAGE).addExchange(
+						FULL_NAME).addExchange(NICK_NAME).addExchange(DOB)
+						.addExchange(GENDER).addExchange(POSTCODE));
+		listeners.addListener(new AxSchemaExtension().addExchange(EMAIL)
+				.addExchange(FIRST_NAME).addExchange(LAST_NAME).addExchange(
+						COUNTRY).addExchange(LANGUAGE).addExchange(FULL_NAME)
+						.addExchange(NICK_NAME).addExchange(DOB).addExchange(GENDER)
+						.addExchange(POSTCODE));
+		listeners.addListener(new RelyingParty.Listener() {
+			public void onDiscovery(final OpenIdUser user,
+					final HttpServletRequest request) {
+				LOG.debug("discovered user: " + user.getClaimedId());
+			}
+
+			public void onPreAuthenticate(final OpenIdUser user,
+					final HttpServletRequest request,
+					final UrlEncodedParameterMap params) {
+
+				params.add("openid.ns.oauth", EXT_NAMESPACE);
+				params.put("openid.oauth.consumer", __google.getConsumerKey());
+				params.put("openid.oauth.scope", OAUTH_SCOPE);
+
+				LOG.debug("pre-authenticate user: "
+						+ user.getClaimedId());
+
+			}
+
+			public void onAuthenticate(final OpenIdUser user,
+					final HttpServletRequest request) {
+
+			}
+
+			public void onAccess(final OpenIdUser user,
+					final HttpServletRequest request) {
+				LOG.debug("user access: " + user.getIdentity());
+				LOG.debug("info: " + user.getAttribute("info"));
+			}
+		});
 	}
 }
