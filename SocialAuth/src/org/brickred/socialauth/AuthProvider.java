@@ -57,8 +57,6 @@ public interface AuthProvider {
 	String POSTCODE = "postcode";
 	String FIRST_NAME = "firstname";
 	String LAST_NAME = "lastname";
-	int AUTHENTICATION_ONLY = 1;
-	int ALL_PERMISSIONS = 2;
 
 	/**
 	 * This is the most important action. It redirects the browser to an
