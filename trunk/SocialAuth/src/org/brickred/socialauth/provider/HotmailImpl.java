@@ -26,8 +26,8 @@
 package org.brickred.socialauth.provider;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -39,11 +39,15 @@ import org.apache.commons.httpclient.HttpStatus;
 import org.apache.commons.httpclient.methods.GetMethod;
 import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.httpclient.methods.StringRequestEntity;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
+import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
+import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.json.JSONArray;
@@ -61,22 +65,35 @@ import com.dyuproject.oauth.Endpoint;
  *
  */
 
-public class HotmailImpl extends AbstractProvider implements AuthProvider {
+public class HotmailImpl extends AbstractProvider implements AuthProvider,
+Serializable {
 
-	private WindowsLiveLogin.ConsentToken token;
+	private static final long serialVersionUID = 4559561466129062485L;
+	private static final String CONSENT_URL = "https://consent.live.com/Connect.aspx?wrap_client_id=%1$s&wrap_callback=%2$s";
+	private static final String ACCESS_TOKEN_URL = "https://consent.live.com/AccessToken.aspx";
+	private static final String PROFILE_URL = "http://apis.live.net/V4.1/cid-%1$s/Profiles/1-%2$s";
+	private static final String CONTACTS_URL = "http://apis.live.net/V4.1/cid-%1$s/Contacts/AllContacts?$type=portable";
+	private static final String UPDATE_STATUS_URL = "http://apis.live.net/V4.1/cid-%1$s/MyActivities";
+
+	transient final Log LOG = LogFactory.getLog(HotmailImpl.class);
+	transient private Endpoint __hotmail;
+	transient private boolean unserializedFlag;
+
 	private String accessToken;
 	private String appid;
 	private String secret;
 	private String uid;
-	private final Endpoint __hotmail;
-	private WindowsLiveLogin wll;
 	private String redirectUri;
-	private int scope;
+	private Permission scope;
+	private Properties properties;
+	private boolean isVerify;
 
-	public HotmailImpl(final Properties props, final int scope)
+
+	public HotmailImpl(final Properties props)
 	throws Exception {
 		try {
 			__hotmail = Endpoint.load(props, "consent.live.com");
+			this.properties = props;
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
@@ -90,8 +107,7 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider {
 			throw new SocialAuthConfigurationException(
 			"consent.live.com.consumer_key value is null");
 		}
-		this.scope = scope;
-
+		unserializedFlag = true;
 	}
 
 	/**
@@ -104,13 +120,14 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider {
 
 	public String getLoginRedirectURL(final String redirectUri)
 	throws Exception {
+		LOG.info("Determining URL for redirection");
 		setProviderState(true);
 		this.redirectUri = redirectUri;
-		String consentUrl = "https://consent.live.com/Connect.aspx?wrap_client_id="
-				+ appid + "&wrap_callback=" + redirectUri;
-		if (scope == AuthProvider.ALL_PERMISSIONS) {
+		String consentUrl = String.format(CONSENT_URL, appid, redirectUri);
+		if (!Permission.AUHTHENTICATE_ONLY.equals(scope)) {
 			consentUrl+= "&wrap_scope=WL_Contacts.View,WL_Activities.Update";
 		}
+		LOG.info("Redirection to following URL should happen : " + consentUrl);
 		return consentUrl;
 	}
 
@@ -125,39 +142,43 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider {
 
 	public Profile verifyResponse(final HttpServletRequest request)
 	throws Exception {
+		LOG.info("Retrieving Access Token in verify response function");
 		if (!isProviderState()) {
 			throw new ProviderStateException();
 		}
-		String authURL = "https://consent.live.com/AccessToken.aspx";
+		if (!unserializedFlag) {
+			restore();
+		}
 		String code = request.getParameter("wrap_verification_code");
 		if (code == null || code.length() == 0) {
 			throw new SocialAuthException("Verification code is null");
 		}
 		HttpClient client = new HttpClient();
-		PostMethod method = new PostMethod(authURL);
+		PostMethod method = new PostMethod(ACCESS_TOKEN_URL);
 		method.addParameter("wrap_client_id", appid);
 		method.addParameter("wrap_client_secret", secret);
 		method.addParameter("wrap_callback", redirectUri);
 		method.addParameter("wrap_verification_code", code);
 		method.addParameter("idtype", "CID");
 		int returnCode = client.executeMethod(method);
-		if (returnCode != HttpStatus.SC_OK) {
-			throw new SocialAuthException(
-			"Problem in getting Access Token. Application key or Secret key may be wrong. Please verify your keys in property file");
-		}
 		String result = null;
-		try {
+		if (returnCode == HttpStatus.SC_OK) {
 			result = method.getResponseBodyAsString();
-		} catch (IOException e) {
-			throw new SocialAuthException("Unable to retrieve Access Token.", e);
 		}
+		if (result == null || result.length() == 0) {
+			throw new SocialAuthConfigurationException(
+					"Problem in getting Access Token. Application key or Secret key may be wrong."
+					+ "The server running the application should be same that was registered to get the keys.");
+		}
+
 		try {
 			Integer expires = null;
 			String[] pairs = result.split("&");
 			for (String pair : pairs) {
 				String[] kv = pair.split("=");
 				if (kv.length != 2) {
-					throw new RuntimeException("Unexpected auth response");
+					throw new SocialAuthException(
+							"Unexpected auth response from " + ACCESS_TOKEN_URL);
 				} else {
 					if (kv[0].equals("wrap_access_token")) {
 						accessToken = kv[1];
@@ -168,14 +189,20 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider {
 					if (kv[0].equals("uid")) {
 						uid = kv[1];
 					}
+					LOG.debug("Access Token : " + accessToken);
+					LOG.debug("Expires : " + expires);
 				}
 			}
 			if (accessToken != null && expires != null) {
+				isVerify = true;
+				LOG.debug("Obtaining user profile");
 				Profile p = getUserProfile();
 				return p;
 
 			} else {
-				throw new RuntimeException("Access token and expires not found");
+				throw new SocialAuthException(
+						"Access token and expires not found from "
+						+ ACCESS_TOKEN_URL);
 			}
 		} catch (Exception e) {
 			throw e;
@@ -187,26 +214,37 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider {
 
 	/**
 	 * Gets the list of contacts of the user and their email.
-	 * @return List of profile objects representing Contacts. Only name and email
-	 * will be available
+	 * 
+	 * @return List of profile objects representing Contacts. Only name and
+	 *         email will be available
+	 * @throws Exception
 	 */
 
 	public List<Contact> getContactList() throws Exception {
+		if (!isVerify) {
+			throw new SocialAuthException(
+			"Please call verifyResponse function first to get Access Token");
+		}
 		HttpClient client = new HttpClient();
-		String u = "http://apis.live.net/V4.1/cid-" + uid
-		+ "/Contacts/AllContacts?$type=portable";
+		String u = String.format(CONTACTS_URL, uid);
+		LOG.info("Fetching contacts from " + u);
 		GetMethod get = new GetMethod(u);
 		get.addRequestHeader("Authorization", "WRAP access_token="
 				+ accessToken);
 		get.addRequestHeader("Content-Type", "application/json");
 		get.addRequestHeader("Accept", "application/json");
-		// TODO:it should be in separate try/catch
-		int returnCode = client.executeMethod(get);
+		int returnCode;
+		try {
+			returnCode = client.executeMethod(get);
+		} catch (Exception e) {
+			throw new SocialAuthException("Error while getting contacts from "
+					+ u);
+		}
 		if (returnCode != HttpStatus.SC_OK) {
-			throw new SocialAuthException("Problem in getting Contacts");
+			throw new SocialAuthException("Error while getting contacts from "
+					+ u + "Status : " + returnCode);
 		}
 		StringBuffer sb = new StringBuffer();
-		// TODO:chek this need for try or not
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(
 					get.getResponseBodyAsStream(), "UTF-8"));
@@ -215,12 +253,14 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider {
 				sb.append(line).append("\n");
 			}
 		} catch (Exception e) {
-			throw e;
+			throw new ServerDataException("Failed to get response from " + u);
 		}
+		LOG.debug("User Contacts list in JSON " + sb.toString());
 		JSONObject resp = new JSONObject(sb.toString());
 		List<Contact> plist = new ArrayList<Contact>();
 		if (resp.has("entries")) {
 			JSONArray addArr = resp.getJSONArray("entries");
+			LOG.debug("Contacts Found : " + addArr.length());
 			for (int i = 0; i < addArr.length(); i++) {
 				JSONObject obj = addArr.getJSONObject(i);
 				if (obj.has("emails")) {
@@ -265,71 +305,59 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider {
 		return plist;
 	}
 
-
+	/**
+	 * Updates the status on the chosen provider if available. This may not be
+	 * implemented for all providers.
+	 * 
+	 * @param msg
+	 *            Message to be shown as user's status
+	 * @throws Exception
+	 */
 	public void updateStatus(final String msg) throws Exception {
-		System.out.println("WARNING: not implemented");
-		String url = "http://apis.live.net/V4.1/cid-" + uid + "/MyActivities";
+		LOG.info("Updating status : " + msg);
+		if (!isVerify) {
+			throw new SocialAuthException(
+			"Please call verifyResponse function first to get Access Token");
+		}
+		if (msg == null || msg.trim().length() == 0) {
+			throw new ServerDataException("Status cannot be blank");
+		}
+		String url = String.format(UPDATE_STATUS_URL, uid);
 		HttpClient client = new HttpClient();
 		PostMethod method = new PostMethod(url);
 		method.addRequestHeader("Authorization", "WRAP access_token="
 				+ accessToken);
 		method.addRequestHeader("Content-Type", "application/json");
 		method.addRequestHeader("Accept", "application/json");
-		JSONObject jbody = new JSONObject();
-		jbody
-		.put("_type",
-		"AddStatusActivity:http://schemas.microsoft.com/ado/2007/08/dataservices");
-		jbody.put("ActivityVerb", "http://activitystrea.ms/schema/1.0/post");
-		jbody.put("ApplicationLink", "http://rex.mslivelabs.com");
-		JSONObject aobj = new JSONObject();
-		aobj.put("ActivityObjectType",
-		"http://activitystrea.ms/schema/1.0/status");
-		aobj.put("Content", msg);
-		aobj
-		.put("AlternateLink",
-		"http://www.contoso.com/wp-content/uploads/2009/06/comments-icon.jpg");
-		JSONArray activityArr = new JSONArray();
-		activityArr.put(aobj);
-
-		jbody.put("ActivityObjects", activityArr);
-		System.out.println("----------BODY-----------" + jbody.toString());
-
 		String body = "{\"__type\" : \"AddStatusActivity:http://schemas.microsoft.com/ado/2007/08/dataservices\",\"ActivityVerb\" : \"http://activitystrea.ms/schema/1.0/post\",\"ApplicationLink\" : \"http://rex.mslivelabs.com\",\"ActivityObjects\" : [{\"ActivityObjectType\" : \"http://activitystrea.ms/schema/1.0/status\",\"Content\" : \""
-			+ "Tis is new one"
+			+ msg
 			+ "\",\"AlternateLink\" : \"http://www.contoso.com/wp-content/uploads/2009/06/comments-icon.jpg\"}}]}";
-		String bstr = jbody.toString();
-		method.addRequestHeader("Content-Length", new Integer(bstr.length())
+		method.addRequestHeader("Content-Length", new Integer(body.length())
 		.toString());
-		method.setRequestEntity(new StringRequestEntity(bstr,
+		method.setRequestEntity(new StringRequestEntity(body,
 				"application/json", "UTF-8"));
-		int code = client.executeMethod(method);
-		System.out.println("-------------" + code + "---------------");
-		StringBuffer sb = new StringBuffer();
-		BufferedReader reader = new BufferedReader(new InputStreamReader(method
-				.getResponseBodyAsStream(), "UTF-8"));
-		String line = null;
-		while ((line = reader.readLine()) != null) {
-			sb.append(line).append("\n");
+		int code;
+		try {
+			code = client.executeMethod(method);
+		} catch (Exception e) {
+			throw new SocialAuthException("Failed to update user status on "
+					+ url);
 		}
-		System.out
-		.println("------------START STATUS RESPONSE---------------------");
-		System.out.println(sb.toString());
-		System.out
-		.println("------------END STATUS RESPONSE---------------------");
+		LOG.debug("Status updated and return status code is :" + code);
+		// return 201
 	}
 
 	/**
 	 * Logout
 	 */
 	public void logout() {
-		token = null;
+		accessToken = null;
 	}
 
-	private Profile getUserProfile() {
+	private Profile getUserProfile() throws Exception {
 		Profile p = new Profile();
 		HttpClient client = new HttpClient();
-		String u = "http://apis.live.net/V4.1/cid-" + uid + "/Profiles/1-"
-		+ uid;
+		String u = String.format(PROFILE_URL, uid, uid);
 		GetMethod get = new GetMethod(u);
 		get.addRequestHeader("Authorization", "WRAP access_token="
 				+ accessToken);
@@ -338,17 +366,26 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider {
 
 		try {
 			client.executeMethod(get);
-			StringBuffer sb = new StringBuffer();
+		} catch (Exception e) {
+			throw new SocialAuthException(
+					"Failed to retrieve the user profile from  " + u, e);
+		}
+		StringBuffer sb = new StringBuffer();
+		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(
 					get.getResponseBodyAsStream(), "UTF-8"));
 			String line = null;
 			while ((line = reader.readLine()) != null) {
 				sb.append(line).append("\n");
 			}
+			LOG.debug("User Profile :" + sb.toString());
+		} catch (Exception e) {
+			throw new SocialAuthException("Failed to read response from  " + u);
+		}
+		try {
 			JSONObject resp = new JSONObject(sb.toString());
 			if (resp.has("Id")) {
 				p.setValidatedId(resp.getString("Id"));
-				// TODO: put CID or ID
 			}
 			if (resp.has("FirstName")) {
 				p.setFirstName(resp.getString("FirstName"));
@@ -387,8 +424,26 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider {
 			}
 			return p;
 		} catch (Exception e) {
-			e.printStackTrace();
+			throw new SocialAuthException(
+					"Failed to parse the user profile json : " + sb.toString());
 		}
-		return null;
+	}
+
+	/**
+	 * 
+	 * @param p
+	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
+	 *            Permission.ALL, Permission.DEFAULT
+	 */
+	public void setPermission(final Permission p) {
+		this.scope = p;
+	}
+
+	private void restore() throws Exception {
+		try {
+			__hotmail = Endpoint.load(this.properties, "consent.live.com");
+		} catch (IllegalStateException e) {
+			throw new SocialAuthConfigurationException(e);
+		}
 	}
 }
