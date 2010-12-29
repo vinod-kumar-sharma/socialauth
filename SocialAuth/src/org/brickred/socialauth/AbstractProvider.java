@@ -1,6 +1,8 @@
 package org.brickred.socialauth;
 
-public class AbstractProvider {
+import java.io.Serializable;
+
+public class AbstractProvider implements Serializable {
 	private boolean providerState;
 
 	public boolean isProviderState() {
