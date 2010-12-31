@@ -33,6 +33,11 @@ public class Contact {
 	String otherEmails[];
 
 	/**
+	 * Profile URL
+	 */
+	String profileUrl;
+
+	/**
 	 * Retrieves the first name
 	 * 
 	 * @return String the first name
@@ -111,7 +116,7 @@ public class Contact {
 	/**
 	 * Retrieves the contact person emails
 	 * 
-	 * @return
+	 * @return String Array of emails
 	 */
 	public String[] getOtherEmails() {
 		return otherEmails;
@@ -128,6 +133,25 @@ public class Contact {
 	}
 
 	/**
+	 * Retrieves the contact person Public profile URL
+	 * 
+	 * @return String contact person Public profile URL
+	 */
+	public String getProfileUrl() {
+		return profileUrl;
+	}
+
+	/**
+	 * Updates the contact person Public profile URL
+	 * 
+	 * @param profileUrl
+	 *            contact person Public profile URL
+	 */
+	public void setProfileUrl(final String profileUrl) {
+		this.profileUrl = profileUrl;
+	}
+
+	/**
 	 * Retrieves the profile info as a string
 	 * 
 	 * @return String
@@ -141,6 +165,7 @@ public class Contact {
 		result.append(" firstName: " + firstName + NEW_LINE);
 		result.append(" lastName: " + lastName + NEW_LINE);
 		result.append(" displayName: " + displayName + NEW_LINE);
+		result.append("profileUrl: " + profileUrl + NEW_LINE);
 		result.append(" otherEmails: " );
 		if (otherEmails != null) {
 			StringBuilder estr = new StringBuilder();
