@@ -65,6 +65,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 Serializable {
 
 	private static final long serialVersionUID = 1908393649053616794L;
+	private static final String PROPERTY_DOMAIN = "twitter.com";
 	transient final Log LOG = LogFactory.getLog(TwitterImpl.class);
 	transient private Endpoint __twitter;
 	transient private boolean unserializedFlag;
@@ -79,7 +80,7 @@ Serializable {
 	public TwitterImpl(final Properties props)
 	throws Exception {
 		try {
-			__twitter = Endpoint.load(props, "twitter.com");
+			__twitter = Endpoint.load(props, PROPERTY_DOMAIN);
 			this.properties = props;
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
@@ -228,7 +229,8 @@ Serializable {
 			for (User u : ulist) {
 				Contact p = new Contact();
 				p.setFirstName(u.getName());
-				p.setEmail(u.getScreenName());
+				p.setProfileUrl("http://" + PROPERTY_DOMAIN + "/"
+						+ u.getScreenName());
 				plist.add(p);
 			}
 		}
@@ -255,7 +257,7 @@ Serializable {
 
 	private void restore() throws Exception {
 		try {
-			__twitter = Endpoint.load(this.properties, "twitter.com");
+			__twitter = Endpoint.load(this.properties, PROPERTY_DOMAIN);
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
