@@ -80,7 +80,8 @@ public class SocialAuthenticationAction extends Action {
 		AuthForm authForm = (AuthForm) form;
 		String id = authForm.getId();
 		AuthProvider provider = AuthProviderFactory.getInstance(id);
-		String returnToUrl = "http://opensource.brickred.com/socialauthdemo/socialAuthSuccessAction.do";
+		String returnToUrl = "http://opensource.brickred.com/socialdemo/socialAuthSuccessAction.do";
+		System.out.println("Return URL..." + returnToUrl);
 		authForm.setProvider(provider);
 		String url = provider.getLoginRedirectURL(returnToUrl);
 		LOG.info("Redirecting to: " + url);

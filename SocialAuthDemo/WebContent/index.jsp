@@ -19,19 +19,18 @@
 	</head>
 	<body>
 		<table cellpadding="10" cellspacing="10" align="center">
-			<tr><td colspan="5"><h3 align="center">Welcome to Social Auth Demo</h3></td></tr>
-			<tr><td colspan="5"><p align="center">Please click on any icon.</p></td></tr>
+			<tr><td colspan="6"><h3 align="center">Welcome to Social Auth Demo</h3></td></tr>
+			<tr><td colspan="6"><p align="center">Please click on any icon.</p></td></tr>
 			<tr>
-				<td><a href="socialAuth.do?id=facebook"><img src="images/facebook_icon.png" border="0"></img></a></td>
-				<td><a href="socialAuth.do?id=twitter"><img src="images/twitter_icon.png" border="0"></img></a></td>
-			
-				<td><a href="socialAuth.do?id=google"><img src="images/gmail-icon.jpg" border="0"></img></a></td>
-				<td><a href="socialAuth.do?id=yahoo"><img src="images/yahoomail_icon.jpg" border="0"></img></a></td>
-			
-				<td><a href="socialAuth.do?id=hotmail"><img src="images/hotmail.jpeg" border="0"></img></a></td>
+				<td><a href="socialAuth.do?id=facebook"><img src="images/facebook_icon.png" alt="Facebook" border="0"></img></a></td>
+				<td><a href="socialAuth.do?id=twitter"><img src="images/twitter_icon.png" alt="Twitter" border="0"></img></a></td>
+				<td><a href="socialAuth.do?id=google"><img src="images/gmail-icon.jpg" alt="Gmail" border="0"></img></a></td>
+				<td><a href="socialAuth.do?id=yahoo"><img src="images/yahoomail_icon.jpg" alt="YahooMail" border="0"></img></a></td>
+				<td><a href="socialAuth.do?id=hotmail"><img src="images/hotmail.jpeg" alt="HotMail" border="0"></img></a></td>
+				<td><a href="socialAuth.do?id=linkedin"><img src="images/linkedin.gif" alt="Linked In" border="0"></img></a></td>
 			</tr>
 			<tr>
-				<td colspan="5" align="center">
+				<td colspan="6" align="center">
 					<form action="socialAuth.do" onsubmit="return validate(this);">
 						or enter OpenID url: <input type="text" value="" name="id"/>
 						<input type="submit" value="Submit"/> 
@@ -40,5 +39,17 @@
 			</tr>
 			
 		</table>
+		<script type="text/javascript">
+			var _gaq = _gaq || [];
+		  	_gaq.push(['_setAccount', 'UA-18575385-2']);
+		  	_gaq.push(['_trackPageview']);
+		
+		  	(function() {
+		    	var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+		    	ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+		    	var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+		  	})();
+		</script>
+		
 	</body>
 </html>
