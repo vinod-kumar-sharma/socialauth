@@ -29,6 +29,7 @@ import java.io.Serializable;
 
 public class Permission implements Serializable {
 
+	private static final long serialVersionUID = 3439812589513804823L;
 	public static final Permission AUHTHENTICATE_ONLY = new Permission(
 	"authenticate_only");
 	public static final Permission ALL = new Permission("all");
