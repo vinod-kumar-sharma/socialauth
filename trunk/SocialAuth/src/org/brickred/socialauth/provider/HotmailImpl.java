@@ -74,6 +74,7 @@ Serializable {
 	private static final String PROFILE_URL = "http://apis.live.net/V4.1/cid-%1$s/Profiles/1-%2$s";
 	private static final String CONTACTS_URL = "http://apis.live.net/V4.1/cid-%1$s/Contacts/AllContacts?$type=portable";
 	private static final String UPDATE_STATUS_URL = "http://apis.live.net/V4.1/cid-%1$s/MyActivities";
+	private static final String PROPERTY_DOMAIN = "consent.live.com";
 
 	transient final Log LOG = LogFactory.getLog(HotmailImpl.class);
 	transient private Endpoint __hotmail;
@@ -92,7 +93,7 @@ Serializable {
 	public HotmailImpl(final Properties props)
 	throws Exception {
 		try {
-			__hotmail = Endpoint.load(props, "consent.live.com");
+			__hotmail = Endpoint.load(props, PROPERTY_DOMAIN);
 			this.properties = props;
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
@@ -441,7 +442,7 @@ Serializable {
 
 	private void restore() throws Exception {
 		try {
-			__hotmail = Endpoint.load(this.properties, "consent.live.com");
+			__hotmail = Endpoint.load(this.properties, PROPERTY_DOMAIN);
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
