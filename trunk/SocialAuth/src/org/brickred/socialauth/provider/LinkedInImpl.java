@@ -77,10 +77,12 @@ import com.dyuproject.util.http.HttpConnector.Response;
 public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 Serializable {
 
-	private static final String CONNECTION_URL = "http://api.linkedin.com/v1/people/~/connections";
+	private static final long serialVersionUID = -6141448721085510813L;
+	private static final String CONNECTION_URL = "http://api.linkedin.com/v1/people/~/connections:(id,first-name,last-name,public-profile-url)";
 	private static final String UPDATE_STATUS_URL = "http://api.linkedin.com/v1/people/~/shares";
 	private static final String PROFILE_URL = "https://api.linkedin.com/v1/people/~:(id,first-name,last-name,languages,date-of-birth,picture-url,location:(name))";
 	private static final String STATUS_BODY = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><share><comment>%1$s</comment><visibility><code>anyone</code></visibility></share>";
+	private static final String PROPERTY_DOMAIN = "api.linkedin.com";
 
 	transient final Log LOG = LogFactory.getLog(LinkedInImpl.class);
 	transient private Consumer __consumer;
@@ -96,7 +98,7 @@ Serializable {
 	public LinkedInImpl(final Properties props)
 	throws Exception {
 		try {
-			__linkedin = Endpoint.load(props, "api.linkedin.com");
+			__linkedin = Endpoint.load(props, PROPERTY_DOMAIN);
 			this.properties = props;
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
@@ -225,25 +227,6 @@ Serializable {
 					"Failed to retrieve the connections from " + CONNECTION_URL,
 					ie);
 		}
-		// try {
-		//
-		// StringBuffer sb = new StringBuffer();
-		// BufferedReader reader = new BufferedReader(new InputStreamReader(
-		// serviceResponse.getInputStream(), "UTF-8"));
-		// String line = null;
-		// while ((line = reader.readLine()) != null) {
-		// sb.append(line).append("\n");
-		// }
-		// System.out
-		// .println("------------START STATUS RESPONSE---------------------");
-		// System.out.println(sb.toString());
-		// System.out
-		// .println("------------END STATUS RESPONSE---------------------");
-		// } catch (Exception e) {
-		// throw new ServerDataException(
-		// "Failed to parse the contacts from response." + url, e);
-		// }
-
 		Element root;
 		try {
 			root = XMLParseUtil.loadXmlResource(serviceResponse
@@ -263,14 +246,18 @@ Serializable {
 					String fname = XMLParseUtil.getElementData(p, "first-name");
 					String lname = XMLParseUtil.getElementData(p, "last-name");
 					String id = XMLParseUtil.getElementData(p, "id");
+					String profileUrl = XMLParseUtil.getElementData(p,
+					"public-profile-url");
 					if (id != null) {
 						Contact cont = new Contact();
-						cont.setEmail(id);
 						if (fname != null) {
 							cont.setFirstName(fname);
 						}
 						if (lname != null) {
 							cont.setLastName(lname);
+						}
+						if (profileUrl != null) {
+							cont.setProfileUrl(profileUrl);
 						}
 						contactList.add(cont);
 					}
@@ -355,25 +342,6 @@ Serializable {
 					"Failed to retrieve the user profile from  " + PROFILE_URL
 					+ ". Staus :" + serviceResponse.getStatus());
 		}
-		// try {
-		//
-		// StringBuffer sb = new StringBuffer();
-		// BufferedReader reader = new BufferedReader(new InputStreamReader(
-		// serviceResponse.getInputStream(), "UTF-8"));
-		// String line = null;
-		// while ((line = reader.readLine()) != null) {
-		// sb.append(line).append("\n");
-		// }
-		// System.out
-		// .println("------------START STATUS RESPONSE---------------------");
-		// System.out.println(sb.toString());
-		// System.out
-		// .println("------------END STATUS RESPONSE---------------------");
-		// } catch (Exception e) {
-		// throw new ServerDataException(
-		// "Failed to parse the contacts from response." + url, e);
-		// }
-		// return null;
 		Element root;
 		try {
 			root = XMLParseUtil.loadXmlResource(serviceResponse
@@ -409,6 +377,7 @@ Serializable {
 				}
 			}
 			String picUrl = XMLParseUtil.getElementData(root, "picture-url");
+			String id = XMLParseUtil.getElementData(root, "id");
 			if (picUrl != null) {
 				profile.setProfileImageURL(picUrl);
 			}
@@ -422,6 +391,7 @@ Serializable {
 			}
 			profile.setFirstName(fname);
 			profile.setLastName(lname);
+			profile.setValidatedId(id);
 			LOG.debug("User Profile :" + profile.toString());
 		}
 		return profile;
@@ -469,7 +439,7 @@ Serializable {
 
 	private void restore() throws Exception {
 		try {
-			__linkedin = Endpoint.load(this.properties, "api.linkedin.com");
+			__linkedin = Endpoint.load(this.properties, PROPERTY_DOMAIN);
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
