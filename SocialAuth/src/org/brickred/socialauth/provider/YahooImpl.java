@@ -83,6 +83,7 @@ Serializable {
 	private static final String PROFILE_URL = "http://social.yahooapis.com/v1/user/%1$s/profile?format=json";
 	private static final String CONTACTS_URL = "http://social.yahooapis.com/v1/user/%1$s/contacts;count=max";
 	private static final String UPDATE_STATUS_URL = "http://social.yahooapis.com/v1/user/%1$s/profile/status";
+	private static final String PROPERTY_DOMAIN = "api.login.yahoo.com";
 
 	transient final Log LOG = LogFactory.getLog(YahooImpl.class);
 	transient private Consumer __consumer;
@@ -97,7 +98,7 @@ Serializable {
 
 	public YahooImpl(final Properties props) throws Exception {
 		try {
-			__yahoo = Endpoint.load(props, "api.login.yahoo.com");
+			__yahoo = Endpoint.load(props, PROPERTY_DOMAIN);
 			this.properties = props;
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
@@ -431,6 +432,11 @@ Serializable {
 			throw new SocialAuthException("Failed to update status on " + url,
 					ie);
 		}
+		if(serviceResponse.getStatus() !=204){
+			throw new SocialAuthException(
+					"Failed to update status. Return status code :"
+							+ serviceResponse.getStatus());
+		}
 		LOG.debug("Status Updated and return status code is : "
 				+ serviceResponse.getStatus());
 		// return 204
@@ -457,7 +463,7 @@ Serializable {
 
 	private void restore() throws Exception {
 		try {
-			__yahoo = Endpoint.load(this.properties, "api.login.yahoo.com");
+			__yahoo = Endpoint.load(this.properties, PROPERTY_DOMAIN);
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
