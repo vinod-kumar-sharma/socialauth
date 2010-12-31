@@ -25,13 +25,9 @@
 package com.auth.actions;
 
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.struts.action.Action;
@@ -39,24 +35,20 @@ import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.brickred.socialauth.AuthProvider;
-import org.brickred.socialauth.Contact;
-import org.brickred.socialauth.Profile;
+import org.brickred.socialauth.exception.SocialAuthException;
 
 import com.auth.form.AuthForm;
 
 /**
- * Verifies the user when the external provider redirects back to our
- * application. It gets the instance of the requested provider from session and
- * calls verifyResponse() method which verifies the user and returns profile
- * information. After verification we call the getContactList() method to get
- * the contacts.
+ * This is for updating status. After verification we call the updateStatus()
+ * method to update status on that provider.
  * 
  * @author tarunn@brickred.com
  * 
  */
-public class SocialAuthSuccessAction extends Action {
+public class SocialAuthUpdateStatusAction extends Action {
 
-	final Log LOG = LogFactory.getLog(SocialAuthSuccessAction.class);
+	final Log LOG = LogFactory.getLog(SocialAuthUpdateStatusAction.class);
 	/**
 	 * Displays the user profile and contacts for the given provider.
 	 * 
@@ -77,30 +69,23 @@ public class SocialAuthSuccessAction extends Action {
 	public ActionForward execute(final ActionMapping mapping,
 			final ActionForm form, final HttpServletRequest request,
 			final HttpServletResponse response) throws Exception {
-
-
+		String statusMsg = request.getParameter("statusMessage");
+		if (statusMsg == null || statusMsg.trim().length() == 0) {
+			request.setAttribute("Message", "Status can't be left blank.");
+			return mapping.findForward("failure");
+		}
 		AuthForm authForm = (AuthForm) form;
 		AuthProvider provider = authForm.getProvider();
 		if (provider != null) {
-			List<Contact> contactsList = new ArrayList<Contact>();
-			Profile profile = null;
 			try {
-				profile = provider.verifyResponse(request);
-				contactsList = provider.getContactList();
-				if (contactsList != null && contactsList.size() > 0) {
-					for (Contact p : contactsList) {
-						if (StringUtils.isEmpty(p.getFirstName())
-								&& StringUtils.isEmpty(p.getLastName())) {
-							p.setFirstName(p.getDisplayName());
-						}
-					}
-				}
-			} catch (Exception e) {
+				provider.updateStatus(statusMsg);
+				request.setAttribute("Message", "Status Updated successfully");
+				return mapping.findForward("success");
+			} catch (SocialAuthException e) {
+				request.setAttribute("Message", e.getMessage());
 				e.printStackTrace();
 			}
-			request.setAttribute("profile", profile);
-			request.setAttribute("contacts", contactsList);
-			return mapping.findForward("success");
+
 		}
 		// if provider null
 		return mapping.findForward("failure");
