@@ -83,6 +83,7 @@ Serializable
 	private static final String GOOGLE_OPENID_SERVER = "https://www.google.com/accounts/o8/ud";
 	private static final String OAUTH_SCOPE = "http://www.google.com/m8/feeds/";
 	private static final String CONTACTS_FEED_URL = "http://www.google.com/m8/feeds/contacts/default/full/?max-results=1000";
+	private static final String PROPERTY_DOMAIN = "www.google.com";
 
 	transient final Log LOG = LogFactory.getLog(GoogleImpl.class);
 	transient private Endpoint __google;
@@ -98,7 +99,7 @@ Serializable
 	public GoogleImpl(final Properties props) throws Exception {
 
 		try {
-			__google = Endpoint.load(props, "www.google.com");
+			__google = Endpoint.load(props, PROPERTY_DOMAIN);
 			this.properties = props;
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
@@ -400,7 +401,7 @@ Serializable
 
 	private void restore() throws Exception {
 		try {
-			__google = Endpoint.load(this.properties, "www.google.com");
+			__google = Endpoint.load(this.properties, PROPERTY_DOMAIN);
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
