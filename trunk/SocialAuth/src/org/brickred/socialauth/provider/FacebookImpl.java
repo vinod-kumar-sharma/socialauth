@@ -67,6 +67,11 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 Serializable {
 
 	private static final long serialVersionUID = 8644510564735754296L;
+	private static final String PROPERTY_DOMAIN = "graph.facebook.com";
+	private static final String UPDATE_STATUS_URL = "https://graph.facebook.com/me/feed";
+	private static final String PROFILE_IMAGE_URL = "http://graph.facebook.com/%1$s/picture";
+	private static final String PUBLIC_PROFILE_URL = "http://www.facebook.com/profile.php?id=";
+
 	transient final Log LOG = LogFactory.getLog(FacebookImpl.class);
 	transient private Endpoint __facebook;
 	transient private boolean unserializedFlag;
@@ -100,7 +105,7 @@ Serializable {
 	public FacebookImpl(final Properties props)
 	throws Exception {
 		try {
-			__facebook = Endpoint.load(props, "graph.facebook.com");
+			__facebook = Endpoint.load(props, PROPERTY_DOMAIN);
 			this.properties = props;
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
@@ -238,9 +243,8 @@ Serializable {
 			if (resp.has("gender")) {
 				p.setGender(resp.getString("gender"));
 			}
-			p.setProfileImageURL("http://graph.facebook.com/"
-					+ resp.getString("id")
-					+ "/picture");
+			p.setProfileImageURL(String.format(PROFILE_IMAGE_URL, resp
+					.getString("id")));
 			String locale = resp.getString("locale");
 			if (locale != null) {
 				String a[] = locale.split("_");
@@ -285,16 +289,18 @@ Serializable {
 			throw new ServerDataException("Status cannot be blank");
 		}
 		HttpClient client = new HttpClient();
-		PostMethod method = new PostMethod("https://graph.facebook.com/me/feed");
+		PostMethod method = new PostMethod(UPDATE_STATUS_URL);
 		method.addParameter("access_token", accessToken);
 		method.addParameter("message", msg);
 
 		try{
 			int returnCode = client.executeMethod(method);
-			method.getResponseBodyAsString();
+			String rmsg = method.getResponseBodyAsString();
 
 			if(returnCode != HttpStatus.SC_OK) {
-				throw new Exception("Status not updated");
+				throw new SocialAuthException(
+						"Status not updated. Return Status code :" + returnCode
+								+ " Message: " + rmsg);
 			}
 		} catch (Exception e) {
 			throw new SocialAuthException(e);
@@ -340,6 +346,7 @@ Serializable {
 				JSONObject obj = data.getJSONObject(i);
 				Contact p = new Contact();
 				p.setFirstName(obj.getString("name"));
+				p.setProfileUrl(PUBLIC_PROFILE_URL + obj.getString("id"));
 				plist.add(p);
 			}
 		} catch (Exception e) {
@@ -369,7 +376,7 @@ Serializable {
 
 	private void restore() throws Exception {
 		try {
-			__facebook = Endpoint.load(this.properties, "graph.facebook.com");
+			__facebook = Endpoint.load(this.properties, PROPERTY_DOMAIN);
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
