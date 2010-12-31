@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -210,16 +211,27 @@ Serializable {
 	}
 
 	private String getAuthURL(final String authCode) {
+		String acode;
+		try {
+			acode = URLEncoder.encode(authCode, "UTF-8");
+		} catch (Exception e) {
+			acode = authCode;
+		}
 		return __facebook.getRequestTokenUrl() + "?client_id=" + client_id
 		+ "&redirect_uri=" + redirectUri + "&client_secret=" + secret
-		+ "&code=" + authCode;
+		+ "&code=" + acode;
 	}
 
 	private Profile authFacebookLogin(final String accessToken,
 			final int expires) throws Exception {
 		String presp;
-		String url = __facebook.getAccessTokenUrl() + "?access_token="
-		+ accessToken;
+		String aToken;
+		try {
+			aToken = URLEncoder.encode(accessToken, "UTF-8");
+		} catch (Exception e) {
+			aToken = accessToken;
+		}
+		String url = __facebook.getAccessTokenUrl() + "?access_token=" + aToken;
 		try {
 			presp = IOUtil.urlToString(new URL(url));
 		} catch (Exception e) {
@@ -283,7 +295,7 @@ Serializable {
 		LOG.info("Updating status : " + msg);
 		if (!isVerify) {
 			throw new SocialAuthException(
-			"Please call verifyResponse function first to get Access Token");
+					"Please call verifyResponse function first to get Access Token and then update status");
 		}
 		if (msg == null || msg.trim().length() == 0) {
 			throw new ServerDataException("Status cannot be blank");
@@ -300,7 +312,7 @@ Serializable {
 			if(returnCode != HttpStatus.SC_OK) {
 				throw new SocialAuthException(
 						"Status not updated. Return Status code :" + returnCode
-								+ " Message: " + rmsg);
+						+ " Message: " + rmsg);
 			}
 		} catch (Exception e) {
 			throw new SocialAuthException(e);
