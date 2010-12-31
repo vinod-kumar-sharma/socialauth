@@ -2,6 +2,8 @@ package org.brickred.socialauth.exception;
 
 public class ServerDataException extends Exception {
 
+	private static final long serialVersionUID = 7313004590704350522L;
+
 	public ServerDataException() {
 		super();
 	}
