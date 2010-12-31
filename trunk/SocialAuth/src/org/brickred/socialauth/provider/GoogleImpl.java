@@ -262,8 +262,10 @@ Serializable
 		return null;
 	}
 
-	public void updateStatus(final String msg) {
+	public void updateStatus(final String msg) throws Exception {
 		LOG.warn("WARNING: Not implemented for Google");
+		throw new SocialAuthException(
+				"Update Status is not implemented for Gmail");
 	}
 
 	/**
