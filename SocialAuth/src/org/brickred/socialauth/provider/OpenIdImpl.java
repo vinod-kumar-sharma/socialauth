@@ -59,7 +59,7 @@ import org.openid4java.message.ax.FetchResponse;
  */
 public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 
-	transient final Log LOG = LogFactory.getLog(OpenIdImpl.class);
+	private final Log LOG = LogFactory.getLog(OpenIdImpl.class);
 
 	private ConsumerManager manager;
 	private DiscoveryInformation discovered;
