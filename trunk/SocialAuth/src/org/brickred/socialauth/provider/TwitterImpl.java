@@ -66,7 +66,8 @@ Serializable {
 
 	private static final long serialVersionUID = 1908393649053616794L;
 	private static final String PROPERTY_DOMAIN = "twitter.com";
-	transient final Log LOG = LogFactory.getLog(TwitterImpl.class);
+	private final Log LOG = LogFactory.getLog(TwitterImpl.class);
+
 	transient private Endpoint __twitter;
 	transient private boolean unserializedFlag;
 
@@ -89,7 +90,7 @@ Serializable {
 		String consumer_secret = __twitter.getConsumerSecret();
 		if (consumer_secret.length() == 0) {
 			throw new SocialAuthConfigurationException(
-			"twitter.com.consumer_secret value is null");
+					"twitter.com.consumer_secret value is null");
 		}
 		if (consumer_key.length() == 0) {
 			throw new SocialAuthConfigurationException(
