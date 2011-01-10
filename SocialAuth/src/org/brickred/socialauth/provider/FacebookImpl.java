@@ -72,8 +72,8 @@ Serializable {
 	private static final String UPDATE_STATUS_URL = "https://graph.facebook.com/me/feed";
 	private static final String PROFILE_IMAGE_URL = "http://graph.facebook.com/%1$s/picture";
 	private static final String PUBLIC_PROFILE_URL = "http://www.facebook.com/profile.php?id=";
+	private final Log LOG = LogFactory.getLog(FacebookImpl.class);
 
-	transient final Log LOG = LogFactory.getLog(FacebookImpl.class);
 	transient private Endpoint __facebook;
 	transient private boolean unserializedFlag;
 
@@ -295,7 +295,7 @@ Serializable {
 		LOG.info("Updating status : " + msg);
 		if (!isVerify) {
 			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token and then update status");
+			"Please call verifyResponse function first to get Access Token and then update status");
 		}
 		if (msg == null || msg.trim().length() == 0) {
 			throw new ServerDataException("Status cannot be blank");
