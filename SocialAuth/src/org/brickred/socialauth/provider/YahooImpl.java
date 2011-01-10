@@ -84,8 +84,8 @@ Serializable {
 	private static final String CONTACTS_URL = "http://social.yahooapis.com/v1/user/%1$s/contacts;count=max";
 	private static final String UPDATE_STATUS_URL = "http://social.yahooapis.com/v1/user/%1$s/profile/status";
 	private static final String PROPERTY_DOMAIN = "api.login.yahoo.com";
+	private final Log LOG = LogFactory.getLog(YahooImpl.class);
 
-	transient final Log LOG = LogFactory.getLog(YahooImpl.class);
 	transient private Consumer __consumer;
 	transient private Endpoint __yahoo;
 	transient private boolean unserializedFlag;
@@ -105,7 +105,7 @@ Serializable {
 		}
 		if (__yahoo.getConsumerSecret().length() == 0) {
 			throw new SocialAuthConfigurationException(
-			"api.login.yahoo.com.consumer_secret value is null");
+					"api.login.yahoo.com.consumer_secret value is null");
 		}
 		if (__yahoo.getConsumerKey().length() == 0) {
 			throw new SocialAuthConfigurationException(
@@ -435,7 +435,7 @@ Serializable {
 		if(serviceResponse.getStatus() !=204){
 			throw new SocialAuthException(
 					"Failed to update status. Return status code :"
-							+ serviceResponse.getStatus());
+					+ serviceResponse.getStatus());
 		}
 		LOG.debug("Status Updated and return status code is : "
 				+ serviceResponse.getStatus());
