@@ -75,8 +75,8 @@ Serializable {
 	private static final String CONTACTS_URL = "http://apis.live.net/V4.1/cid-%1$s/Contacts/AllContacts?$type=portable";
 	private static final String UPDATE_STATUS_URL = "http://apis.live.net/V4.1/cid-%1$s/MyActivities";
 	private static final String PROPERTY_DOMAIN = "consent.live.com";
+	private final Log LOG = LogFactory.getLog(HotmailImpl.class);
 
-	transient final Log LOG = LogFactory.getLog(HotmailImpl.class);
 	transient private Endpoint __hotmail;
 	transient private boolean unserializedFlag;
 
@@ -102,7 +102,7 @@ Serializable {
 		appid = __hotmail.getConsumerKey();
 		if (secret.length() == 0) {
 			throw new SocialAuthConfigurationException(
-			"consent.live.com.consumer_secret value is null");
+					"consent.live.com.consumer_secret value is null");
 		}
 		if (appid.length() == 0) {
 			throw new SocialAuthConfigurationException(
