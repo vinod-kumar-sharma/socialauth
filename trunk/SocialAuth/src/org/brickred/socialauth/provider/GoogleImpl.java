@@ -84,8 +84,8 @@ Serializable
 	private static final String OAUTH_SCOPE = "http://www.google.com/m8/feeds/";
 	private static final String CONTACTS_FEED_URL = "http://www.google.com/m8/feeds/contacts/default/full/?max-results=1000";
 	private static final String PROPERTY_DOMAIN = "www.google.com";
+	private final Log LOG = LogFactory.getLog(GoogleImpl.class);
 
-	transient final Log LOG = LogFactory.getLog(GoogleImpl.class);
 	transient private Endpoint __google;
 	transient private ListenerCollection listeners;
 	transient private boolean unserializedFlag;
@@ -106,7 +106,7 @@ Serializable
 		}
 		if (__google.getConsumerSecret().length() == 0) {
 			throw new SocialAuthConfigurationException(
-			"www.google.com.consumer_secret value is null");
+					"www.google.com.consumer_secret value is null");
 		}
 		if (__google.getConsumerKey().length() == 0) {
 			throw new SocialAuthConfigurationException(
@@ -202,6 +202,7 @@ Serializable
 						user.setAttribute("info", axschema);
 					}
 					String alias = user.getExtension(EXT_NAMESPACE);
+					isVerify = true;
 					if (alias != null) {
 						String requestToken = request
 						.getParameter("openid." + alias
@@ -221,7 +222,6 @@ Serializable
 										.getKey());
 								user.setAttribute("token_s", token
 										.getSecret());
-								isVerify = true;
 
 							} else {
 								throw new SocialAuthException(
@@ -265,7 +265,7 @@ Serializable
 	public void updateStatus(final String msg) throws Exception {
 		LOG.warn("WARNING: Not implemented for Google");
 		throw new SocialAuthException(
-				"Update Status is not implemented for Gmail");
+		"Update Status is not implemented for Gmail");
 	}
 
 	/**
