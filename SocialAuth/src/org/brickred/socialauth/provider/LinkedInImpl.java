@@ -83,8 +83,8 @@ Serializable {
 	private static final String PROFILE_URL = "https://api.linkedin.com/v1/people/~:(id,first-name,last-name,languages,date-of-birth,picture-url,location:(name))";
 	private static final String STATUS_BODY = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><share><comment>%1$s</comment><visibility><code>anyone</code></visibility></share>";
 	private static final String PROPERTY_DOMAIN = "api.linkedin.com";
+	private final Log LOG = LogFactory.getLog(LinkedInImpl.class);
 
-	transient final Log LOG = LogFactory.getLog(LinkedInImpl.class);
 	transient private Consumer __consumer;
 	transient private Endpoint __linkedin;
 	transient private boolean unserializedFlag;
@@ -105,11 +105,11 @@ Serializable {
 		}
 		if (__linkedin.getConsumerSecret().length() == 0) {
 			throw new SocialAuthConfigurationException(
-			"consent.live.com.consumer_secret value is null");
+					"api.linkedin.com.consumer_secret value is null");
 		}
 		if (__linkedin.getConsumerKey().length() == 0) {
 			throw new SocialAuthConfigurationException(
-			"consent.live.com.consumer_key value is null");
+			"api.linkedin.com.consumer_key value is null");
 		}
 		__consumer = Consumer.getInstance();
 		unserializedFlag = true;
