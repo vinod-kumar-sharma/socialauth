@@ -105,13 +105,13 @@ Serializable {
 		}
 		if (__yahoo.getConsumerSecret().length() == 0) {
 			throw new SocialAuthConfigurationException(
-					"api.login.yahoo.com.consumer_secret value is null");
+			"api.login.yahoo.com.consumer_secret value is null");
 		}
 		if (__yahoo.getConsumerKey().length() == 0) {
 			throw new SocialAuthConfigurationException(
 			"api.login.yahoo.com.consumer_key value is null");
 		}
-		__consumer = Consumer.getInstance();
+		__consumer = Consumer.newInstance(props);
 		unserializedFlag = true;
 	}
 
@@ -467,7 +467,7 @@ Serializable {
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
-		__consumer = Consumer.getInstance();
+		__consumer = Consumer.newInstance(this.properties);
 	}
 
 	private String getYahooAuthHeaderValue(final UrlEncodedParameterMap params,
