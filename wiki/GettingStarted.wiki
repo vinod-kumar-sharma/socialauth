@@ -19,7 +19,7 @@ This step is very important and the library will NOT work without this.
   * Create a properties like the sample [SampleProperties oauth_consumer.properties] using the consumer key and secrets obtained above. This file should be included in your classpath, for example WEB-INF/classes directory
 
 == Download the jar ==
-  # Download the [http://socialauth.googlecode.com/files/socialauth.jar socialauth.jar] 
+  # Download the [http://socialauth.googlecode.com/files/socialauth.jar socialauth-1.0-beta1.jar] 
   # Download the [http://socialauth.googlecode.com/files/dependencies.zip dependencies] Please note that you may not need all of them - for example jboss-seam.jar is not needed if you are building a Struts application. jsf-api is not needed if your application is JSP based.
   # Include all the jars in your project
 
@@ -51,7 +51,7 @@ Using the socialauth.jar consists of two main steps:
   AuthProvider provider = (AuthProvider)session.getAttribute("SocialAuth");
 
   // verify the authentication
-  Profile p = provider.verifyResponse(request, returnToUrl);
+  Profile p = provider.verifyResponse(request);
 
   // you can obtain profile information
   System.out.println(p.getFirstName());
