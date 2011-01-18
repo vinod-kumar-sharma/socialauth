@@ -105,13 +105,13 @@ Serializable {
 		}
 		if (__linkedin.getConsumerSecret().length() == 0) {
 			throw new SocialAuthConfigurationException(
-					"api.linkedin.com.consumer_secret value is null");
+			"api.linkedin.com.consumer_secret value is null");
 		}
 		if (__linkedin.getConsumerKey().length() == 0) {
 			throw new SocialAuthConfigurationException(
 			"api.linkedin.com.consumer_key value is null");
 		}
-		__consumer = Consumer.getInstance();
+		__consumer = Consumer.newInstance(this.properties);
 		unserializedFlag = true;
 	}
 
@@ -443,6 +443,6 @@ Serializable {
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
-		__consumer = Consumer.getInstance();
+		__consumer = Consumer.newInstance(this.properties);
 	}
 }
