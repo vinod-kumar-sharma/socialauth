@@ -111,7 +111,7 @@ Serializable {
 			throw new SocialAuthConfigurationException(
 			"api.login.yahoo.com.consumer_key value is null");
 		}
-		__consumer = Consumer.newInstance(props);
+		__consumer = Consumer.newInstance(this.properties);
 		unserializedFlag = true;
 	}
 
