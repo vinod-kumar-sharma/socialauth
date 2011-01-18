@@ -62,14 +62,13 @@ import com.dyuproject.oauth.Endpoint;
 public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 Serializable {
 
-	private static final long serialVersionUID = 903564874550419470L;
+	private static final long serialVersionUID = 3364430495809289118L;
 	private static final String PROFILE_URL = "https://api.foursquare.com/v2/users/self?oauth_token=";
 	private static final String CONTACTS_URL = "https://api.foursquare.com/v2/users/self/friends?oauth_token=";
 	private static final String REQUEST_TOKEN_URL = "https://foursquare.com/oauth2/authenticate?client_id=%1$s&response_type=code&redirect_uri=%2$s";
 	private static final String ACCESS_TOKEN_URL = "https://foursquare.com/oauth2/access_token";
 	private static final String VIEW_PROFILE_URL = "http://foursquare.com/user/";
 	private static final String PROPERTY_DOMAIN = "foursquare.com";
-
 	private final Log LOG = LogFactory.getLog(YahooImpl.class);
 
 	transient private Endpoint __foursquare;
