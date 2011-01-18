@@ -33,6 +33,7 @@ import java.util.Properties;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.provider.AolImpl;
 import org.brickred.socialauth.provider.FacebookImpl;
+import org.brickred.socialauth.provider.FourSquareImpl;
 import org.brickred.socialauth.provider.GoogleImpl;
 import org.brickred.socialauth.provider.HotmailImpl;
 import org.brickred.socialauth.provider.LinkedInImpl;
@@ -58,6 +59,7 @@ public class AuthProviderFactory {
 	public static String hotmail = "hotmail";
 	public static String aol = "aol";
 	public static String linkedin = "linkedin";
+	public static String foursquare = "foursquare";
 	private static String propFileName = "oauth_consumer.properties";
 	/**
 	 * 
@@ -117,6 +119,8 @@ public class AuthProviderFactory {
 				provider = new HotmailImpl(props);
 			} else if (linkedin.equals(id)) {
 				provider = new LinkedInImpl(props);
+			} else if (foursquare.equals(id)) {
+				provider = new FourSquareImpl(props);
 			} else {
 				provider = new OpenIdImpl(props);
 			}
