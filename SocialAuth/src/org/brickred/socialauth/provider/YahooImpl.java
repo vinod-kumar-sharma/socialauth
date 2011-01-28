@@ -201,8 +201,12 @@ Serializable {
 	private Profile getUserProfile() throws Exception {
 		LOG.debug("Obtaining user profile");
 		Profile profile = new Profile();
-		String url = String.format(PROFILE_URL, token
-				.getAttribute("xoauth_yahoo_guid"));
+		String guid = (String) token.getAttribute("xoauth_yahoo_guid");
+		if (guid.indexOf("<") != -1) {
+			guid = guid.substring(0, guid.indexOf("<")).trim();
+			token.setAttribute("xoauth_yahoo_guid", guid);
+		}
+		String url = String.format(PROFILE_URL, guid);
 		UrlEncodedParameterMap serviceParams = new UrlEncodedParameterMap(url);
 		NonceAndTimestamp nts = SimpleNonceAndTimestamp.getDefault();
 		Signature sig = __yahoo.getSignature();
@@ -243,6 +247,9 @@ Serializable {
 			JSONObject jobj = new JSONObject(sb.toString());
 			if (jobj.has("profile")) {
 				JSONObject pObj = jobj.getJSONObject("profile");
+				if (pObj.has("guid")) {
+					profile.setValidatedId(pObj.getString("guid"));
+				}
 				if (pObj.has("familyName")) {
 					profile.setLastName(pObj.getString("familyName"));
 				}
