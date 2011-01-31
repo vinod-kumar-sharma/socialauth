@@ -28,44 +28,60 @@ package org.brickred.socialauth;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Constructor;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
-import org.brickred.socialauth.provider.AolImpl;
-import org.brickred.socialauth.provider.FacebookImpl;
-import org.brickred.socialauth.provider.FourSquareImpl;
-import org.brickred.socialauth.provider.GoogleImpl;
-import org.brickred.socialauth.provider.HotmailImpl;
-import org.brickred.socialauth.provider.LinkedInImpl;
-import org.brickred.socialauth.provider.OpenIdImpl;
-import org.brickred.socialauth.provider.TwitterImpl;
-import org.brickred.socialauth.provider.YahooImpl;
+import org.brickred.socialauth.exception.SocialAuthException;
+import org.mortbay.log.Log;
 
 /**
  * This is a factory which creates an instance of the requested provider based
- * on the string passed as id. Currently available providers are given as
- * static constants. If requested provider id is not matched, it returns the
- * OpenId provider.
+ * on the string passed as id. Currently available providers are facebook,
+ * foursquare, google, hotmail, linkedin,myspace, openid, twitter, yahoo . If
+ * requested provider id is not matched, it returns the OpenId provider.
  * 
  * @author tarunn@brickred.com
  * 
  */
 public class AuthProviderFactory {
 
-	public static String facebook = "facebook";
-	public static String twitter = "twitter";
-	public static String google = "google";
-	public static String yahoo = "yahoo";
-	public static String hotmail = "hotmail";
-	public static String aol = "aol";
-	public static String linkedin = "linkedin";
-	public static String foursquare = "foursquare";
 	private static String propFileName = "oauth_consumer.properties";
+	private static Map<String, Class> providerMap;
+
+	static {
+		providerMap = new HashMap<String, Class>();
+		providerMap.put("facebook",
+				org.brickred.socialauth.provider.FacebookImpl.class);
+		providerMap.put("foursquare",
+				org.brickred.socialauth.provider.FourSquareImpl.class);
+		providerMap.put("google",
+				org.brickred.socialauth.provider.GoogleImpl.class);
+		providerMap.put("hotmail",
+				org.brickred.socialauth.provider.HotmailImpl.class);
+		providerMap.put("linkedin",
+				org.brickred.socialauth.provider.LinkedInImpl.class);
+		providerMap.put("myspace",
+				org.brickred.socialauth.provider.MySpaceImpl.class);
+		providerMap.put("openid",
+				org.brickred.socialauth.provider.OpenIdImpl.class);
+		providerMap.put("twitter",
+				org.brickred.socialauth.provider.TwitterImpl.class);
+		providerMap.put("yahoo",
+				org.brickred.socialauth.provider.YahooImpl.class);
+
+	}
+
 	/**
 	 * 
 	 * @param id
-	 *            the id of requested provider. It can be google, yahoo,
-	 *            hotmail, twitter, facebook.
+	 *            the id of requested provider. It can be facebook, foursquare,
+	 *            google, hotmail, linkedin,myspace, twitter, yahoo
 	 * 
 	 * @return AuthProvider the instance of requested provider based on given
 	 *         id. If id is a URL it returns the OpenId provider.
@@ -81,8 +97,8 @@ public class AuthProviderFactory {
 	/**
 	 * 
 	 * @param id
-	 *            the id of requested provider. It can be google, yahoo,
-	 *            hotmail, twitter, facebook.
+	 *            the id of requested provider. It can be facebook, foursquare,
+	 *            google, hotmail, linkedin,myspace, twitter, yahoo.
 	 * @param propertiesFileName
 	 *            file name to read the properties
 	 * @return AuthProvider the instance of requested provider based on given
@@ -105,24 +121,13 @@ public class AuthProviderFactory {
 			.getResourceAsStream(fileName);
 			props.load(in);
 			props.setProperty("id", id);
-			if (facebook.equals(id)) {
-				provider = new FacebookImpl(props);
-			} else if (twitter.equals(id)) {
-				provider = new TwitterImpl(props);
-			} else if (aol.equals(id)) {
-				provider = new AolImpl(props);
-			} else if (google.equals(id)) {
-				provider = new GoogleImpl(props);
-			} else if (yahoo.equals(id)) {
-				provider = new YahooImpl(props);
-			} else if (hotmail.equals(id)) {
-				provider = new HotmailImpl(props);
-			} else if (linkedin.equals(id)) {
-				provider = new LinkedInImpl(props);
-			} else if (foursquare.equals(id)) {
-				provider = new FourSquareImpl(props);
-			} else {
-				provider = new OpenIdImpl(props);
+			for (Iterator iter = props.keySet().iterator(); iter.hasNext();) {
+				String str = (String) iter.next();
+				if (str.startsWith("socialauth.")) {
+					String val = str.substring("socialauth.".length());
+					registerProvider(val, Class.forName(props.get(str)
+							.toString()));
+				}
 			}
 		} catch (NullPointerException ne) {
 			throw new FileNotFoundException(fileName
@@ -130,10 +135,43 @@ public class AuthProviderFactory {
 		} catch (IOException ie) {
 			throw new IOException("Could not load configuration from "
 					+ fileName);
-		} catch (SocialAuthConfigurationException se) {
-			throw se;
+		}
+
+
+		Class obj = providerMap.get(id);
+		if (obj == null) {
+			try{
+				URL url = new URL(id);
+				obj = providerMap.get("openid");
+			}catch(MalformedURLException me){
+				throw new SocialAuthException(id
+						+ " is not a provider or valid OpenId URL");
+			}
+		}
+
+		try {
+			Constructor cons = obj.getConstructor(Properties.class);
+			provider = (AuthProvider) cons.newInstance(props);
+		} catch (NoSuchMethodException me) {
+			Log.warn(obj.getName()
+					+ " does not implement a constructor " + obj.getName()
+					+ "(Poperties props)");
+			provider = (AuthProvider) obj.newInstance();
+		} catch (Exception e) {
+			throw new SocialAuthConfigurationException(e);
 		}
 		return provider;
 	}
 
+	/**
+	 * It register a new provider in AuthProviderFactory.
+	 * 
+	 * @param pname
+	 *            provider name
+	 * @param clazz
+	 *            class name of the provider implementation.
+	 */
+	public static void registerProvider(String pname, Class clazz) {
+		providerMap.put(pname, clazz);
+	}
 }
