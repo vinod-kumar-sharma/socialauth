@@ -1,111 +1,119 @@
-<project name="socialauthproj" default="create-ear">
+<project name="socialauthseam" default="create-war">
   <property name="basedir" value="." />
 
-  <property name="sourceDir" value="${basedir}/src" />
-  <property name="libDir" value="${basedir}/lib" />
-  <property name="viewDir" value="${basedir}/view" />	  
-  <property name="resourcesDir" value="${basedir}/resources" />
-	<property name="externalLib" value="${basedir}/external-lib" />
-	 
-  <property name="distDir" value="${basedir}/dist" />	  
-	  	
-  <property name="buildDirWar" value="${distDir}/war-dir" />	  
-  <property name="buildDirJar" value="${distDir}/jar-dir" />	  
-  <property name="buildDirEar" value="${distDir}/ear-dir" />	  
+  <property name="sourceDir" value="${basedir}/src/action" />
+  <property name="sourceDirModel" value="${basedir}/src/model" />
+  <property name="webDir" value="${basedir}/WebContent" />
 
-  <property name="socialauth-war" value="${buildDirWar}/social-auth.war" />	  
-  <property name="socialauth-jar" value="${buildDirJar}/social-auth.jar" />	  
-  <property name="socialauth-ear" value="${distDir}/socialauthseam.ear" />	  
-	  
-	
-  <property name="classesDir" value="${buildDirWar}/WEB-INF/classes" />	  
+  <property name="libDir" value="${webDir}/WEB-INF/lib" />
+  <property name="externalLib" value="${basedir}/external-lib" />
+  <property name="buildDir" value="${webDir}/WEB-INF/classes" />
+  <property name="distDir" value="${basedir}/dist" />
+  <property name="javaDocDistDir" value="${distDir}/javadoc" />
 
- 
+  <property name="resourceDir" value="${basedir}/resources" />
+
   <path id="libraries-App">
 	 <fileset dir="${libDir}">
-	  <include name="**/*.jar" />
+	    <include name="**/*.jar" />
 	 </fileset>
-  	 <fileset dir="${externalLib}">
-  		  <include name="**/*.jar" />
-  		 </fileset>
+  	<fileset dir="${externalLib}">
+  		<include name="**/*.jar" />
+  	</fileset>
   </path>
 
   <target name="clean">
+	 <delete dir="${buildDir}" failonerror="true" />
 	 <delete dir="${distDir}" failonerror="true" />
   </target>
 
   <target name="init">
-    <mkdir dir="${distDir}" />
- 	<mkdir dir="${buildDirWar}" />
- 	<mkdir dir="${buildDirJar}" />
- 	<mkdir dir="${buildDirEar}" />
+    <mkdir dir="${buildDir}" />
+  	<mkdir dir="${distDir}" />
   </target>
 
-  <target name="webFolders">
-    <mkdir dir="${buildDirWar}/WEB-INF/classes" />
-    <mkdir dir="${buildDirWar}/WEB-INF/lib" />
- </target>
-
   <!--====================COMPILE CLASSES================================-->
-  <target name="compile" depends="clean, init,webFolders">
-  	<javac destdir="${buildDirJar}" classpathref="libraries-App" debug="true" encoding="ISO-8859-1" failonerror="true" >
+  <target name="compile" depends="clean, init">
+  	<javac destdir="${buildDir}" classpathref="libraries-App" debug="true" encoding="ISO-8859-1" failonerror="true" >
   	  <src location="${sourceDir}" />
   	</javac>
   </target>
 
-  <!--====================CREATE JAR================================-->
-  <target name="create-jar" depends="compile">
+  <!--====================CREATE WAR================================-->
+  <target name="create-war" depends="compile">
+  	<copy todir="${webDir}/WEB-INF/classes" file="${resourceDir}/log4j.properties"></copy>
+  	<copy todir="${webDir}/WEB-INF/classes" file="${resourceDir}/seam.properties"></copy>
+  	<copy todir="${webDir}/WEB-INF/classes" file="${resourceDir}/oauth_consumer.properties"></copy>
+  	  	
   	
-  	<copy todir="${buildDirJar}" file="${resourcesDir}/log4j.properties"></copy>
-  	<copy todir="${buildDirJar}" file="${resourcesDir}/seam.properties"></copy>
-  	<copy todir="${buildDirJar}" file="${resourcesDir}/oauth_consumer.properties"></copy>
-  	
-  	<copy todir="${buildDirJar}/org/brickred/socialauth/bundle">
-  		<fileset dir="${sourceDir}/org/brickred/socialauth/bundle"></fileset>
+  	<copy todir="${webDir}/WEB-INF/classes/org/brickred/socialauthseam/bundle">
+  		<fileset dir="${sourceDir}/org/brickred/socialauthseam/bundle"></fileset>
   	</copy>
   	
-  	<jar destfile="${socialauth-jar}" basedir="${buildDirJar}" />
-  
+  	<copy todir="${webDir}/WEB-INF/classes">
+  	  		<fileset dir="${sourceDirModel}"></fileset>
+  	</copy>
+  	<war destfile="${distDir}/socialauthseam.war" basedir="${webDir}" webxml="${webDir}/WEB-INF/web.xml" />
   </target>
-
-  <!--====================CREATE WAR================================-->
-	  <target name="create-war" depends="compile">
-	  	
-	  	<copy todir="${buildDirWar}">
-	  	  	<fileset dir="${viewDir}"></fileset>
-	  	</copy>
-	  	<copy todir="${buildDirWar}/WEB-INF">
-	  		 <fileset dir="${resourcesDir}/WEB-INF"></fileset>
-	  	</copy>
-	  	
-	  	<copy todir="${classesDir}" file="${resourcesDir}/log4j.properties"></copy>
-	  	<copy todir="${classesDir}" file="${resourcesDir}/oauth_consumer.properties"></copy>
-	  	
-		<war destfile="${socialauth-war}" basedir="${buildDirWar}" webxml="${buildDirWar}/WEB-INF/web.xml" />
-	  
-	  </target>	
-	<!--====================CREATE EAR================================-->
-	  <target name="create-ear" depends="create-war,create-jar">
-	  	
-	  	<copy todir="${buildDirEar}/lib">
-	  	  	<fileset dir="${libDir}">
-	  	  		<exclude name="jboss-seam.jar" />	
-	  	  	</fileset>
-	  	</copy>
-	  	
-	  	<copy todir="${buildDirEar}" file="${libDir}/jboss-seam.jar"/>
-	  		  	
-	  	<copy todir="${buildDirEar}/META-INF" file="${resourcesDir}/META-INF/jboss-app.xml"></copy>
-	  			  		  	
-	  	<move  todir="${buildDirEar}" file="${socialauth-war}" />
-	  	
-	  	<move todir="${buildDirEar}" file="${socialauth-jar}"/>
-	  	<ear destfile="${socialauth-ear}" basedir="${buildDirEar}" appxml="${resourcesDir}/META-INF/application.xml" />
-	  	
-	  </target>	
+  
+  <!--====================CREATE JBoss Project================================-->
+  <target name="generate-project" depends="clean,init">
+  		<mkdir dir="${distDir}/socialauthseam" />
+		<mkdir dir="${distDir}/socialauthseam/lib" />
+		<mkdir dir="${distDir}/socialauthseam/external-lib" />
+		<mkdir dir="${distDir}/socialauthseam/src" />
+		<mkdir dir="${distDir}/socialauthseam/view" />
+  		<mkdir dir="${distDir}/socialauthseam/resources" />
+  		<mkdir dir="${distDir}/socialauthseam/resources/META-INF" />
+  		<mkdir dir="${distDir}/socialauthseam/resources/WEB-INF" />
+  		
+  		<copy todir="${distDir}/socialauthseam" file="${resourceDir}/ear-artifacts/build.xml"/> 
+  			
+  		<copy todir="${distDir}/socialauthseam/lib"> 
+  			<fileset dir="${libDir}">
+  				<include name="**/*.jar" />
+  			</fileset>
+  		</copy>
+  		<copy todir="${distDir}/socialauthseam/external-lib"> 
+  			<fileset dir="${externalLib}">
+		  		<include name="**/*.jar" />
+		  	</fileset>
+  	  	</copy>
+  		
+  		<copy todir="${distDir}/socialauthseam/src">
+  			<fileset dir="${basedir}/src"/>
+  		</copy>
+  	
+  		<copy todir="${distDir}/socialauthseam/view">
+  	  		<fileset dir="${webDir}">
+  	  			<exclude name="WEB-INF/**"/>
+  			</fileset>
+  	  	</copy>
+  	
+  		<copy todir="${distDir}/socialauthseam/resources">
+  	  		<fileset dir="${resourceDir}">
+  	  			<include name="*.properties"/>
+  	  		</fileset>	
+  	  			
+  		</copy>
+		<copy todir="${distDir}/socialauthseam/resources/META-INF">
+	  		<fileset dir="${resourceDir}/ear-artifacts">
+	  			<exclude name="build.xml"/>
+	  		</fileset>
+		</copy>
+  		<copy todir="${distDir}/socialauthseam/resources/WEB-INF">
+  		  	<fileset dir="${webDir}/WEB-INF">
+  		  		<include name="*.xml"/>
+  		  		<exclude name="jboss-web.xml"/>
+  		  	</fileset>
+  			
+  		</copy>
+  	
+  </target>  
+	
   <!--=========================RUN JAVA DOC===============================-->
   <target name="run-java-doc">
-    <javadoc packagenames="org.brickred.socialauth.*" sourcepath="${sourceDir}" destdir="${javaDocDistDir}" author="true" version="true" use="true" />
+    <javadoc packagenames="org.brickred.socialauthseam.*" sourcepath="${sourceDir}" destdir="${javaDocDistDir}" author="true" version="true" use="true" />
   </target>
 	
 </project>
