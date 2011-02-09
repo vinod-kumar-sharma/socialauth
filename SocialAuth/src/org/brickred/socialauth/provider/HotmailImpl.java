@@ -27,18 +27,16 @@ package org.brickred.socialauth.provider;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Serializable;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
-import org.apache.commons.httpclient.methods.StringRequestEntity;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.AbstractProvider;
@@ -53,6 +51,7 @@ import org.brickred.socialauth.exception.SocialAuthException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+import com.dyuproject.oauth.Constants;
 import com.dyuproject.oauth.Endpoint;
 
 /**
@@ -119,6 +118,7 @@ Serializable {
 	 * @throws Exception
 	 */
 
+	@Override
 	public String getLoginRedirectURL(final String redirectUri)
 	throws Exception {
 		LOG.info("Determining URL for redirection");
@@ -141,6 +141,7 @@ Serializable {
 	 * @throws Exception
 	 */
 
+	@Override
 	public Profile verifyResponse(final HttpServletRequest request)
 	throws Exception {
 		LOG.info("Retrieving Access Token in verify response function");
@@ -154,17 +155,41 @@ Serializable {
 		if (code == null || code.length() == 0) {
 			throw new SocialAuthException("Verification code is null");
 		}
-		HttpClient client = new HttpClient();
-		PostMethod method = new PostMethod(ACCESS_TOKEN_URL);
-		method.addParameter("wrap_client_id", appid);
-		method.addParameter("wrap_client_secret", secret);
-		method.addParameter("wrap_callback", redirectUri);
-		method.addParameter("wrap_verification_code", code);
-		method.addParameter("idtype", "CID");
-		int returnCode = client.executeMethod(method);
+		HttpURLConnection conn;
+		URL url = new URL(ACCESS_TOKEN_URL);
+		conn = (HttpURLConnection) url.openConnection();
+		conn.setRequestMethod("POST");
+		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded"); 
+		conn.setDoOutput(true);
+		conn.setDoInput(true);
+		OutputStreamWriter wr = null;
+		StringBuilder strb = new StringBuilder();
+		strb.append("wrap_client_id=").append(appid);
+		strb.append("&wrap_client_secret=").append(secret);
+		strb.append("&wrap_callback=").append(redirectUri);
+		strb.append("&wrap_verification_code=").append(code);
+		strb.append("&idtype=CID");
+		System.out.println("====SBB===="+strb.toString());
+		wr = new OutputStreamWriter(conn.getOutputStream());
+		wr.write(strb.toString());
+		wr.flush();
+		conn.connect();
+			
+		int returnCode = conn.getResponseCode();
 		String result = null;
-		if (returnCode == HttpStatus.SC_OK) {
-			result = method.getResponseBodyAsString();
+		if (returnCode == 200) {
+			StringBuffer sb = new StringBuffer();
+			try {
+				BufferedReader reader = new BufferedReader(new InputStreamReader(
+						conn.getInputStream(), Constants.ENCODING));
+				String line = null;
+				while ((line = reader.readLine()) != null) {
+					sb.append(line);
+				}
+			} catch (Exception exc) {
+				throw new SocialAuthException("Failed to parse response");
+			}
+			result = sb.toString();
 		}
 		if (result == null || result.length() == 0) {
 			throw new SocialAuthConfigurationException(
@@ -208,7 +233,8 @@ Serializable {
 		} catch (Exception e) {
 			throw e;
 		} finally {
-			method.releaseConnection();
+			//method.releaseConnection();
+			conn.disconnect();
 		}
 
 	}
@@ -221,34 +247,33 @@ Serializable {
 	 * @throws Exception
 	 */
 
+	@Override
 	public List<Contact> getContactList() throws Exception {
 		if (!isVerify) {
 			throw new SocialAuthException(
 			"Please call verifyResponse function first to get Access Token");
 		}
-		HttpClient client = new HttpClient();
 		String u = String.format(CONTACTS_URL, uid);
 		LOG.info("Fetching contacts from " + u);
-		GetMethod get = new GetMethod(u);
-		get.addRequestHeader("Authorization", "WRAP access_token="
-				+ accessToken);
-		get.addRequestHeader("Content-Type", "application/json");
-		get.addRequestHeader("Accept", "application/json");
-		int returnCode;
-		try {
-			returnCode = client.executeMethod(get);
-		} catch (Exception e) {
-			throw new SocialAuthException("Error while getting contacts from "
-					+ u);
-		}
-		if (returnCode != HttpStatus.SC_OK) {
+		HttpURLConnection conn;
+		URL url = new URL(u);
+		conn = (HttpURLConnection) url.openConnection();
+		conn.setRequestMethod("GET");
+		conn.setRequestProperty("Authorization", "WRAP access_token="+ accessToken);
+		conn.setRequestProperty("Content-Type", "application/json");
+		conn.setRequestProperty("Accept", "application/json");
+		//conn.setDoOutput(true);
+		conn.setDoInput(true);
+		conn.connect();
+		int returnCode = conn.getResponseCode();
+		if (returnCode != 200) {
 			throw new SocialAuthException("Error while getting contacts from "
 					+ u + "Status : " + returnCode);
 		}
 		StringBuffer sb = new StringBuffer();
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					get.getResponseBodyAsStream(), "UTF-8"));
+					conn.getInputStream(), "UTF-8"));
 			String line = null;
 			while ((line = reader.readLine()) != null) {
 				sb.append(line).append("\n");
@@ -303,6 +328,7 @@ Serializable {
 			}
 
 		}
+		conn.disconnect();
 		return plist;
 	}
 
@@ -314,6 +340,7 @@ Serializable {
 	 *            Message to be shown as user's status
 	 * @throws Exception
 	 */
+	@Override
 	public void updateStatus(final String msg) throws Exception {
 		LOG.info("Updating status : " + msg);
 		if (!isVerify) {
@@ -323,50 +350,52 @@ Serializable {
 		if (msg == null || msg.trim().length() == 0) {
 			throw new ServerDataException("Status cannot be blank");
 		}
-		String url = String.format(UPDATE_STATUS_URL, uid);
-		HttpClient client = new HttpClient();
-		PostMethod method = new PostMethod(url);
-		method.addRequestHeader("Authorization", "WRAP access_token="
-				+ accessToken);
-		method.addRequestHeader("Content-Type", "application/json");
-		method.addRequestHeader("Accept", "application/json");
-		String body = "{\"__type\" : \"AddStatusActivity:http://schemas.microsoft.com/ado/2007/08/dataservices\",\"ActivityVerb\" : \"http://activitystrea.ms/schema/1.0/post\",\"ApplicationLink\" : \"http://rex.mslivelabs.com\",\"ActivityObjects\" : [{\"ActivityObjectType\" : \"http://activitystrea.ms/schema/1.0/status\",\"Content\" : \""
-			+ msg
-			+ "\",\"AlternateLink\" : \"http://www.contoso.com/wp-content/uploads/2009/06/comments-icon.jpg\"}}]}";
-		method.addRequestHeader("Content-Length", new Integer(body.length())
-		.toString());
-		method.setRequestEntity(new StringRequestEntity(body,
-				"application/json", "UTF-8"));
-		int code;
-		try {
-			code = client.executeMethod(method);
-		} catch (Exception e) {
-			throw new SocialAuthException("Failed to update user status on "
-					+ url);
-		}
+		String u = String.format(UPDATE_STATUS_URL, uid);
+		HttpURLConnection conn;
+		URL url = new URL(u);
+		conn = (HttpURLConnection) url.openConnection();
+		conn.setRequestMethod("POST");
+		conn.setDoOutput(true);
+		conn.setDoInput(true);
+		conn.setRequestProperty("Authorization", "WRAP access_token="+ accessToken);
+		conn.setRequestProperty("Content-Type", "application/json");
+		conn.setRequestProperty("Accept", "application/json");
+		String body = "{\"__type\" : \"AddStatusActivity:http://schemas.microsoft.com/ado/2007/08/dataservices\",\"ActivityVerb\" : \"http://activitystrea.ms/schema/1.0/post\",\"ApplicationLink\" : \"http://rex.mslivelabs.com\",\"ActivityObjects\" : [{\"ActivityObjectType\" : \"http://activitystrea.ms/schema/1.0/status\",\"Content\" : \""+ msg+ "\",\"AlternateLink\" : \"http://www.contoso.com/wp-content/uploads/2009/06/comments-icon.jpg\"}}]}";
+		conn.setRequestProperty("Content-Length", new Integer(body.length()).toString());
+		OutputStreamWriter wr = null;
+		wr = new OutputStreamWriter(conn.getOutputStream());
+		wr.write(body);
+		wr.flush();
+		conn.connect();
+		
+		int code = conn.getResponseCode();
 		LOG.debug("Status updated and return status code is :" + code);
 		// return 201
+		conn.disconnect();
 	}
 
 	/**
 	 * Logout
 	 */
+	@Override
 	public void logout() {
 		accessToken = null;
 	}
 
 	private Profile getUserProfile() throws Exception {
 		Profile p = new Profile();
-		HttpClient client = new HttpClient();
 		String u = String.format(PROFILE_URL, uid, uid);
-		GetMethod get = new GetMethod(u);
-		get.addRequestHeader("Authorization", "WRAP access_token="
-				+ accessToken);
-		get.addRequestHeader("Content-Type", "application/json");
-		get.addRequestHeader("Accept", "application/json");
-
+		HttpURLConnection conn;
+		URL url = new URL(u);
+		conn = (HttpURLConnection) url.openConnection();
+		conn.setRequestMethod("GET");
+		conn.setDoInput(true);
+		conn.setRequestProperty("Authorization", "WRAP access_token="+ accessToken);
+		conn.setRequestProperty("Content-Type", "application/json");
+		conn.setRequestProperty("Accept", "application/json");
+		
 		try {
-			client.executeMethod(get);
+			conn.connect();
 		} catch (Exception e) {
 			throw new SocialAuthException(
 					"Failed to retrieve the user profile from  " + u, e);
@@ -374,7 +403,7 @@ Serializable {
 		StringBuffer sb = new StringBuffer();
 		try {
 			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					get.getResponseBodyAsStream(), "UTF-8"));
+					conn.getInputStream(), "UTF-8"));
 			String line = null;
 			while ((line = reader.readLine()) != null) {
 				sb.append(line).append("\n");
@@ -423,6 +452,7 @@ Serializable {
 					p.setEmail(eobj.getString("Address"));
 				}
 			}
+			conn.disconnect();
 			return p;
 		} catch (Exception e) {
 			throw new SocialAuthException(
