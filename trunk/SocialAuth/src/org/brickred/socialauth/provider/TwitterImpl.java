@@ -43,6 +43,8 @@ import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.exception.UserDeniedPermissionException;
+import org.brickred.socialauth.util.OAuthConfig;
 
 import twitter4j.IDs;
 import twitter4j.Twitter;
@@ -50,8 +52,6 @@ import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.User;
 import twitter4j.http.RequestToken;
-
-import com.dyuproject.oauth.Endpoint;
 
 /**
  * Twitter implementation of the provider. This is completely based on the
@@ -62,44 +62,39 @@ import com.dyuproject.oauth.Endpoint;
  */
 
 public class TwitterImpl extends AbstractProvider implements AuthProvider,
-Serializable {
+		Serializable {
 
 	private static final long serialVersionUID = 1908393649053616794L;
 	private static final String PROPERTY_DOMAIN = "twitter.com";
 	private final Log LOG = LogFactory.getLog(TwitterImpl.class);
-
-	transient private Endpoint __twitter;
-	transient private boolean unserializedFlag;
 
 	private Twitter twitter;
 	private RequestToken requestToken;
 	private Permission scope;
 	private Properties properties;
 	private boolean isVerify;
+	private OAuthConfig config;
 
-
-	public TwitterImpl(final Properties props)
-	throws Exception {
+	public TwitterImpl(final Properties props) throws Exception {
 		try {
-			__twitter = Endpoint.load(props, PROPERTY_DOMAIN);
 			this.properties = props;
+			config = OAuthConfig.load(this.properties, PROPERTY_DOMAIN);
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
-		String consumer_key = __twitter.getConsumerKey();
-		String consumer_secret = __twitter.getConsumerSecret();
-		if (consumer_secret.length() == 0) {
+		if (config.get_consumerSecret().length() == 0) {
 			throw new SocialAuthConfigurationException(
 					"twitter.com.consumer_secret value is null");
 		}
-		if (consumer_key.length() == 0) {
+		if (config.get_consumerKey().length() == 0) {
 			throw new SocialAuthConfigurationException(
-			"twitter.com.consumer_key value is null");
+					"twitter.com.consumer_key value is null");
 		}
 		TwitterFactory factory = new TwitterFactory();
 		twitter = factory.getInstance();
 
-		twitter.setOAuthConsumer(consumer_key, consumer_secret);
+		twitter.setOAuthConsumer(config.get_consumerKey(),
+				config.get_consumerSecret());
 	}
 
 	/**
@@ -110,8 +105,9 @@ Serializable {
 	 * @throws Exception
 	 */
 
+	@Override
 	public String getLoginRedirectURL(final String redirect_uri)
-	throws Exception {
+			throws Exception {
 		LOG.info("Determining URL for redirection");
 		setProviderState(true);
 		try {
@@ -134,14 +130,15 @@ Serializable {
 	 * @throws Exception
 	 */
 
+	@Override
 	public Profile verifyResponse(final HttpServletRequest request)
-	throws Exception {
+			throws Exception {
 		LOG.info("Retrieving Access Token in verify response function");
+		if (request.getParameter("denied") != null) {
+			throw new UserDeniedPermissionException();
+		}
 		if (!isProviderState()) {
 			throw new ProviderStateException();
-		}
-		if (!unserializedFlag) {
-			restore();
 		}
 		String verifier = request.getParameter("oauth_verifier");
 		try {
@@ -171,11 +168,12 @@ Serializable {
 	 * @throws Exception
 	 */
 
+	@Override
 	public void updateStatus(final String msg) throws Exception {
 		LOG.info("Updatting status " + msg);
 		if (!isVerify) {
 			throw new SocialAuthException(
-			"Please call verifyResponse function first to get Access Token");
+					"Please call verifyResponse function first to get Access Token");
 		}
 		if (msg == null || msg.trim().length() == 0) {
 			throw new ServerDataException("Status cannot be blank");
@@ -194,10 +192,11 @@ Serializable {
 	 *         screen name will be available
 	 */
 
+	@Override
 	public List<Contact> getContactList() throws Exception {
 		if (!isVerify) {
 			throw new SocialAuthException(
-			"Please call verifyResponse function first to get Access Token");
+					"Please call verifyResponse function first to get Access Token");
 		}
 		LOG.info("Fetching user contacts");
 		IDs ids = twitter.getFriendsIDs();
@@ -241,6 +240,7 @@ Serializable {
 	/**
 	 * Logout
 	 */
+	@Override
 	public void logout() {
 		twitter = null;
 	}
@@ -256,11 +256,4 @@ Serializable {
 		this.scope = p;
 	}
 
-	private void restore() throws Exception {
-		try {
-			__twitter = Endpoint.load(this.properties, PROPERTY_DOMAIN);
-		} catch (IllegalStateException e) {
-			throw new SocialAuthConfigurationException(e);
-		}
-	}
 }

@@ -25,14 +25,11 @@
 
 package org.brickred.socialauth.provider;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.Serializable;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
@@ -48,24 +45,27 @@ import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.exception.UserDeniedPermissionException;
+import org.brickred.socialauth.util.Constants;
+import org.brickred.socialauth.util.HttpUtil;
+import org.brickred.socialauth.util.MethodType;
+import org.brickred.socialauth.util.OAuthConfig;
+import org.brickred.socialauth.util.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import com.dyuproject.oauth.Constants;
-import com.dyuproject.oauth.Endpoint;
-
 /**
- * Implementation of Hotmail provider. This implementation is based on
- * the sample provided by Microsoft. Currently no elements in profile
- * are available and this implements only getContactList() properly
+ * Implementation of Hotmail provider. This implementation is based on the
+ * sample provided by Microsoft. Currently no elements in profile are available
+ * and this implements only getContactList() properly
  * 
  * 
  * @author tarunn@brickred.com
- *
+ * 
  */
 
 public class HotmailImpl extends AbstractProvider implements AuthProvider,
-Serializable {
+		Serializable {
 
 	private static final long serialVersionUID = 4559561466129062485L;
 	private static final String CONSENT_URL = "https://consent.live.com/Connect.aspx?wrap_client_id=%1$s&wrap_callback=%2$s";
@@ -76,38 +76,29 @@ Serializable {
 	private static final String PROPERTY_DOMAIN = "consent.live.com";
 	private final Log LOG = LogFactory.getLog(HotmailImpl.class);
 
-	transient private Endpoint __hotmail;
-	transient private boolean unserializedFlag;
-
 	private String accessToken;
-	private String appid;
-	private String secret;
 	private String uid;
 	private String redirectUri;
 	private Permission scope;
 	private Properties properties;
 	private boolean isVerify;
+	private OAuthConfig config;
 
-
-	public HotmailImpl(final Properties props)
-	throws Exception {
+	public HotmailImpl(final Properties props) throws Exception {
 		try {
-			__hotmail = Endpoint.load(props, PROPERTY_DOMAIN);
 			this.properties = props;
+			config = OAuthConfig.load(this.properties, PROPERTY_DOMAIN);
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
-		secret = __hotmail.getConsumerSecret();
-		appid = __hotmail.getConsumerKey();
-		if (secret.length() == 0) {
+		if (config.get_consumerSecret().length() == 0) {
 			throw new SocialAuthConfigurationException(
 					"consent.live.com.consumer_secret value is null");
 		}
-		if (appid.length() == 0) {
+		if (config.get_consumerKey().length() == 0) {
 			throw new SocialAuthConfigurationException(
-			"consent.live.com.consumer_key value is null");
+					"consent.live.com.consumer_key value is null");
 		}
-		unserializedFlag = true;
 	}
 
 	/**
@@ -120,13 +111,14 @@ Serializable {
 
 	@Override
 	public String getLoginRedirectURL(final String redirectUri)
-	throws Exception {
+			throws Exception {
 		LOG.info("Determining URL for redirection");
 		setProviderState(true);
 		this.redirectUri = redirectUri;
-		String consentUrl = String.format(CONSENT_URL, appid, redirectUri);
+		String consentUrl = String.format(CONSENT_URL,
+				config.get_consumerKey(), redirectUri);
 		if (!Permission.AUHTHENTICATE_ONLY.equals(scope)) {
-			consentUrl+= "&wrap_scope=WL_Contacts.View,WL_Activities.Update";
+			consentUrl += "&wrap_scope=WL_Contacts.View,WL_Activities.Update";
 		}
 		LOG.info("Redirection to following URL should happen : " + consentUrl);
 		return consentUrl;
@@ -137,64 +129,60 @@ Serializable {
 	 * application.
 	 * 
 	 * @return Profile object containing the profile information
-	 * @param request Request object the request is received from the provider
+	 * @param request
+	 *            Request object the request is received from the provider
 	 * @throws Exception
 	 */
 
 	@Override
 	public Profile verifyResponse(final HttpServletRequest request)
-	throws Exception {
+			throws Exception {
 		LOG.info("Retrieving Access Token in verify response function");
+
+		if (request.getParameter("wrap_error_reason") != null
+				&& "user_denied".equals(request
+						.getParameter("wrap_error_reason"))) {
+			throw new UserDeniedPermissionException();
+		}
 		if (!isProviderState()) {
 			throw new ProviderStateException();
-		}
-		if (!unserializedFlag) {
-			restore();
 		}
 		String code = request.getParameter("wrap_verification_code");
 		if (code == null || code.length() == 0) {
 			throw new SocialAuthException("Verification code is null");
 		}
-		HttpURLConnection conn;
-		URL url = new URL(ACCESS_TOKEN_URL);
-		conn = (HttpURLConnection) url.openConnection();
-		conn.setRequestMethod("POST");
-		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded"); 
-		conn.setDoOutput(true);
-		conn.setDoInput(true);
-		OutputStreamWriter wr = null;
 		StringBuilder strb = new StringBuilder();
-		strb.append("wrap_client_id=").append(appid);
-		strb.append("&wrap_client_secret=").append(secret);
+		strb.append("wrap_client_id=").append(config.get_consumerKey());
+		strb.append("&wrap_client_secret=").append(config.get_consumerSecret());
 		strb.append("&wrap_callback=").append(redirectUri);
 		strb.append("&wrap_verification_code=").append(code);
 		strb.append("&idtype=CID");
-		System.out.println("====SBB===="+strb.toString());
-		wr = new OutputStreamWriter(conn.getOutputStream());
-		wr.write(strb.toString());
-		wr.flush();
-		conn.connect();
-			
-		int returnCode = conn.getResponseCode();
+		Response serviceResponse;
+		try {
+			serviceResponse = HttpUtil.doHttpRequest(ACCESS_TOKEN_URL,
+					MethodType.POST.toString(), strb.toString(), null);
+
+		} catch (Exception e) {
+			throw new SocialAuthException(e);
+		}
+		if (serviceResponse.getStatus() != 200) {
+			throw new SocialAuthConfigurationException(
+					"Problem in getting Access Token. Application key or Secret key may be wrong."
+							+ "The server running the application should be same that was registered to get the keys.");
+		}
 		String result = null;
-		if (returnCode == 200) {
-			StringBuffer sb = new StringBuffer();
+		if (serviceResponse.getStatus() == 200) {
 			try {
-				BufferedReader reader = new BufferedReader(new InputStreamReader(
-						conn.getInputStream(), Constants.ENCODING));
-				String line = null;
-				while ((line = reader.readLine()) != null) {
-					sb.append(line);
-				}
+				result = serviceResponse
+						.getResponseBodyAsString(Constants.ENCODING);
 			} catch (Exception exc) {
-				throw new SocialAuthException("Failed to parse response");
+				throw new SocialAuthException("Failed to parse response", exc);
 			}
-			result = sb.toString();
 		}
 		if (result == null || result.length() == 0) {
 			throw new SocialAuthConfigurationException(
 					"Problem in getting Access Token. Application key or Secret key may be wrong."
-					+ "The server running the application should be same that was registered to get the keys.");
+							+ "The server running the application should be same that was registered to get the keys.");
 		}
 
 		try {
@@ -228,13 +216,12 @@ Serializable {
 			} else {
 				throw new SocialAuthException(
 						"Access token and expires not found from "
-						+ ACCESS_TOKEN_URL);
+								+ ACCESS_TOKEN_URL);
 			}
 		} catch (Exception e) {
 			throw e;
 		} finally {
-			//method.releaseConnection();
-			conn.disconnect();
+			serviceResponse.close();
 		}
 
 	}
@@ -251,38 +238,34 @@ Serializable {
 	public List<Contact> getContactList() throws Exception {
 		if (!isVerify) {
 			throw new SocialAuthException(
-			"Please call verifyResponse function first to get Access Token");
+					"Please call verifyResponse function first to get Access Token");
 		}
 		String u = String.format(CONTACTS_URL, uid);
 		LOG.info("Fetching contacts from " + u);
-		HttpURLConnection conn;
-		URL url = new URL(u);
-		conn = (HttpURLConnection) url.openConnection();
-		conn.setRequestMethod("GET");
-		conn.setRequestProperty("Authorization", "WRAP access_token="+ accessToken);
-		conn.setRequestProperty("Content-Type", "application/json");
-		conn.setRequestProperty("Accept", "application/json");
-		//conn.setDoOutput(true);
-		conn.setDoInput(true);
-		conn.connect();
-		int returnCode = conn.getResponseCode();
-		if (returnCode != 200) {
-			throw new SocialAuthException("Error while getting contacts from "
-					+ u + "Status : " + returnCode);
-		}
-		StringBuffer sb = new StringBuffer();
+		Map<String, String> headerParam = new HashMap<String, String>();
+		headerParam.put("Authorization", "WRAP access_token=" + accessToken);
+		headerParam.put("Content-Type", "application/json");
+		headerParam.put("Accept", "application/json");
+		Response serviceResponse;
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					conn.getInputStream(), "UTF-8"));
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				sb.append(line).append("\n");
-			}
+			serviceResponse = HttpUtil.doHttpRequest(u, "GET", null,
+					headerParam);
+		} catch (Exception e) {
+			throw e;
+		}
+		if (serviceResponse.getStatus() != 200) {
+			throw new SocialAuthException("Error while getting contacts from "
+					+ u + "Status : " + serviceResponse.getStatus());
+		}
+		String result;
+		try {
+			result = serviceResponse
+					.getResponseBodyAsString(Constants.ENCODING);
 		} catch (Exception e) {
 			throw new ServerDataException("Failed to get response from " + u);
 		}
-		LOG.debug("User Contacts list in JSON " + sb.toString());
-		JSONObject resp = new JSONObject(sb.toString());
+		LOG.debug("User Contacts list in JSON " + result);
+		JSONObject resp = new JSONObject(result);
 		List<Contact> plist = new ArrayList<Contact>();
 		if (resp.has("entries")) {
 			JSONArray addArr = resp.getJSONArray("entries");
@@ -314,9 +297,7 @@ Serializable {
 								p.setLastName(nameObj.getString("familyName"));
 							}
 							if (nameObj.has("formatted")) {
-								p
-								.setDisplayName(nameObj
-										.getString("formatted"));
+								p.setDisplayName(nameObj.getString("formatted"));
 							}
 							if (nameObj.has("givenName")) {
 								p.setFirstName(nameObj.getString("givenName"));
@@ -328,7 +309,7 @@ Serializable {
 			}
 
 		}
-		conn.disconnect();
+		serviceResponse.close();
 		return plist;
 	}
 
@@ -345,33 +326,32 @@ Serializable {
 		LOG.info("Updating status : " + msg);
 		if (!isVerify) {
 			throw new SocialAuthException(
-			"Please call verifyResponse function first to get Access Token");
+					"Please call verifyResponse function first to get Access Token");
 		}
 		if (msg == null || msg.trim().length() == 0) {
 			throw new ServerDataException("Status cannot be blank");
 		}
 		String u = String.format(UPDATE_STATUS_URL, uid);
-		HttpURLConnection conn;
-		URL url = new URL(u);
-		conn = (HttpURLConnection) url.openConnection();
-		conn.setRequestMethod("POST");
-		conn.setDoOutput(true);
-		conn.setDoInput(true);
-		conn.setRequestProperty("Authorization", "WRAP access_token="+ accessToken);
-		conn.setRequestProperty("Content-Type", "application/json");
-		conn.setRequestProperty("Accept", "application/json");
-		String body = "{\"__type\" : \"AddStatusActivity:http://schemas.microsoft.com/ado/2007/08/dataservices\",\"ActivityVerb\" : \"http://activitystrea.ms/schema/1.0/post\",\"ApplicationLink\" : \"http://rex.mslivelabs.com\",\"ActivityObjects\" : [{\"ActivityObjectType\" : \"http://activitystrea.ms/schema/1.0/status\",\"Content\" : \""+ msg+ "\",\"AlternateLink\" : \"http://www.contoso.com/wp-content/uploads/2009/06/comments-icon.jpg\"}}]}";
-		conn.setRequestProperty("Content-Length", new Integer(body.length()).toString());
-		OutputStreamWriter wr = null;
-		wr = new OutputStreamWriter(conn.getOutputStream());
-		wr.write(body);
-		wr.flush();
-		conn.connect();
-		
-		int code = conn.getResponseCode();
+
+		String body = "{\"__type\" : \"AddStatusActivity:http://schemas.microsoft.com/ado/2007/08/dataservices\",\"ActivityVerb\" : \"http://activitystrea.ms/schema/1.0/post\",\"ApplicationLink\" : \"http://rex.mslivelabs.com\",\"ActivityObjects\" : [{\"ActivityObjectType\" : \"http://activitystrea.ms/schema/1.0/status\",\"Content\" : \""
+				+ msg
+				+ "\",\"AlternateLink\" : \"http://www.contoso.com/wp-content/uploads/2009/06/comments-icon.jpg\"}}]}";
+
+		Map<String, String> headerParam = new HashMap<String, String>();
+		headerParam.put("Authorization", "WRAP access_token=" + accessToken);
+		headerParam.put("Content-Type", "application/json");
+		headerParam.put("Accept", "application/json");
+		headerParam
+				.put("Content-Length", new Integer(body.length()).toString());
+		Response serviceResponse;
+
+		serviceResponse = HttpUtil.doHttpRequest(u, MethodType.POST.toString(),
+				body, headerParam);
+
+		int code = serviceResponse.getStatus();
 		LOG.debug("Status updated and return status code is :" + code);
 		// return 201
-		conn.disconnect();
+		serviceResponse.close();
 	}
 
 	/**
@@ -385,35 +365,29 @@ Serializable {
 	private Profile getUserProfile() throws Exception {
 		Profile p = new Profile();
 		String u = String.format(PROFILE_URL, uid, uid);
-		HttpURLConnection conn;
-		URL url = new URL(u);
-		conn = (HttpURLConnection) url.openConnection();
-		conn.setRequestMethod("GET");
-		conn.setDoInput(true);
-		conn.setRequestProperty("Authorization", "WRAP access_token="+ accessToken);
-		conn.setRequestProperty("Content-Type", "application/json");
-		conn.setRequestProperty("Accept", "application/json");
-		
+		Map<String, String> headerParam = new HashMap<String, String>();
+		headerParam.put("Authorization", "WRAP access_token=" + accessToken);
+		headerParam.put("Content-Type", "application/json");
+		headerParam.put("Accept", "application/json");
+		Response serviceResponse;
 		try {
-			conn.connect();
+			serviceResponse = HttpUtil.doHttpRequest(u, "GET", null,
+					headerParam);
 		} catch (Exception e) {
 			throw new SocialAuthException(
 					"Failed to retrieve the user profile from  " + u, e);
 		}
-		StringBuffer sb = new StringBuffer();
+
+		String result;
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					conn.getInputStream(), "UTF-8"));
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				sb.append(line).append("\n");
-			}
-			LOG.debug("User Profile :" + sb.toString());
+			result = serviceResponse
+					.getResponseBodyAsString(Constants.ENCODING);
+			LOG.debug("User Profile :" + result);
 		} catch (Exception e) {
 			throw new SocialAuthException("Failed to read response from  " + u);
 		}
 		try {
-			JSONObject resp = new JSONObject(sb.toString());
+			JSONObject resp = new JSONObject(result);
 			if (resp.has("Id")) {
 				p.setValidatedId(resp.getString("Id"));
 			}
@@ -452,11 +426,11 @@ Serializable {
 					p.setEmail(eobj.getString("Address"));
 				}
 			}
-			conn.disconnect();
+			serviceResponse.close();
 			return p;
 		} catch (Exception e) {
 			throw new SocialAuthException(
-					"Failed to parse the user profile json : " + sb.toString());
+					"Failed to parse the user profile json : " + result);
 		}
 	}
 
@@ -466,15 +440,9 @@ Serializable {
 	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
 	 *            Permission.ALL, Permission.DEFAULT
 	 */
+	@Override
 	public void setPermission(final Permission p) {
 		this.scope = p;
 	}
 
-	private void restore() throws Exception {
-		try {
-			__hotmail = Endpoint.load(this.properties, PROPERTY_DOMAIN);
-		} catch (IllegalStateException e) {
-			throw new SocialAuthConfigurationException(e);
-		}
-	}
 }
