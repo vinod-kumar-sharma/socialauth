@@ -30,18 +30,20 @@ import javax.servlet.http.HttpServletRequest;
 
 /**
  * This is the main interface representing an authentication provider. First we
- * call the getLoginRedirectURL method to get the URL where the user needs to be redirected.
- * It is the responsibility of the caller to redirect the user to that URL.
+ * call the getLoginRedirectURL method to get the URL where the user needs to be
+ * redirected. It is the responsibility of the caller to redirect the user to
+ * that URL.
  * 
- * Once the external provider like Facebook redirects the user back to our application,
- * we call the verifyResponse method and pass along the HttpRequest object that
- * is called upon redirection.
+ * Once the external provider like Facebook redirects the user back to our
+ * application, we call the verifyResponse method and pass along the HttpRequest
+ * object that is called upon redirection.
  * 
- * If the verifyResponse method returns a non null profile object, we can start calling
- * the other methods to obtain user information, update status or import contacts
+ * If the verifyResponse method returns a non null profile object, we can start
+ * calling the other methods to obtain user information, update status or import
+ * contacts
  * 
  * @author Abhinav Maheshwari
- *
+ * 
  */
 
 public interface AuthProvider {
@@ -72,7 +74,8 @@ public interface AuthProvider {
 	 * application.
 	 * 
 	 * @return Profile object containing the profile information
-	 * @param request Request object the request is received from the provider
+	 * @param request
+	 *            Request object the request is received from the provider
 	 * @throws Exception
 	 */
 
@@ -81,15 +84,18 @@ public interface AuthProvider {
 	/**
 	 * Updates the status on the chosen provider if available. This may not be
 	 * implemented for all providers.
-	 * @param msg Message to be shown as user's status
+	 * 
+	 * @param msg
+	 *            Message to be shown as user's status
 	 */
 	public void updateStatus(String msg) throws Exception;
 
 	/**
-	 * Gets the list of contacts of the user and their email. this may not
-	 * be available for all providers.
-	 * @return List of profile objects representing Contacts. Only name and email
-	 * will be available
+	 * Gets the list of contacts of the user and their email. this may not be
+	 * available for all providers.
+	 * 
+	 * @return List of profile objects representing Contacts. Only name and
+	 *         email will be available
 	 */
 	public List<Contact> getContactList() throws Exception;
 
@@ -97,4 +103,12 @@ public interface AuthProvider {
 	 * Logout
 	 */
 	public void logout();
+
+	/**
+	 * 
+	 * @param p
+	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
+	 *            Permission.ALL, Permission.DEFAULT
+	 */
+	public void setPermission(final Permission p);
 }
