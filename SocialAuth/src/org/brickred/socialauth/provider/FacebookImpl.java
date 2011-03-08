@@ -25,11 +25,8 @@
 
 package org.brickred.socialauth.provider;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Serializable;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,9 +34,6 @@ import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.AbstractProvider;
@@ -51,12 +45,14 @@ import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.exception.UserDeniedPermissionException;
+import org.brickred.socialauth.util.Constants;
+import org.brickred.socialauth.util.HttpUtil;
+import org.brickred.socialauth.util.MethodType;
+import org.brickred.socialauth.util.OAuthConfig;
+import org.brickred.socialauth.util.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import com.dyuproject.oauth.Endpoint;
-import com.visural.common.IOUtil;
-import com.visural.common.StringUtil;
 
 /**
  * Provider implementation for Facebook
@@ -65,33 +61,31 @@ import com.visural.common.StringUtil;
  * 
  */
 public class FacebookImpl extends AbstractProvider implements AuthProvider,
-Serializable {
+		Serializable {
 
 	private static final long serialVersionUID = 8644510564735754296L;
 	private static final String PROPERTY_DOMAIN = "graph.facebook.com";
+	private static final String AUTHORIZATION_URL = "https://graph.facebook.com/oauth/authorize?client_id=%1$s&display=page&redirect_uri=%2$s";
+	private static final String ACCESS_TOKEN_URL = "https://graph.facebook.com/oauth/access_token?client_id=%1$s&redirect_uri=%2$s&client_secret=%3$s&code=%4$s";
+	private static final String PROFILE_URL = "https://graph.facebook.com/me?access_token=%1$s";
+	private static final String CONTACTS_URL = "https://graph.facebook.com/me/friends?access_token=%1$s";
 	private static final String UPDATE_STATUS_URL = "https://graph.facebook.com/me/feed";
 	private static final String PROFILE_IMAGE_URL = "http://graph.facebook.com/%1$s/picture";
 	private static final String PUBLIC_PROFILE_URL = "http://www.facebook.com/profile.php?id=";
 	private final Log LOG = LogFactory.getLog(FacebookImpl.class);
 
-	transient private Endpoint __facebook;
-	transient private boolean unserializedFlag;
-
-	private String secret;
-	private String client_id;
 	private String accessToken;
 	private String redirectUri;
 	private Permission scope;
 	private Properties properties;
 	private boolean isVerify;
+	private OAuthConfig config;
 
-
-
-	/// set this to the list of extended permissions you want
+	// / set this to the list of extended permissions you want
 	private static final String[] AllPerms = new String[] { "publish_stream",
-		"email", "user_birthday", "user_location" };
+			"email", "user_birthday", "user_location" };
 	private static final String[] AuthPerms = new String[] { "email",
-		"user_birthday", "user_location" };
+			"user_birthday", "user_location" };
 
 	/**
 	 * Reads properties provided in the configuration file
@@ -103,25 +97,22 @@ Serializable {
 	 *            AuthProvider.AUTHENTICATION_ONLY or
 	 *            AuthProvider.ALL_PERMISSIONS
 	 */
-	public FacebookImpl(final Properties props)
-	throws Exception {
+	public FacebookImpl(final Properties props) throws Exception {
 		try {
-			__facebook = Endpoint.load(props, PROPERTY_DOMAIN);
 			this.properties = props;
+			config = OAuthConfig.load(this.properties, PROPERTY_DOMAIN);
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
-		secret = __facebook.getConsumerSecret();
-		client_id = __facebook.getConsumerKey();
-		if (secret.length() <= 0) {
+
+		if (config.get_consumerSecret().length() <= 0) {
 			throw new SocialAuthConfigurationException(
-			"graph.facebook.com.consumer_secret value is null");
+					"graph.facebook.com.consumer_secret value is null");
 		}
-		if (client_id.length() <= 0) {
+		if (config.get_consumerKey().length() <= 0) {
 			throw new SocialAuthConfigurationException(
-			"graph.facebook.com.consumer_key value is null");
+					"graph.facebook.com.consumer_key value is null");
 		}
-		unserializedFlag = true;
 	}
 
 	/**
@@ -130,18 +121,29 @@ Serializable {
 	 * that has been set using setId()
 	 * 
 	 */
+	@Override
 	public String getLoginRedirectURL(final String redirectUri) {
 		LOG.info("Determining URL for redirection");
 		setProviderState(true);
 		this.redirectUri = redirectUri;
-		String url = __facebook.getAuthorizationUrl() + "?client_id="
-		+ client_id + "&display=page&redirect_uri=" + redirectUri;
+		String url = String.format(AUTHORIZATION_URL, config.get_consumerKey(),
+				redirectUri);
+		StringBuffer result = new StringBuffer();
+		boolean isFirstSet = false;
 		if (Permission.AUHTHENTICATE_ONLY.equals(scope)) {
-			url += "&scope="
-				+ StringUtil.delimitObjectsToString(",", AuthPerms);
+			result.append(AuthPerms[0]);
+			for (int i = 1; i < AuthPerms.length; i++) {
+				if (isFirstSet) {
+					result.append(",").append(AuthPerms[i]);
+				}
+			}
 		} else {
-			url += "&scope=" + StringUtil.delimitObjectsToString(",", AllPerms);
+			result.append(AllPerms[0]);
+			for (int i = 1; i < AllPerms.length; i++) {
+				result.append(",").append(AllPerms[i]);
+			}
 		}
+		url += "&scope=" + result.toString();
 		LOG.info("Redirection to following URL should happen : " + url);
 		return url;
 	}
@@ -151,34 +153,46 @@ Serializable {
 	 * application.
 	 * 
 	 * @return Profile object containing the profile information
-	 * @param request Request object the request is received from the provider
+	 * @param request
+	 *            Request object the request is received from the provider
 	 * @throws Exception
 	 */
 
+	@Override
 	public Profile verifyResponse(final HttpServletRequest httpReq)
-	throws Exception {
+			throws Exception {
 		LOG.info("Retrieving Access Token in verify response function");
+		if (httpReq.getParameter("error_reason") != null
+				&& "user_denied".equals(httpReq.getParameter("error_reason"))) {
+			throw new UserDeniedPermissionException();
+		}
 		if (!isProviderState()) {
 			throw new ProviderStateException();
-		}
-		if (!unserializedFlag) {
-			restore();
 		}
 		String code = httpReq.getParameter("code");
 		if (code == null || code.length() == 0) {
 			throw new SocialAuthException("Verification code is null");
 		}
 		LOG.debug("Verification Code : " + code);
-		String authURL = getAuthURL(code);
-		URL url;
+		String acode;
 		try {
-			url = new URL(authURL);
+			acode = URLEncoder.encode(code, "UTF-8");
+		} catch (Exception e) {
+			acode = code;
+		}
+		String authURL = String.format(ACCESS_TOKEN_URL,
+				config.get_consumerKey(), redirectUri,
+				config.get_consumerSecret(), acode);
+		Response response;
+		try {
+			response = HttpUtil.doHttpRequest(authURL,
+					MethodType.GET.toString(), null, null);
 		} catch (Exception e) {
 			throw new SocialAuthException("Error in url : " + authURL, e);
 		}
 		String result;
 		try {
-			result = readURL(url);
+			result = response.getResponseBodyAsString(Constants.ENCODING);
 		} catch (IOException io) {
 			throw new SocialAuthException(io);
 		}
@@ -187,8 +201,8 @@ Serializable {
 		for (String pair : pairs) {
 			String[] kv = pair.split("=");
 			if (kv.length != 2) {
-				throw new SocialAuthException(
-						"Unexpected auth response from " + authURL);
+				throw new SocialAuthException("Unexpected auth response from "
+						+ authURL);
 			} else {
 				if (kv[0].equals("access_token")) {
 					accessToken = kv[1];
@@ -206,20 +220,8 @@ Serializable {
 			return authFacebookLogin(accessToken, expires);
 		} else {
 			throw new SocialAuthException(
-					"Access token and expires not found from " + url);
+					"Access token and expires not found from " + authURL);
 		}
-	}
-
-	private String getAuthURL(final String authCode) {
-		String acode;
-		try {
-			acode = URLEncoder.encode(authCode, "UTF-8");
-		} catch (Exception e) {
-			acode = authCode;
-		}
-		return __facebook.getRequestTokenUrl() + "?client_id=" + client_id
-		+ "&redirect_uri=" + redirectUri + "&client_secret=" + secret
-		+ "&code=" + acode;
 	}
 
 	private Profile authFacebookLogin(final String accessToken,
@@ -227,16 +229,18 @@ Serializable {
 		String presp;
 		String aToken;
 		try {
-			aToken = URLEncoder.encode(accessToken, "UTF-8");
+			aToken = URLEncoder.encode(accessToken, Constants.ENCODING);
 		} catch (Exception e) {
 			aToken = accessToken;
 		}
-		String url = __facebook.getAccessTokenUrl() + "?access_token=" + aToken;
+		String profileurl = String.format(PROFILE_URL, aToken);
 		try {
-			presp = IOUtil.urlToString(new URL(url));
+			Response response = HttpUtil.doHttpRequest(profileurl,
+					MethodType.GET.toString(), null, null);
+			presp = response.getResponseBodyAsString(Constants.ENCODING);
 		} catch (Exception e) {
 			throw new SocialAuthException("Error while getting profile from "
-					+ url, e);
+					+ profileurl, e);
 		}
 		try {
 			LOG.debug("User Profile : " + presp);
@@ -255,8 +259,8 @@ Serializable {
 			if (resp.has("gender")) {
 				p.setGender(resp.getString("gender"));
 			}
-			p.setProfileImageURL(String.format(PROFILE_IMAGE_URL, resp
-					.getString("id")));
+			p.setProfileImageURL(String.format(PROFILE_IMAGE_URL,
+					resp.getString("id")));
 			String locale = resp.getString("locale");
 			if (locale != null) {
 				String a[] = locale.split("_");
@@ -272,16 +276,6 @@ Serializable {
 		}
 	}
 
-	private String readURL(final URL url) throws IOException {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		InputStream is = url.openStream();
-		int r;
-		while ((r = is.read()) != -1) {
-			baos.write(r);
-		}
-		return new String(baos.toByteArray());
-	}
-
 	/**
 	 * Updates the status on the chosen provider if available. This may not be
 	 * implemented for all providers.
@@ -291,33 +285,32 @@ Serializable {
 	 * @throws Exception
 	 */
 
+	@Override
 	public void updateStatus(final String msg) throws Exception {
 		LOG.info("Updating status : " + msg);
 		if (!isVerify) {
 			throw new SocialAuthException(
-			"Please call verifyResponse function first to get Access Token and then update status");
+					"Please call verifyResponse function first to get Access Token and then update status");
 		}
 		if (msg == null || msg.trim().length() == 0) {
 			throw new ServerDataException("Status cannot be blank");
 		}
-		HttpClient client = new HttpClient();
-		PostMethod method = new PostMethod(UPDATE_STATUS_URL);
-		method.addParameter("access_token", accessToken);
-		method.addParameter("message", msg);
+		StringBuilder strb = new StringBuilder();
+		strb.append("access_token=").append(accessToken).append("&");
+		strb.append("message=").append(msg);
 
-		try{
-			int returnCode = client.executeMethod(method);
-			String rmsg = method.getResponseBodyAsString();
+		Response serviceResponse;
+		try {
+			serviceResponse = HttpUtil.doHttpRequest(UPDATE_STATUS_URL,
+					MethodType.POST.toString(), strb.toString(), null);
 
-			if(returnCode != HttpStatus.SC_OK) {
+			if (serviceResponse.getStatus() != 200) {
 				throw new SocialAuthException(
-						"Status not updated. Return Status code :" + returnCode
-						+ " Message: " + rmsg);
+						"Status not updated. Return Status code :"
+								+ serviceResponse.getStatus());
 			}
 		} catch (Exception e) {
 			throw new SocialAuthException(e);
-		} finally {
-			method.releaseConnection();
 		}
 
 	}
@@ -330,21 +323,23 @@ Serializable {
 	 *         available
 	 */
 
+	@Override
 	public List<Contact> getContactList() throws Exception {
 		if (!isProviderState()) {
 			throw new ProviderStateException();
 		}
 		if (!isVerify) {
 			throw new SocialAuthException(
-			"Please call verifyResponse function first to get Access Token");
+					"Please call verifyResponse function first to get Access Token");
 		}
 		List<Contact> plist = new ArrayList<Contact>();
-		String contactURL = __facebook.getAccessTokenUrl()
-		+ "/friends?access_token=" + accessToken;
+		String contactURL = String.format(CONTACTS_URL, accessToken);
 		LOG.info("Fetching contacts from " + contactURL);
 		String respStr;
 		try {
-			respStr = IOUtil.urlToString(new URL(contactURL));
+			Response response = HttpUtil.doHttpRequest(contactURL,
+					MethodType.GET.toString(), null, null);
+			respStr = response.getResponseBodyAsString(Constants.ENCODING);
 		} catch (Exception e) {
 			throw new SocialAuthException("Error while getting contacts from "
 					+ contactURL);
@@ -371,6 +366,7 @@ Serializable {
 	/**
 	 * Logout
 	 */
+	@Override
 	public void logout() {
 		accessToken = null;
 	}
@@ -381,16 +377,10 @@ Serializable {
 	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
 	 *            Permission.ALL, Permission.DEFAULT
 	 */
+	@Override
 	public void setPermission(final Permission p) {
 		LOG.debug("Permission requested : " + p.toString());
 		this.scope = p;
 	}
 
-	private void restore() throws Exception {
-		try {
-			__facebook = Endpoint.load(this.properties, PROPERTY_DOMAIN);
-		} catch (IllegalStateException e) {
-			throw new SocialAuthConfigurationException(e);
-		}
-	}
 }

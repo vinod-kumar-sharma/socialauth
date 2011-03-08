@@ -25,12 +25,11 @@
 
 package org.brickred.socialauth.provider;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
@@ -46,73 +45,61 @@ import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.util.Constants;
+import org.brickred.socialauth.util.OAuthConfig;
+import org.brickred.socialauth.util.OAuthConsumer;
+import org.brickred.socialauth.util.Response;
+import org.brickred.socialauth.util.Token;
 import org.brickred.socialauth.util.XMLParseUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
-import com.dyuproject.oauth.Constants;
-import com.dyuproject.oauth.Consumer;
-import com.dyuproject.oauth.Endpoint;
-import com.dyuproject.oauth.HttpAuthTransport;
-import com.dyuproject.oauth.NonceAndTimestamp;
-import com.dyuproject.oauth.Signature;
-import com.dyuproject.oauth.SimpleNonceAndTimestamp;
-import com.dyuproject.oauth.Token;
-import com.dyuproject.oauth.TokenExchange;
-import com.dyuproject.oauth.Transport;
-import com.dyuproject.util.http.HttpConnector;
-import com.dyuproject.util.http.SimpleHttpConnector;
-import com.dyuproject.util.http.UrlEncodedParameterMap;
-import com.dyuproject.util.http.HttpConnector.Parameter;
-import com.dyuproject.util.http.HttpConnector.Response;
-
 /**
- * Provider implementation for Yahoo. This uses the oAuth API
- * provided by Yahoo
+ * Provider implementation for Yahoo. This uses the oAuth API provided by Yahoo
  * 
  * @author abhinavm@brickred.com
  * @author tarunn@brickred.com
- *
+ * 
  */
 public class YahooImpl extends AbstractProvider implements AuthProvider,
-Serializable {
+		Serializable {
 
 	private static final long serialVersionUID = 903564874550419470L;
+	private static final String REQUEST_TOKEN_URL = "https://api.login.yahoo.com/oauth/v2/get_request_token";
+	private static final String AUTHORIZATION_URL = "https://api.login.yahoo.com//oauth/v2/request_auth";
+	private static final String ACCESS_TOKEN_URL = "https://api.login.yahoo.com/oauth/v2/get_token";
 	private static final String PROFILE_URL = "http://social.yahooapis.com/v1/user/%1$s/profile?format=json";
 	private static final String CONTACTS_URL = "http://social.yahooapis.com/v1/user/%1$s/contacts;count=max";
 	private static final String UPDATE_STATUS_URL = "http://social.yahooapis.com/v1/user/%1$s/profile/status";
 	private static final String PROPERTY_DOMAIN = "api.login.yahoo.com";
 	private final Log LOG = LogFactory.getLog(YahooImpl.class);
 
-	transient private Consumer __consumer;
-	transient private Endpoint __yahoo;
-	transient private boolean unserializedFlag;
-
-	private Token token;
 	private Permission scope;
 	private Properties properties;
 	private boolean isVerify;
-
+	private Token requestToken;
+	private Token accessToken;
+	private OAuthConsumer oauth;
+	private OAuthConfig config;
 
 	public YahooImpl(final Properties props) throws Exception {
 		try {
-			__yahoo = Endpoint.load(props, PROPERTY_DOMAIN);
 			this.properties = props;
+			config = OAuthConfig.load(this.properties, PROPERTY_DOMAIN);
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
-		if (__yahoo.getConsumerSecret().length() == 0) {
+		if (config.get_consumerSecret().length() == 0) {
 			throw new SocialAuthConfigurationException(
-			"api.login.yahoo.com.consumer_secret value is null");
+					"api.login.yahoo.com.consumer_secret value is null");
 		}
-		if (__yahoo.getConsumerKey().length() == 0) {
+		if (config.get_consumerKey().length() == 0) {
 			throw new SocialAuthConfigurationException(
-			"api.login.yahoo.com.consumer_key value is null");
+					"api.login.yahoo.com.consumer_key value is null");
 		}
-		__consumer = Consumer.newInstance(this.properties);
-		unserializedFlag = true;
+		oauth = new OAuthConsumer(config);
 	}
 
 	/**
@@ -123,34 +110,23 @@ Serializable {
 	 * @throws Exception
 	 */
 
+	@Override
 	public String getLoginRedirectURL(final String returnTo) throws Exception {
 		LOG.info("Determining URL for redirection");
 		setProviderState(true);
-		token = new Token(__yahoo.getConsumerKey());
-		UrlEncodedParameterMap params = new UrlEncodedParameterMap().add(
-				Constants.OAUTH_CALLBACK, returnTo);
-		Response r;
+		LOG.debug("Call to fetch Request Token");
 		try {
-			LOG.debug("Call to fetch Request Token");
-			r = __consumer.fetchToken(__yahoo, params,
-					TokenExchange.REQUEST_TOKEN, token);
-		} catch (Exception e) {
-			throw e;
+			requestToken = oauth.getRequestToken(REQUEST_TOKEN_URL, returnTo);
+		} catch (SocialAuthException ex) {
+			String msg = ex.getMessage()
+					+ "OR you have not set any scope while registering your application. You will have to select atlest read public profile scope while registering your application";
+			throw new SocialAuthException(msg, ex);
 		}
-		if (r.getStatus() == 200 && token.getState() == Token.UNAUTHORIZED) {
-			// unauthorized request token
-			StringBuilder urlBuffer = Transport.buildAuthUrl(__yahoo
-					.getAuthorizationUrl(), token, returnTo);
-			LOG.info("Redirection to following URL should happen : "
-					+ urlBuffer.toString());
-			return urlBuffer.toString();
-		} else {
-			LOG.debug("Error while fetching Request Token");
-			throw new SocialAuthConfigurationException(
-					"Application keys are not correct. "
-					+ "The server running the application should be same that was registered to get the keys.");
-		}
-
+		StringBuilder urlBuffer = oauth.buildAuthUrl(AUTHORIZATION_URL,
+				requestToken, returnTo);
+		LOG.info("Redirection to following URL should happen : "
+				+ urlBuffer.toString());
+		return urlBuffer.toString();
 	}
 
 	/**
@@ -158,93 +134,65 @@ Serializable {
 	 * application.
 	 * 
 	 * @return Profile object containing the profile information
-	 * @param request Request object the request is received from the provider
+	 * @param request
+	 *            Request object the request is received from the provider
 	 * @throws Exception
 	 */
 
+	@Override
 	public Profile verifyResponse(final HttpServletRequest request)
-	throws Exception {
+			throws Exception {
 		LOG.info("Verifying the authentication response from provider");
 		if (!isProviderState()) {
 			throw new ProviderStateException();
 		}
-		if (!unserializedFlag) {
-			LOG.debug("Restoring from serialized state");
-			restore();
+		if (requestToken == null) {
+			throw new SocialAuthException("Request token is null");
+		}
+		String verifier = request.getParameter(Constants.OAUTH_VERIFIER);
+		if (verifier != null) {
+			requestToken.setAttribute(Constants.OAUTH_VERIFIER, verifier);
 		}
 
-		String verifier = request.getParameter(Constants.OAUTH_VERIFIER);
-		if (token.authorize(request.getParameter(Constants.OAUTH_TOKEN),
-				verifier)) {
-			LOG.debug("Call to fetch Access Token");
-			UrlEncodedParameterMap params = new UrlEncodedParameterMap();
-			Response r;
-			try {
-				r = __consumer.fetchToken(__yahoo, params,
-						TokenExchange.ACCESS_TOKEN, token);
-			} catch (Exception e) {
-				throw new SocialAuthException(
-				"Error while getting Access Token");
-			}
-			if (r.getStatus() == 200) {
-				isVerify = true;
-				return getUserProfile();
-			} else {
-				throw new SocialAuthException(
-						"Unable to retrieve the access token. Status: "
-						+ r.getStatus());
-			}
-		}
-		return null;
+		LOG.debug("Call to fetch Access Token");
+		accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL, requestToken);
+
+		isVerify = true;
+		return getUserProfile();
 	}
 
 	private Profile getUserProfile() throws Exception {
 		LOG.debug("Obtaining user profile");
 		Profile profile = new Profile();
-		String guid = (String) token.getAttribute("xoauth_yahoo_guid");
+		String guid = (String) accessToken.getAttribute("xoauth_yahoo_guid");
 		if (guid.indexOf("<") != -1) {
 			guid = guid.substring(0, guid.indexOf("<")).trim();
-			token.setAttribute("xoauth_yahoo_guid", guid);
+			accessToken.setAttribute("xoauth_yahoo_guid", guid);
 		}
 		String url = String.format(PROFILE_URL, guid);
-		UrlEncodedParameterMap serviceParams = new UrlEncodedParameterMap(url);
-		NonceAndTimestamp nts = SimpleNonceAndTimestamp.getDefault();
-		Signature sig = __yahoo.getSignature();
-
-		HttpConnector connector = SimpleHttpConnector.getDefault();
-
-		Parameter authorizationHeader = new Parameter("Authorization",
-				HttpAuthTransport.getAuthHeaderValue(serviceParams, __yahoo,
-						token, nts, sig));
 		Response serviceResponse = null;
 		try {
-			serviceResponse = connector.doGET(serviceParams
-					.toStringRFC3986(), authorizationHeader);
-		} catch (IOException ie) {
+			serviceResponse = oauth.httpGet(url, null, accessToken);
+		} catch (Exception e) {
 			throw new SocialAuthException(
 					"Failed to retrieve the user profile from  " + url);
 		}
 		if (serviceResponse.getStatus() != 200) {
 			throw new SocialAuthException(
 					"Failed to retrieve the user profile from  " + url
-					+ ". Staus :"
-					+ serviceResponse.getStatus());
+							+ ". Staus :" + serviceResponse.getStatus());
 		}
-		StringBuffer sb = new StringBuffer();
+		String result;
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					serviceResponse.getInputStream(), "UTF-8"));
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				sb.append(line).append("\n");
-			}
-			LOG.debug("User Profile :" + sb.toString());
+			result = serviceResponse
+					.getResponseBodyAsString(Constants.ENCODING);
+			LOG.debug("User Profile :" + result);
 		} catch (Exception exc) {
 			throw new SocialAuthException("Failed to read response from  "
 					+ url);
 		}
 		try {
-			JSONObject jobj = new JSONObject(sb.toString());
+			JSONObject jobj = new JSONObject(result);
 			if (jobj.has("profile")) {
 				JSONObject pObj = jobj.getJSONObject("profile");
 				if (pObj.has("guid")) {
@@ -274,9 +222,7 @@ Serializable {
 				if (pObj.has("image")) {
 					JSONObject imgObj = pObj.getJSONObject("image");
 					if (imgObj.has("imageUrl")) {
-						profile
-						.setProfileImageURL(imgObj
-								.getString("imageUrl"));
+						profile.setProfileImageURL(imgObj.getString("imageUrl"));
 					}
 				}
 				if (pObj.has("emails")) {
@@ -297,7 +243,7 @@ Serializable {
 			return profile;
 		} catch (Exception e) {
 			throw new ServerDataException(
-					"Failed to parse the user profile json : " + sb.toString());
+					"Failed to parse the user profile json : " + result);
 
 		}
 	}
@@ -309,32 +255,26 @@ Serializable {
 	 *         email will be available
 	 */
 
+	@Override
 	public List<Contact> getContactList() throws Exception {
 		if (!isVerify) {
 			throw new SocialAuthException(
-			"Please call verifyResponse function first to get Access Token");
+					"Please call verifyResponse function first to get Access Token");
 		}
-		String url = String.format(CONTACTS_URL, token
-				.getAttribute("xoauth_yahoo_guid"));
+		String url = String.format(CONTACTS_URL,
+				accessToken.getAttribute("xoauth_yahoo_guid"));
 		LOG.info("Fetching contacts from " + url);
-		UrlEncodedParameterMap serviceParams = new UrlEncodedParameterMap(url);
-		NonceAndTimestamp nts = SimpleNonceAndTimestamp.getDefault();
-		Signature sig = __yahoo.getSignature();
 
-		HttpConnector connector = SimpleHttpConnector.getDefault();
-		Parameter authorizationHeader = new Parameter("Authorization",
-				HttpAuthTransport.getAuthHeaderValue(serviceParams, __yahoo,
-						token, nts, sig));
-		List<Contact> plist = new ArrayList<Contact>();
-		Response serviceResponse;
-		Element root;
+		Response serviceResponse = null;
 		try {
-			serviceResponse = connector.doGET(serviceParams
-					.toStringRFC3986(), authorizationHeader);
-		} catch (IOException ie) {
+			serviceResponse = oauth.httpGet(url, null, accessToken);
+		} catch (Exception ie) {
 			throw new SocialAuthException(
 					"Failed to retrieve the contacts from " + url, ie);
 		}
+
+		List<Contact> plist = new ArrayList<Contact>();
+		Element root;
 		try {
 			root = XMLParseUtil.loadXmlResource(serviceResponse
 					.getInputStream());
@@ -356,25 +296,25 @@ Serializable {
 					List<String> emailArr = new ArrayList<String>();
 					for (int j = 0; j < fieldList.getLength(); j++) {
 						Element field = (Element) fieldList.item(j);
-						String type = XMLParseUtil.getElementData(field,
-						"type");
+						String type = XMLParseUtil
+								.getElementData(field, "type");
 
 						if ("email".equalsIgnoreCase(type)) {
 							if (address.length() > 0) {
 								emailArr.add(XMLParseUtil.getElementData(field,
-								"value"));
+										"value"));
 							} else {
 								address = XMLParseUtil.getElementData(field,
-								"value");
+										"value");
 							}
 						} else if ("name".equals(type)) {
 							fname = XMLParseUtil.getElementData(field,
-							"givenName");
+									"givenName");
 							lname = XMLParseUtil.getElementData(field,
-							"familyName");
+									"familyName");
 						} else if ("yahooid".equalsIgnoreCase(type)) {
 							dispName = XMLParseUtil.getElementData(field,
-							"value");
+									"value");
 						}
 					}
 					if (address != null && address.length() > 0) {
@@ -410,39 +350,33 @@ Serializable {
 	 *            Message to be shown as user's status
 	 * @throws Exception
 	 */
+	@Override
 	public void updateStatus(final String msg) throws Exception {
 		if (!isVerify) {
 			throw new SocialAuthException(
-			"Please call verifyResponse function first to get Access Token");
+					"Please call verifyResponse function first to get Access Token");
 		}
 		if (msg == null || msg.trim().length() == 0) {
 			throw new ServerDataException("Status cannot be blank");
 		}
-		String url = String.format(UPDATE_STATUS_URL, token
-				.getAttribute("xoauth_yahoo_guid"));
+		String url = String.format(UPDATE_STATUS_URL,
+				accessToken.getAttribute("xoauth_yahoo_guid"));
 		LOG.info("Updating status " + msg + " on " + url);
-		UrlEncodedParameterMap serviceParams = new UrlEncodedParameterMap(url);
-		NonceAndTimestamp nts = SimpleNonceAndTimestamp.getDefault();
-		Signature sig = __yahoo.getSignature();
-		HttpConnector connector = SimpleHttpConnector.getDefault();
-		Parameter authorizationHeader = new Parameter(
-				"Authorization",
-				getYahooAuthHeaderValue(serviceParams, __yahoo, token, nts, sig));
-
-		Response serviceResponse;
+		Map<String, String> params = new HashMap<String, String>();
+		String msgBody = "{\"status\":{\"message\":\"" + msg + "\"}}";
+		Response serviceResponse = null;
 		try {
-			String msgBody = "{\"status\":{\"message\":\"" + msg + "\"}}";
-			serviceResponse = connector.doPUT(serviceParams.toStringRFC3986(),
-					authorizationHeader, null, msgBody
-					.getBytes("UTF-8"));
-		} catch (IOException ie) {
+			serviceResponse = oauth.httpPut(url, params, null, msgBody,
+					accessToken);
+		} catch (Exception ie) {
 			throw new SocialAuthException("Failed to update status on " + url,
 					ie);
 		}
-		if(serviceResponse.getStatus() !=204){
+
+		if (serviceResponse.getStatus() != 204) {
 			throw new SocialAuthException(
 					"Failed to update status. Return status code :"
-					+ serviceResponse.getStatus());
+							+ serviceResponse.getStatus());
 		}
 		LOG.debug("Status Updated and return status code is : "
 				+ serviceResponse.getStatus());
@@ -453,8 +387,10 @@ Serializable {
 	/**
 	 * Logout
 	 */
+	@Override
 	public void logout() {
-		token = null;
+		requestToken = null;
+		accessToken = null;
 	}
 
 	/**
@@ -467,44 +403,4 @@ Serializable {
 		LOG.debug("Permission requested : " + p.toString());
 		this.scope = p;
 	}
-
-	private void restore() throws Exception {
-		try {
-			__yahoo = Endpoint.load(this.properties, PROPERTY_DOMAIN);
-		} catch (IllegalStateException e) {
-			throw new SocialAuthConfigurationException(e);
-		}
-		__consumer = Consumer.newInstance(this.properties);
-	}
-
-	private String getYahooAuthHeaderValue(final UrlEncodedParameterMap params,
-			final Endpoint ep, final Token token, final NonceAndTimestamp nts,
-			final Signature signature) {
-		StringBuilder oauthBuffer = new StringBuilder();
-		params.put(Constants.OAUTH_CONSUMER_KEY, ep.getConsumerKey());
-		params.put(Constants.OAUTH_TOKEN, token.getKey());
-		nts.put(params, ep.getConsumerKey());
-		Signature.Listener __authHeaderListener = new Signature.Listener() {
-			public void handleOAuthParameter(final String key,
-					final String value, final StringBuilder oauthBuffer) {
-				oauthBuffer.append(',').append(key).append('=').append('"')
-				.append(value).append('"');
-			}
-
-			public void handleRequestParameter(final String key,
-					final String value, final StringBuilder requestBuffer) {
-
-			}
-		};
-		signature.generate(params, ep.getConsumerSecret(), token,
-				HttpConnector.PUT, __authHeaderListener, oauthBuffer, null);
-
-		oauthBuffer.setCharAt(0, ' ');
-		oauthBuffer.insert(0, "OAuth");
-
-		return oauthBuffer.toString();
-	}
-
-
-
 }

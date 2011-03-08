@@ -32,10 +32,6 @@ import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.httpclient.HttpClient;
-import org.apache.commons.httpclient.HttpStatus;
-import org.apache.commons.httpclient.methods.GetMethod;
-import org.apache.commons.httpclient.methods.PostMethod;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.AbstractProvider;
@@ -44,13 +40,16 @@ import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
-import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.exception.UserDeniedPermissionException;
+import org.brickred.socialauth.util.Constants;
+import org.brickred.socialauth.util.HttpUtil;
+import org.brickred.socialauth.util.MethodType;
+import org.brickred.socialauth.util.OAuthConfig;
+import org.brickred.socialauth.util.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import com.dyuproject.oauth.Endpoint;
 
 /**
  * Provider implementation for FourSquare. This uses the oAuth API provided by
@@ -60,7 +59,7 @@ import com.dyuproject.oauth.Endpoint;
  * 
  */
 public class FourSquareImpl extends AbstractProvider implements AuthProvider,
-Serializable {
+		Serializable {
 
 	private static final long serialVersionUID = 3364430495809289118L;
 	private static final String PROFILE_URL = "https://api.foursquare.com/v2/users/self?oauth_token=";
@@ -71,32 +70,28 @@ Serializable {
 	private static final String PROPERTY_DOMAIN = "foursquare.com";
 	private final Log LOG = LogFactory.getLog(YahooImpl.class);
 
-	transient private Endpoint __foursquare;
-	transient private boolean unserializedFlag;
-
 	private Permission scope;
 	private Properties properties;
 	private boolean isVerify;
 	private String redirectUri;
 	private String accessToken;
-
+	private OAuthConfig config;
 
 	public FourSquareImpl(final Properties props) throws Exception {
 		try {
-			__foursquare = Endpoint.load(props, PROPERTY_DOMAIN);
 			this.properties = props;
+			config = OAuthConfig.load(this.properties, PROPERTY_DOMAIN);
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
-		if (__foursquare.getConsumerSecret().length() == 0) {
+		if (config.get_consumerSecret().length() == 0) {
 			throw new SocialAuthConfigurationException(
-			"foursquare.com.consumer_secret value is null");
+					"foursquare.com.consumer_secret value is null");
 		}
-		if (__foursquare.getConsumerKey().length() == 0) {
+		if (config.get_consumerKey().length() == 0) {
 			throw new SocialAuthConfigurationException(
-			"foursquare.com.consumer_key value is null");
+					"foursquare.com.consumer_key value is null");
 		}
-		unserializedFlag = true;
 	}
 
 	/**
@@ -107,13 +102,14 @@ Serializable {
 	 * @throws Exception
 	 */
 
+	@Override
 	public String getLoginRedirectURL(final String redirectUri)
-	throws Exception {
+			throws Exception {
 		LOG.info("Determining URL for redirection");
 		setProviderState(true);
 		this.redirectUri = redirectUri;
-		String reqTokenUrl = String.format(REQUEST_TOKEN_URL, __foursquare
-				.getConsumerKey(), redirectUri);
+		String reqTokenUrl = String.format(REQUEST_TOKEN_URL,
+				config.get_consumerKey(), redirectUri);
 		LOG.info("Redirection to following URL should happen : " + reqTokenUrl);
 		return reqTokenUrl;
 
@@ -124,46 +120,57 @@ Serializable {
 	 * application.
 	 * 
 	 * @return Profile object containing the profile information
-	 * @param request Request object the request is received from the provider
+	 * @param request
+	 *            Request object the request is received from the provider
 	 * @throws Exception
 	 */
 
+	@Override
 	public Profile verifyResponse(final HttpServletRequest request)
-	throws Exception {
+			throws Exception {
 		LOG.info("Verifying the authentication response from provider");
+		if (request.getParameter("error") != null
+				&& "access_denied".equals(request.getParameter("error"))) {
+			throw new UserDeniedPermissionException();
+		}
+
 		if (!isProviderState()) {
 			throw new ProviderStateException();
-		}
-		if (!unserializedFlag) {
-			LOG.debug("Restoring from serialized state");
-			restore();
 		}
 
 		String code = request.getParameter("code");
 		if (code == null || code.length() == 0) {
 			throw new SocialAuthException("Verification code is null");
 		}
-		HttpClient client = new HttpClient();
-		PostMethod method = new PostMethod(ACCESS_TOKEN_URL);
-		method.addParameter("client_id", __foursquare.getConsumerKey());
-		method.addParameter("client_secret", __foursquare.getConsumerSecret());
-		method.addParameter("grant_type", "authorization_code");
-		method.addParameter("redirect_uri", redirectUri);
-		method.addParameter("code", code);
-		int returnCode = client.executeMethod(method);
+		StringBuilder strb = new StringBuilder();
+		strb.append("client_id=").append(config.get_consumerKey()).append("&");
+		strb.append("client_secret=").append(config.get_consumerSecret())
+				.append("&");
+		strb.append("grant_type=authorization_code&");
+		strb.append("redirect_uri=").append(redirectUri).append("&");
+		strb.append("code=").append(code);
+		Response serviceResponse = HttpUtil.doHttpRequest(ACCESS_TOKEN_URL,
+				MethodType.POST.toString(), strb.toString(), null);
+
 		String result = null;
-		if (returnCode == HttpStatus.SC_OK) {
-			result = method.getResponseBodyAsString();
+		if (serviceResponse.getStatus() == 200) {
+			try {
+				result = serviceResponse
+						.getResponseBodyAsString(Constants.ENCODING);
+			} catch (Exception exc) {
+				throw new SocialAuthException("Failed to read response from  "
+						+ ACCESS_TOKEN_URL);
+			}
 		}
 		if (result == null || result.length() == 0) {
 			throw new SocialAuthConfigurationException(
 					"Problem in getting Access Token. Application key or Secret key may be wrong."
-					+ "The server running the application should be same that was registered to get the keys.");
+							+ "The server running the application should be same that was registered to get the keys.");
 		}
 
 		try {
 			JSONObject jobj = new JSONObject(result);
-			if(jobj.has("access_token")){
+			if (jobj.has("access_token")) {
 				accessToken = jobj.getString("access_token");
 			}
 			if (accessToken != null) {
@@ -175,33 +182,29 @@ Serializable {
 			} else {
 				throw new SocialAuthException(
 						"Access token and expires not found from "
-						+ ACCESS_TOKEN_URL);
+								+ ACCESS_TOKEN_URL);
 			}
 		} catch (Exception e) {
 			throw e;
-		} finally {
-			method.releaseConnection();
 		}
-		// return null;
 	}
 
 	private Profile getUserProfile() throws Exception {
 		LOG.debug("Obtaining user profile");
 		Profile profile = new Profile();
-		HttpClient client = new HttpClient();
 		String u = PROFILE_URL + accessToken;
-		GetMethod get = new GetMethod(u);
+		Response serviceResponse;
 		try {
-			client.executeMethod(get);
+			serviceResponse = HttpUtil.doHttpRequest(u,
+					MethodType.GET.toString(), null, null);
 		} catch (Exception e) {
 			throw new SocialAuthException(
 					"Failed to retrieve the user profile from  " + u, e);
 		}
 		String res;
 		try {
-			res = get.getResponseBodyAsString();
-			LOG.debug("User Profile :" + res);
-		} catch (Exception e) {
+			res = serviceResponse.getResponseBodyAsString(Constants.ENCODING);
+		} catch (Exception exc) {
 			throw new SocialAuthException("Failed to read response from  " + u);
 		}
 
@@ -255,31 +258,34 @@ Serializable {
 	 *         profile URL will be available
 	 */
 
+	@Override
 	public List<Contact> getContactList() throws Exception {
 		if (!isVerify) {
 			throw new SocialAuthException(
-			"Please call verifyResponse function first to get Access Token");
+					"Please call verifyResponse function first to get Access Token");
 		}
 		String url = CONTACTS_URL + accessToken;
-		HttpClient client = new HttpClient();
 		LOG.info("Fetching contacts from " + url);
-		GetMethod get = new GetMethod(url);
 
-		int returnCode;
+		Response serviceResponse;
 		try {
-			returnCode = client.executeMethod(get);
+			serviceResponse = HttpUtil.doHttpRequest(url,
+					MethodType.GET.toString(), null, null);
 		} catch (Exception e) {
-			throw new SocialAuthException("Error while getting contacts from "+ url);
-		}
-		if (returnCode != HttpStatus.SC_OK) {
 			throw new SocialAuthException("Error while getting contacts from "
-					+ url + "Status : " + returnCode);
+					+ url);
+		}
+		if (serviceResponse.getStatus() != 200) {
+			throw new SocialAuthException("Error while getting contacts from "
+					+ url + "Status : " + serviceResponse.getStatus());
 		}
 		String respStr;
 		try {
-			respStr = get.getResponseBodyAsString();
-		} catch (Exception e) {
-			throw new ServerDataException("Failed to get response from " + url);
+			respStr = serviceResponse
+					.getResponseBodyAsString(Constants.ENCODING);
+		} catch (Exception exc) {
+			throw new SocialAuthException("Failed to read response from  "
+					+ url);
 		}
 		LOG.debug("User Contacts list in JSON " + respStr);
 		JSONObject resp = new JSONObject(respStr);
@@ -287,16 +293,18 @@ Serializable {
 		JSONArray items = new JSONArray();
 		if (resp.has("response")) {
 			JSONObject robj = resp.getJSONObject("response");
-			if(robj.has("friends")){
+			if (robj.has("friends")) {
 				JSONObject fobj = robj.getJSONObject("friends");
 				if (fobj.has("items")) {
 					items = fobj.getJSONArray("items");
 				}
-			}else{
-				throw new SocialAuthException("Failed to parse the user profile json : " + respStr);
+			} else {
+				throw new SocialAuthException(
+						"Failed to parse the user profile json : " + respStr);
 			}
-		}else{
-			throw new SocialAuthException("Failed to parse the user profile json : " + respStr);
+		} else {
+			throw new SocialAuthException(
+					"Failed to parse the user profile json : " + respStr);
 		}
 		LOG.debug("Contacts Found : " + items.length());
 		for (int i = 0; i < items.length(); i++) {
@@ -325,15 +333,17 @@ Serializable {
 	 *            Message to be shown as user's status
 	 * @throws Exception
 	 */
+	@Override
 	public void updateStatus(final String msg) throws Exception {
 		LOG.warn("WARNING: Not implemented for FourSquare");
 		throw new SocialAuthException(
-		"Update Status is not implemented for FourSquare");
+				"Update Status is not implemented for FourSquare");
 	}
 
 	/**
 	 * Logout
 	 */
+	@Override
 	public void logout() {
 		accessToken = null;
 	}
@@ -344,20 +354,9 @@ Serializable {
 	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
 	 *            Permission.ALL, Permission.DEFAULT
 	 */
+	@Override
 	public void setPermission(final Permission p) {
 		LOG.debug("Permission requested : " + p.toString());
 		this.scope = p;
 	}
-
-	private void restore() throws Exception {
-		try {
-			__foursquare = Endpoint.load(this.properties, PROPERTY_DOMAIN);
-		} catch (IllegalStateException e) {
-			throw new SocialAuthConfigurationException(e);
-		}
-	}
-
-
-
-
 }

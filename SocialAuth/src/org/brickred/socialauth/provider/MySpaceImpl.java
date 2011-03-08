@@ -25,20 +25,12 @@
 
 package org.brickred.socialauth.provider;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.io.Serializable;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
-import java.util.Random;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -53,66 +45,56 @@ import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.exception.UserDeniedPermissionException;
+import org.brickred.socialauth.util.Constants;
+import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.OAuthConsumer;
+import org.brickred.socialauth.util.Response;
+import org.brickred.socialauth.util.Token;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import com.dyuproject.oauth.Constants;
-import com.dyuproject.oauth.Consumer;
-import com.dyuproject.oauth.Endpoint;
-import com.dyuproject.oauth.HttpAuthTransport;
-import com.dyuproject.oauth.NonceAndTimestamp;
-import com.dyuproject.oauth.Signature;
-import com.dyuproject.oauth.SimpleNonceAndTimestamp;
-import com.dyuproject.oauth.Token;
-import com.dyuproject.oauth.TokenExchange;
-import com.dyuproject.oauth.Transport;
-import com.dyuproject.util.http.HttpConnector;
-import com.dyuproject.util.http.SimpleHttpConnector;
-import com.dyuproject.util.http.UrlEncodedParameterMap;
-import com.dyuproject.util.http.HttpConnector.Parameter;
-import com.dyuproject.util.http.HttpConnector.Response;
 
 /**
  * Provider implementation for Myspace
  * 
  */
 public class MySpaceImpl extends AbstractProvider implements AuthProvider,
-Serializable {
+		Serializable {
 
 	private static final long serialVersionUID = -4074039782095430942L;
 	private static final String PROPERTY_DOMAIN = "api.myspace.com";
+	private static final String REQUEST_TOKEN_URL = "http://api.myspace.com/request_token";
+	private static final String AUTHORIZATION_URL = "http://api.myspace.com/authorize?myspaceid.permissions=VIEWER_FULL_PROFILE_INFO|ViewFullProfileInfo|UpdateMoodStatus";
+	private static final String ACCESS_TOKEN_URL = "http://api.myspace.com/access_token";
 	private static final String PROFILE_URL = "http://api.myspace.com/1.0/people/@me/@self";
 	private static final String CONTACTS_URL = "http://api.myspace.com/1.0/people/@me/@all";
 	private static final String UPDATE_STATUS_URL = "http://api.myspace.com/1.0/statusmood/@me/@self";
 	private final Log LOG = LogFactory.getLog(MySpaceImpl.class);
 
-	transient private Consumer __consumer;
-	transient private Endpoint __myspace;
-	transient private boolean unserializedFlag;
-
-	private Token token;
 	private Permission scope;
 	private Properties properties;
 	private boolean isVerify;
+	private Token requestToken;
+	private Token accessToken;
+	OAuthConsumer oauth;
+	OAuthConfig config;
 
 	public MySpaceImpl(final Properties props) throws Exception {
 		try {
-			__myspace = Endpoint.load(props, PROPERTY_DOMAIN);
 			this.properties = props;
+			config = OAuthConfig.load(this.properties, PROPERTY_DOMAIN);
 		} catch (IllegalStateException e) {
 			throw new SocialAuthConfigurationException(e);
 		}
-		if (__myspace.getConsumerSecret().length() == 0) {
+		if (config.get_consumerSecret().length() == 0) {
 			throw new SocialAuthConfigurationException(
-			"api.myspace.com.consumer_secret value is null");
+					"api.myspace.com.consumer_secret value is null");
 		}
-		if (__myspace.getConsumerKey().length() == 0) {
+		if (config.get_consumerKey().length() == 0) {
 			throw new SocialAuthConfigurationException(
-			"api.myspace.com.consumer_key value is null");
+					"api.myspace.com.consumer_key value is null");
 		}
-		__consumer = Consumer.newInstance(props);
-		unserializedFlag = true;
+		oauth = new OAuthConsumer(config);
 	}
 
 	/**
@@ -123,38 +105,17 @@ Serializable {
 	 * @throws Exception
 	 */
 
+	@Override
 	public String getLoginRedirectURL(final String returnTo) throws Exception {
 		LOG.info("Determining URL for redirection");
 		setProviderState(true);
-		token = new Token(__myspace.getConsumerKey());
-		UrlEncodedParameterMap params = new UrlEncodedParameterMap().add(
-				Constants.OAUTH_CALLBACK, returnTo);
-
-		Response r;
-		try {
-			LOG.debug("Call to fetch Request Token");
-			r = __consumer.fetchToken(__myspace, params,
-					TokenExchange.REQUEST_TOKEN, token);
-		} catch (Exception e) {
-			throw e;
-		}
-		if (r.getStatus() == 200 && token.getState() == Token.UNAUTHORIZED) {
-			// unauthorized request token
-			StringBuilder urlBuffer = Transport
-			.buildAuthUrl(
-					__myspace.getAuthorizationUrl()
-					+ "?myspaceid.permissions=VIEWER_FULL_PROFILE_INFO|ViewFullProfileInfo|UpdateMoodStatus",
-					token, returnTo);
-			LOG.info("Redirection to following URL should happen : "
-					+ urlBuffer.toString());
-			return urlBuffer.toString();
-		} else {
-			LOG.debug("Error while fetching Request Token");
-			throw new SocialAuthConfigurationException(
-					"Application keys are not correct. "
-					+ "The server running the application should be same that was registered to get the keys.");
-		}
-
+		LOG.debug("Call to fetch Request Token");
+		requestToken = oauth.getRequestToken(REQUEST_TOKEN_URL, returnTo);
+		StringBuilder urlBuffer = oauth.buildAuthUrl(AUTHORIZATION_URL,
+				requestToken, returnTo);
+		LOG.info("Redirection to following URL should happen : "
+				+ urlBuffer.toString());
+		return urlBuffer.toString();
 	}
 
 	/**
@@ -167,41 +128,31 @@ Serializable {
 	 * @throws Exception
 	 */
 
+	@Override
 	public Profile verifyResponse(final HttpServletRequest request)
-	throws Exception {
+			throws Exception {
 		LOG.info("Verifying the authentication response from provider");
+		if (request.getParameter("oauth_problem") != null
+				&& "user_refused".equals(request.getParameter("oauth_problem"))) {
+			throw new UserDeniedPermissionException();
+		}
 		if (!isProviderState()) {
 			throw new ProviderStateException();
 		}
-		if (!unserializedFlag) {
-			LOG.debug("Restoring from serialized state");
-			restore();
+
+		if (requestToken == null) {
+			throw new SocialAuthException("Request token is null");
+		}
+		String verifier = request.getParameter(Constants.OAUTH_VERIFIER);
+		if (verifier != null) {
+			requestToken.setAttribute(Constants.OAUTH_VERIFIER, verifier);
 		}
 
-		String verifier = request.getParameter(Constants.OAUTH_VERIFIER);
-		if (token.authorize(URLDecoder.decode(request
-				.getParameter(Constants.OAUTH_TOKEN), "UTF-8"),
-				verifier)) {
-			LOG.debug("Call to fetch Access Token");
-			UrlEncodedParameterMap params = new UrlEncodedParameterMap();
-			Response r;
-			try {
-				r = __consumer.fetchToken(__myspace, params,
-						TokenExchange.ACCESS_TOKEN, token);
-			} catch (Exception e) {
-				throw new SocialAuthException(
-				"Error while getting Access Token");
-			}
-			if (r.getStatus() == 200) {
-				isVerify = true;
-				return getUserProfile();
-			} else {
-				throw new SocialAuthException(
-						"Unable to retrieve the access token. Status: "
-						+ r.getStatus());
-			}
-		}
-		return null;
+		LOG.debug("Call to fetch Access Token");
+		accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL, requestToken);
+
+		isVerify = true;
+		return getUserProfile();
 	}
 
 	/**
@@ -211,53 +162,37 @@ Serializable {
 	 *         profile URL will be available
 	 */
 
+	@Override
 	public List<Contact> getContactList() throws Exception {
 		if (!isVerify) {
 			throw new SocialAuthException(
-			"Please call verifyResponse function first to get Access Token");
+					"Please call verifyResponse function first to get Access Token");
 		}
 		LOG.info("Fetching contacts from " + CONTACTS_URL);
-		UrlEncodedParameterMap serviceParams = new UrlEncodedParameterMap(
-				CONTACTS_URL);
-		NonceAndTimestamp nts = SimpleNonceAndTimestamp.getDefault();
-		Signature sig = __myspace.getSignature();
 
-		HttpConnector connector = SimpleHttpConnector.getDefault();
-
-		Parameter authorizationHeader = new Parameter("Authorization",
-				HttpAuthTransport.getAuthHeaderValue(serviceParams, __myspace,
-						token, nts, sig));
 		Response serviceResponse = null;
 		try {
-			serviceResponse = connector.doGET(serviceParams.toStringRFC3986(),
-					authorizationHeader);
-		} catch (IOException ie) {
+			serviceResponse = oauth.httpGet(CONTACTS_URL, null, accessToken);
+		} catch (Exception ie) {
 			throw new SocialAuthException(
-					"Failed to retrieve the user contacts from  "
-					+ CONTACTS_URL,
-					ie);
+					"Failed to retrieve the contacts from " + CONTACTS_URL, ie);
 		}
-
-		StringBuffer sb = new StringBuffer();
+		String result;
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					serviceResponse.getInputStream(), "UTF-8"));
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				sb.append(line).append("\n");
-			}
-			LOG.debug("Contacts JSON :" + sb.toString());
+			result = serviceResponse
+					.getResponseBodyAsString(Constants.ENCODING);
+			LOG.debug("Contacts JSON :" + result);
 		} catch (Exception exc) {
 			throw new SocialAuthException("Failed to read contacts from  "
 					+ CONTACTS_URL);
 		}
 		JSONArray fArr = new JSONArray();
-		JSONObject resObj = new JSONObject(sb.toString());
+		JSONObject resObj = new JSONObject(result);
 		if (resObj.has("entry")) {
 			fArr = resObj.getJSONArray("entry");
 		} else {
 			throw new ServerDataException(
-					"Failed to parse the user Contacts json : " + sb.toString());
+					"Failed to parse the user Contacts json : " + result);
 		}
 		List<Contact> plist = new ArrayList<Contact>();
 		for (int i = 0; i < fArr.length(); i++) {
@@ -295,48 +230,37 @@ Serializable {
 	 *            Message to be shown as user's status
 	 * @throws Exception
 	 */
+	@Override
 	public void updateStatus(final String msg) throws Exception {
 		if (!isVerify) {
 			throw new SocialAuthException(
-			"Please call verifyResponse function first to get Access Token");
+					"Please call verifyResponse function first to get Access Token");
 		}
 		if (msg == null || msg.trim().length() == 0) {
 			throw new ServerDataException("Status cannot be blank");
 		}
 		LOG.info("Updating status " + msg + " on " + UPDATE_STATUS_URL);
-
-		long randomNum = new Random().nextLong();
-		long timestamp = System.currentTimeMillis()/1000;
-		Map<String, String> args = new HashMap<String, String>();
-		args.put(Constants.OAUTH_CONSUMER_KEY, __myspace
-				.getConsumerKey());
-		args.put(Constants.OAUTH_NONCE, Long.toString(randomNum));
-		args.put(Constants.OAUTH_SIGNATURE_METHOD, "HMAC-SHA1");
-		args.put(Constants.OAUTH_TIMESTAMP, Long.toString(timestamp));
-		args.put(Constants.OAUTH_VERSION, "1.0");
-		args.put(Constants.OAUTH_TOKEN, token.getKey());
-		OAuthConsumer oauthConsumer = new OAuthConsumer();
-		oauthConsumer.setConsumerSecret(__myspace.getConsumerSecret());
-		oauthConsumer.setTokenSecret(token.getSecret());
-		String sig1 = oauthConsumer.generateSignature(__myspace.getSignature()
-				.getMethod(), "PUT", UPDATE_STATUS_URL, args);
-		String result = UPDATE_STATUS_URL + "?"
-		+ oauthConsumer.buildParams(args) + "&"
-		+ Constants.OAUTH_SIGNATURE + "=" + oauthConsumer.encode(sig1);
-
-		HashMap<String, String> headerMap = new HashMap<String, String>();
+		Map<String, String> params = new HashMap<String, String>();
 		String msgBody = "{\"status\":\"" + msg + "\"}";
-		String response = doHttpMethodReq(result, "PUT", msgBody, headerMap);
-		LOG.info("Update Status Response :" + response);
+		Response serviceResponse = null;
+		try {
+			serviceResponse = oauth.httpPut(UPDATE_STATUS_URL, params, null,
+					msgBody, accessToken, false);
+		} catch (Exception ie) {
+			throw new SocialAuthException("Failed to update status on "
+					+ UPDATE_STATUS_URL, ie);
+		}
+		LOG.info("Update Status Response :" + serviceResponse.getStatus());
 
 	}
-
 
 	/**
 	 * Logout
 	 */
+	@Override
 	public void logout() {
-		token = null;
+		requestToken = null;
+		accessToken = null;
 	}
 
 	/**
@@ -353,50 +277,36 @@ Serializable {
 	private Profile getUserProfile() throws Exception {
 		LOG.debug("Obtaining user profile");
 		Profile profile = new Profile();
-		UrlEncodedParameterMap serviceParams = new UrlEncodedParameterMap(
-				PROFILE_URL);
-		NonceAndTimestamp nts = SimpleNonceAndTimestamp.getDefault();
-		Signature sig = __myspace.getSignature();
 
-		HttpConnector connector = SimpleHttpConnector.getDefault();
-
-		Parameter authorizationHeader = new Parameter("Authorization",
-				HttpAuthTransport.getAuthHeaderValue(serviceParams, __myspace,
-						token, nts, sig));
 		Response serviceResponse = null;
 		try {
-			serviceResponse = connector.doGET(serviceParams.toStringRFC3986(),
-					authorizationHeader);
-		} catch (IOException ie) {
+			serviceResponse = oauth.httpGet(PROFILE_URL, null, accessToken);
+		} catch (Exception e) {
 			throw new SocialAuthException(
-					"Failed to retrieve the user profile from  " + PROFILE_URL,
-					ie);
+					"Failed to retrieve the user profile from  " + PROFILE_URL);
 		}
 		if (serviceResponse.getStatus() != 200) {
 			throw new SocialAuthException(
 					"Failed to retrieve the user profile from  " + PROFILE_URL
-					+ ". Staus :" + serviceResponse.getStatus());
+							+ ". Staus :" + serviceResponse.getStatus());
 		}
-		StringBuffer sb = new StringBuffer();
+
+		String result;
 		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					serviceResponse.getInputStream(), "UTF-8"));
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				sb.append(line).append("\n");
-			}
-			LOG.debug("User Profile :" + sb.toString());
+			result = serviceResponse
+					.getResponseBodyAsString(Constants.ENCODING);
+			LOG.debug("User Profile :" + result);
 		} catch (Exception exc) {
 			throw new SocialAuthException("Failed to read response from  "
 					+ PROFILE_URL);
 		}
 		JSONObject pObj = new JSONObject();
-		JSONObject jobj = new JSONObject(sb.toString());
+		JSONObject jobj = new JSONObject(result);
 		if (jobj.has("person")) {
 			pObj = jobj.getJSONObject("person");
 		} else {
 			throw new ServerDataException(
-					"Failed to parse the user profile json : " + sb.toString());
+					"Failed to parse the user profile json : " + result);
 		}
 		if (pObj.has("displayName")) {
 			profile.setDisplayName(pObj.getString("displayName"));
@@ -430,84 +340,5 @@ Serializable {
 		}
 
 		return profile;
-	}
-
-	private void restore() throws Exception {
-		try {
-			__myspace = Endpoint.load(this.properties, PROPERTY_DOMAIN);
-		} catch (IllegalStateException e) {
-			throw new SocialAuthConfigurationException(e);
-		}
-		__consumer = Consumer.newInstance(this.properties);
-	}
-
-
-
-
-
-	public String doHttpMethodReq(String urlStr, String requestMethod,
-			String paramStr, Map<String, String> header) throws Exception {
-		StringBuffer sb = new StringBuffer();
-		try {
-			// Construct data
-			// Send data
-			URL url = new URL(urlStr);
-			HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-			conn.setDoOutput(true);
-			conn.setDoInput(true);
-			if (requestMethod != null) {
-				conn.setRequestMethod(requestMethod);
-			}
-
-			if (header != null) {
-				for (String key : header.keySet()) {
-					conn.setRequestProperty(key, header.get(key));
-				}
-			}
-
-			// conn.setRequestProperty("X-HTTP-Method-Override", "PUT"); // If
-			// use POST, must use this
-
-			OutputStreamWriter wr = null;
-			if (requestMethod != null && !requestMethod.equals("GET")
-					&& !requestMethod.equals("DELETE")) {
-				wr = new OutputStreamWriter(conn.getOutputStream());
-				wr.write(paramStr);
-				wr.flush();
-			}
-			if (conn.getResponseCode() != 200) {
-				throw new SocialAuthException(
-						"Failed to update status. Return status code :"
-						+ conn.getResponseCode());
-			}
-			// Get the response
-			BufferedReader br = new BufferedReader(new InputStreamReader(conn
-					.getInputStream()));
-			do {
-				String line = null;
-				try {
-					line = br.readLine();
-				} catch (IOException e) {
-					throw e;
-				}
-
-				if (line == null) {
-					break;
-				}
-				sb.append(line).append("\n");
-			} while (true);
-
-			if (wr != null) {
-				wr.close();
-			}
-			if (br != null) {
-				br.close();
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw e;
-		}
-		String response = sb.toString();
-		return response;
 	}
 }

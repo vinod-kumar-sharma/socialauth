@@ -42,12 +42,13 @@ import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
+import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
-import org.mortbay.log.Log;
-
-import com.dyuproject.oauth.Endpoint;
+import org.brickred.socialauth.util.OAuthConfig;
 
 /**
  * The implementation for the AOL provider. AOL returns very limited profile
@@ -55,24 +56,28 @@ import com.dyuproject.oauth.Endpoint;
  * contacts. May be removed in future.
  * 
  * @author abhinavm@brickred.com
- *
+ * 
  */
 public class AolImpl implements AuthProvider {
 
-	private static Pattern nameValSplitter =  Pattern.compile("[=&]", Pattern.CASE_INSENSITIVE);
+	private static Pattern nameValSplitter = Pattern.compile("[=&]",
+			Pattern.CASE_INSENSITIVE);
 
 	private String dev_id;
 	private String token;
-	private final Endpoint __aol;
 	private String redirectUri;
+	private OAuthConfig config;
+	private final Log LOG = LogFactory.getLog(AolImpl.class);
 
 	/**
 	 * Reads properties provided in the configuration file
-	 * @param props Properties for consumer key
+	 * 
+	 * @param props
+	 *            Properties for consumer key
 	 */
 	public AolImpl(final Properties props) {
-		__aol = Endpoint.load(props, "api.screenname.aol.com");
-		dev_id = __aol.getConsumerKey();
+		config = OAuthConfig.load(props, "api.screenname.aol.com");
+		dev_id = config.get_consumerKey();
 	}
 
 	/**
@@ -82,10 +87,11 @@ public class AolImpl implements AuthProvider {
 	 * 
 	 * @throws Exception
 	 */
+	@Override
 	public String getLoginRedirectURL(final String redirectUri) {
 		this.redirectUri = redirectUri;
-		return "https://api.screenname.aol.com/auth/login?f=qs"
-		+ "&succUrl=" + redirectUri + "&devId=" + dev_id;
+		return "https://api.screenname.aol.com/auth/login?f=qs" + "&succUrl="
+				+ redirectUri + "&devId=" + dev_id;
 	}
 
 	/**
@@ -93,32 +99,33 @@ public class AolImpl implements AuthProvider {
 	 * application.
 	 * 
 	 * @return Profile object containing the profile information
-	 * @param request Request object the request is received from the provider
+	 * @param request
+	 *            Request object the request is received from the provider
 	 * @throws Exception
 	 */
 
-	public Profile verifyResponse(final HttpServletRequest request)
-	{
+	@Override
+	public Profile verifyResponse(final HttpServletRequest request) {
 		try {
 			// retrieve and validate the token by calling OpenAuth getInfo
 			token = request.getParameter("token_a");
 			String encodedToken = URLEncoder.encode(token, "UTF-8");
 
-			String getInfoUrl = "https://api.screenname.aol.com/auth/getInfo?"  + "f=qs"
-			+ "&devId=" + dev_id
-			+ "&referer=" + redirectUri
-			+ "&a=" + encodedToken;
+			String getInfoUrl = "https://api.screenname.aol.com/auth/getInfo?"
+					+ "f=qs" + "&devId=" + dev_id + "&referer=" + redirectUri
+					+ "&a=" + encodedToken;
 			Map responseParamMap = getHttpResponseParameters(getInfoUrl);
 			String statusCode = (String) responseParamMap.get("statusCode");
-			if ((statusCode != null) &&
-					(statusCode.equals("200"))) {
+			if ((statusCode != null) && (statusCode.equals("200"))) {
 				Profile p = new Profile();
-				p.setFullName((String) responseParamMap.get("userData_displayName"));
+				p.setFullName((String) responseParamMap
+						.get("userData_displayName"));
 				String[] str = p.getFullName().split(" ");
 				p.setFirstName(str[0]);
 				p.setLastName(str.length > 1 ? str[1] : " ");
 				p.setEmail((String) responseParamMap.get("userData_loginId"));
-				p.setValidatedId((String)responseParamMap.get("userData_loginId"));
+				p.setValidatedId((String) responseParamMap
+						.get("userData_loginId"));
 				return p;
 			}
 
@@ -130,11 +137,12 @@ public class AolImpl implements AuthProvider {
 	}
 
 	private Map getHttpResponseParameters(final String Url)
-	throws MalformedURLException, IOException {
+			throws MalformedURLException, IOException {
 		URL getInfo = new URL(Url);
 		String getInfoResponse;
 		StringBuffer responseBuf = new StringBuffer();
-		BufferedReader in = new BufferedReader(new InputStreamReader(getInfo.openStream()));
+		BufferedReader in = new BufferedReader(new InputStreamReader(
+				getInfo.openStream()));
 		String inputLine;
 		while ((inputLine = in.readLine()) != null) {
 			responseBuf.append(inputLine);
@@ -142,19 +150,22 @@ public class AolImpl implements AuthProvider {
 		getInfoResponse = responseBuf.toString();
 		String[] nameValuePairs = nameValSplitter.split(getInfoResponse);
 		Map responseParamMap = new HashMap();
-		for(int i=0; i < nameValuePairs.length; i+=2) {
-			responseParamMap.put(nameValuePairs[i], URLDecoder.decode(nameValuePairs[i+1]));
+		for (int i = 0; i < nameValuePairs.length; i += 2) {
+			responseParamMap.put(nameValuePairs[i],
+					URLDecoder.decode(nameValuePairs[i + 1]));
 		}
 		return responseParamMap;
 	}
 
 	/**
-	 * Gets the list of contacts of the user and their email. this may not
-	 * be available for all providers.
-	 * @return List of profile objects representing Contacts. Only name and email
-	 * will be available
+	 * Gets the list of contacts of the user and their email. this may not be
+	 * available for all providers.
+	 * 
+	 * @return List of profile objects representing Contacts. Only name and
+	 *         email will be available
 	 */
 
+	@Override
 	public List<Contact> getContactList() {
 		List<Contact> plist = new ArrayList<Contact>();
 		try {
@@ -162,12 +173,12 @@ public class AolImpl implements AuthProvider {
 
 			String encodedToken = URLEncoder.encode(token, "UTF-8");
 			String u = "http://api.oscar.aol.com/presence/get?f=json&bl=1&k="
-				+ dev_id + "&a=" + encodedToken;
+					+ dev_id + "&a=" + encodedToken;
 			URL connURL = new URL(u);
 			HttpURLConnection urlConn = (HttpURLConnection) connURL
-			.openConnection();
+					.openConnection();
 			urlConn.setRequestProperty("referer",
-			"http://localhost:8080/AuthApp/");
+					"http://localhost:8080/AuthApp/");
 			StringBuffer responseBuf = new StringBuffer();
 			BufferedReader in = new BufferedReader(new InputStreamReader(
 					urlConn.getInputStream(), "UTF-8"));
@@ -175,7 +186,7 @@ public class AolImpl implements AuthProvider {
 			while ((inputLine = in.readLine()) != null) {
 				responseBuf.append(inputLine);
 			}
-			Log.debug(responseBuf.toString());
+			LOG.debug(responseBuf.toString());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -185,17 +196,32 @@ public class AolImpl implements AuthProvider {
 	/**
 	 * Updates the status on the chosen provider if available. This may not be
 	 * implemented for all providers.
-	 * @param msg Message to be shown as user's status
+	 * 
+	 * @param msg
+	 *            Message to be shown as user's status
 	 */
 
+	@Override
 	public void updateStatus(final String msg) {
-		Log.warn("Update status not implemented");
+		LOG.warn("Update status not implemented");
 	}
 
 	/**
 	 * Logout
 	 */
+	@Override
 	public void logout() {
 		token = null;
+	}
+
+	/**
+	 * 
+	 * @param p
+	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
+	 *            Permission.ALL, Permission.DEFAULT
+	 */
+	@Override
+	public void setPermission(final Permission p) {
+		LOG.debug("Permission requested : " + p.toString());
 	}
 }
