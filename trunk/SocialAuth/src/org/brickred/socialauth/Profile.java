@@ -25,13 +25,18 @@
 
 package org.brickred.socialauth;
 
+import java.io.Serializable;
+
 /**
  * Data bean for profile information.
  * 
  * @author tarunn@brickred.com
  * 
  */
-public class Profile {
+public class Profile implements Serializable {
+
+	private static final long serialVersionUID = 6082073969740796991L;
+
 	/**
 	 * Email
 	 */
@@ -247,7 +252,8 @@ public class Profile {
 	/**
 	 * Retrieves the date of birth
 	 * 
-	 * @return String the date of birth different providers may use different formats
+	 * @return String the date of birth different providers may use different
+	 *         formats
 	 */
 	public String getDob() {
 		return dob;
@@ -300,7 +306,6 @@ public class Profile {
 	public void setLocation(final String location) {
 		this.location = location;
 	}
-
 
 	/**
 	 * Retrieves the profile image URL
