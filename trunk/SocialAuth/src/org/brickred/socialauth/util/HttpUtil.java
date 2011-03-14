@@ -28,12 +28,12 @@ import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
 import org.brickred.socialauth.exception.SocialAuthException;
 
 /**
@@ -88,8 +88,8 @@ public class HttpUtil {
 			OutputStreamWriter wr = null;
 			if (body != null) {
 				if (requestMethod != null
-						&& !MethodType.GET.equals(requestMethod)
-						&& !MethodType.DELETE.equals(requestMethod)) {
+						&& !MethodType.GET.toString().equals(requestMethod)
+						&& !MethodType.DELETE.toString().equals(requestMethod)) {
 					wr = new OutputStreamWriter(conn.getOutputStream());
 					wr.write(body);
 					wr.flush();
@@ -136,6 +136,23 @@ public class HttpUtil {
 
 	private static final String ALLOWED_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()";
 
+	public static String encodeURIComponent123(final String value)
+			throws Exception {
+		if (value == null) {
+			return "";
+		}
+
+		try {
+			return URLEncoder.encode(value, "utf-8")
+					// OAuth encodes some characters differently:
+					.replace("+", "%20").replace("*", "%2A")
+					.replace("%7E", "~");
+			// This could be done faster with more hand-crafted code.
+		} catch (UnsupportedEncodingException wow) {
+			throw new SocialAuthException(wow.getMessage(), wow);
+		}
+	}
+
 	/**
 	 * It encodes the given string
 	 * 
@@ -143,7 +160,7 @@ public class HttpUtil {
 	 * @return
 	 */
 	public static String encodeURIComponent(final String input) {
-		if (StringUtils.isEmpty(input)) {
+		if (input == null || input.trim().length() == 0) {
 			return input;
 		}
 

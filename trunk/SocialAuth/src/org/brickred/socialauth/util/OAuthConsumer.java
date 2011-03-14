@@ -65,7 +65,11 @@ public class OAuthConsumer implements Serializable, Constants {
 	}
 
 	/**
-	 * It returns a signature for signing OAuth request.
+	 * It returns a signature for signing OAuth request. The Signature Base
+	 * String is a consistent reproducible concatenation of the request elements
+	 * into a single string. The string is used as an input in hashing or
+	 * signing algorithms.The request parameters are collected, sorted and
+	 * concatenated into a normalized string.
 	 * 
 	 * @param signatureType
 	 *            Type of signature. It can be HMAC-SHA1.
@@ -83,6 +87,11 @@ public class OAuthConsumer implements Serializable, Constants {
 	public String generateSignature(final String signatureType,
 			final String method, final String url,
 			final Map<String, String> args, final Token token) throws Exception {
+		LOG.debug("Generating OAUTH Signature");
+		LOG.debug("Given Signature Type : " + signatureType);
+		LOG.debug("Given Method Type : " + method);
+		LOG.debug("Given URL : " + url);
+		LOG.debug("Given Parameters : " + args);
 		if (HMACSHA1_SIGNATURE.equals(signatureType)) {
 			return getHMACSHA1(method, url, args, token);
 		} else {
@@ -97,9 +106,9 @@ public class OAuthConsumer implements Serializable, Constants {
 		if (config.get_consumerSecret().length() == 0) {
 			throw new SignatureException("Please check consumer secret");
 		}
-		boolean valid = MethodType.GET.equals(method)
-				|| MethodType.PUT.equals(method)
-				|| MethodType.POST.equals(method);
+		boolean valid = MethodType.GET.toString().equals(method)
+				|| MethodType.PUT.toString().equals(method)
+				|| MethodType.POST.toString().equals(method);
 		if (!valid) {
 			throw new SignatureException("Invalid method type :" + method);
 		}
@@ -109,7 +118,7 @@ public class OAuthConsumer implements Serializable, Constants {
 		String key = HttpUtil.encodeURIComponent(config.get_consumerSecret())
 				+ "&";
 		if (token != null && token.getSecret() != null) {
-			key += token.getSecret();
+			key += HttpUtil.encodeURIComponent(token.getSecret());
 		}
 		try {
 			// get an hmac_sha1 key from the raw key bytes
@@ -123,6 +132,7 @@ public class OAuthConsumer implements Serializable, Constants {
 			String data = HttpUtil.encodeURIComponent(method) + "&"
 					+ HttpUtil.encodeURIComponent(url) + "&"
 					+ HttpUtil.encodeURIComponent(HttpUtil.buildParams(args));
+			LOG.debug("Signature data : " + data);
 			// compute the hmac on input data bytes
 			byte[] rawHmac = mac.doFinal(data.getBytes("UTF-8"));
 
@@ -137,7 +147,8 @@ public class OAuthConsumer implements Serializable, Constants {
 	}
 
 	/**
-	 * It obtains the request token
+	 * It obtains the request token. The Request Token is a temporary token used
+	 * to initiate User authorization.
 	 * 
 	 * @param reqTokenURL
 	 *            Request Token URL
@@ -148,6 +159,9 @@ public class OAuthConsumer implements Serializable, Constants {
 	 */
 	public Token getRequestToken(final String reqTokenURL,
 			final String callbackURL) throws Exception {
+		LOG.debug("Preparing to get Request Token");
+		LOG.debug("Given Request Token URL : " + reqTokenURL);
+		LOG.debug("Given CallBack URL : " + callbackURL);
 		boolean valid = reqTokenURL.length() > 0 && callbackURL.length() > 0;
 		Token token = null;
 		Map<String, String> params = new HashMap<String, String>();
@@ -156,7 +170,8 @@ public class OAuthConsumer implements Serializable, Constants {
 		String reqURL = reqTokenURL;
 		String sig = generateSignature(config.get_signatureMethod(),
 				config.get_transportName(), reqURL, params, null);
-		LOG.debug(config.get_signatureMethod() + "Signature : " + sig);
+		LOG.debug(config.get_signatureMethod()
+				+ " Signature for request token : " + sig);
 		params.put(OAUTH_SIGNATURE, sig);
 		reqURL += "?" + HttpUtil.buildParams(params);
 		LOG.debug("URL to get Request Token : " + reqURL);
@@ -177,7 +192,8 @@ public class OAuthConsumer implements Serializable, Constants {
 	}
 
 	/**
-	 * It obtains the access token
+	 * It obtains the access token. The Consumer exchanges the Request Token for
+	 * an Access Token capable of accessing the Protected Resources.
 	 * 
 	 * @param accessTokenURL
 	 *            Access Token URL
@@ -188,12 +204,10 @@ public class OAuthConsumer implements Serializable, Constants {
 	 */
 	public Token getAccessToken(final String accessTokenURL,
 			final Token reqToken) throws Exception {
-		if (accessTokenURL == null) {
-			throw new SocialAuthException("Access Token URL is null");
-		}
-		if (reqToken == null) {
-			throw new SocialAuthException("Request Token is null");
-		}
+		LOG.debug("Preparing to get Access Token");
+		LOG.debug("Given Access Token URL : " + accessTokenURL);
+		LOG.debug("Given Request Token : " + reqToken.toString());
+
 		if (reqToken.getKey() == null || reqToken.getKey().length() == 0) {
 			throw new SocialAuthException(
 					"Key in Request Token is null or blank");
@@ -210,6 +224,8 @@ public class OAuthConsumer implements Serializable, Constants {
 		String reqURL = accessTokenURL;
 		String sig = generateSignature(config.get_signatureMethod(),
 				config.get_transportName(), reqURL, params, reqToken);
+		LOG.debug(config.get_signatureMethod()
+				+ " Signature for access token : " + sig);
 		params.put(OAUTH_SIGNATURE, sig);
 		reqURL += "?" + HttpUtil.buildParams(params);
 		LOG.debug("Access Token URL : " + reqURL);
@@ -259,14 +275,6 @@ public class OAuthConsumer implements Serializable, Constants {
 				MethodType.GET.toString(), token, true);
 	}
 
-	public Response httpGet(final String reqURL,
-			final Map<String, String> params,
-			final Map<String, String> headerParams, final Token token,
-			final boolean isHeaderRequired) throws Exception {
-		return send(reqURL, params, headerParams, null,
-				MethodType.GET.toString(), token, isHeaderRequired);
-	}
-
 	/**
 	 * Does an HTTP POST request.
 	 * 
@@ -292,6 +300,7 @@ public class OAuthConsumer implements Serializable, Constants {
 	}
 
 	/**
+	 * Does an HTTP PUT request.
 	 * 
 	 * @param reqURL
 	 *            URL to send request to.
@@ -315,6 +324,8 @@ public class OAuthConsumer implements Serializable, Constants {
 	}
 
 	/**
+	 * Does an HTTP PUT request.
+	 * 
 	 * @param reqURL
 	 *            URL to send request to.
 	 * @param params
@@ -466,7 +477,12 @@ public class OAuthConsumer implements Serializable, Constants {
 	}
 
 	/**
-	 * Generates Authorize header
+	 * Generates Authorization header. The OAuth Protocol Parameters are sent in
+	 * the Authorization header. Parameter names and values are encoded. For
+	 * each parameter, the name is immediately followed by an ‘=’ character
+	 * (ASCII code 61), a '"' character (ASCII code 34), the parameter value
+	 * (MAY be empty), and another '"’ character (ASCII code 34).Parameters are
+	 * separated by a comma character (ASCII code 44).
 	 * 
 	 * @param params
 	 *            Parameters to generate header value
@@ -475,6 +491,8 @@ public class OAuthConsumer implements Serializable, Constants {
 	 */
 	public String getAuthHeaderValue(final Map<String, String> params)
 			throws Exception {
+		LOG.debug("Genrating Authorization header for given parameters : "
+				+ params);
 		StringBuilder headerStr = new StringBuilder();
 		String[] REQUIRED_OAUTH_HEADERS_TO_SIGN = new String[] {
 				OAUTH_CONSUMER_KEY, OAUTH_NONCE, OAUTH_TIMESTAMP,

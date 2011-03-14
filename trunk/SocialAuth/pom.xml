@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>org.brickred.socialauth</groupId>
 	<artifactId>socialauth</artifactId>
-	<version>1.0-beta2</version>
+	<version>1.0-beta3</version>
 
 	<dependencies>
 		<dependency>
@@ -40,24 +40,14 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>com.dyuproject</groupId>
-			<artifactId>dyuproject-openid</artifactId>
-			<version>[1.1.7,)</version>
-		</dependency>
-		<dependency>
-			<groupId>com.dyuproject</groupId>
-			<artifactId>dyuproject-oauth</artifactId>
-			<version>[1.1.7,)</version>
-		</dependency>
-		<dependency>
 			<groupId>org.twitter4j</groupId>
 			<artifactId>twitter4j-core</artifactId>
-			<version>[2.1,)</version>
+			<version>[2.2,)</version>
 		</dependency>
 		<dependency>
-			<groupId>com.visural</groupId>
-			<artifactId>visural-common</artifactId>
-			<version>0.3.2</version>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.1</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.seam</groupId>
@@ -70,11 +60,6 @@
 			<artifactId>jsf-api</artifactId>
 			<version>1.2_12</version>
 			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>commons-httpclient</groupId>
-			<artifactId>commons-httpclient</artifactId>
-			<version>3.1</version>
 		</dependency>
 	</dependencies>
 
@@ -112,16 +97,6 @@
 	</build>
 
 	<repositories>
-		<repository>
-			<id>dyuproject-repo</id>
-			<name>dyuproject-repo</name>
-			<url>http://dyuproject.googlecode.com/svn/repos/maven2</url>
-		</repository>
-		<repository>
-			<id>visural-common</id>
-			<name>visural-common</name>
-			<url>http://visural-common.googlecode.com/svn/trunk/visural-common/maven/</url>
-		</repository>
 		<repository>
 			<id>jboss-repo</id>
 			<url>http://repository.jboss.org/maven2</url>

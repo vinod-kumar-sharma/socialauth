@@ -43,6 +43,7 @@ public class OpenIdConsumer {
 	private static final Log LOG = LogFactory.getLog(OpenIdConsumer.class);
 	private static Map<String, String> associationMap;
 	private static Map<String, String> requestTokenMap;
+	public static final String OPENID_REQUEST_TOKEN = "openid.ext2.request_token";
 	static {
 		associationMap = new HashMap<String, String>();
 		associationMap.put("openid.ns", "http://specs.openid.net/auth/2.0");
@@ -80,6 +81,15 @@ public class OpenIdConsumer {
 
 	}
 
+	/**
+	 * Provides an association URL. An association between the Relying Party and
+	 * the OpenID Provider establishes a shared secret between them, which is
+	 * used to verify subsequent protocol messages and reduce round trips.
+	 * 
+	 * @param url
+	 * @return Association URL
+	 * @throws Exception
+	 */
 	public static String getAssociationURL(final String url) throws Exception {
 		String param = HttpUtil.buildParams(associationMap);
 		char separator = url.indexOf('?') == -1 ? '?' : '&';
@@ -87,6 +97,8 @@ public class OpenIdConsumer {
 	}
 
 	/**
+	 * It obtains the request token. The Request Token is a temporary token used
+	 * to initiate User authorization.
 	 * 
 	 * @param requestTokenUrl
 	 *            the Request Token URL
@@ -120,6 +132,13 @@ public class OpenIdConsumer {
 		return url;
 	}
 
+	/**
+	 * Parses the user info from request
+	 * 
+	 * @param req
+	 *            request object
+	 * @return User Profile
+	 */
 	public static Profile getUserInfo(final HttpServletRequest req) {
 		Profile p = new Profile();
 		p.setEmail(req.getParameter("openid.ext1.value.email"));
