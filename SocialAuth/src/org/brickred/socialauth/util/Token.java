@@ -119,4 +119,19 @@ public class Token implements Serializable {
 
 		_attributes.put(key, value);
 	}
+
+	@Override
+	public String toString() {
+		StringBuilder result = new StringBuilder();
+		String NEW_LINE = System.getProperty("line.separator");
+		result.append(this.getClass().getName() + " Object {" + NEW_LINE);
+		result.append(" token key : " + key + NEW_LINE);
+		result.append(" token secret : " + secret + NEW_LINE);
+		if (_attributes != null) {
+			result.append(_attributes.toString());
+		}
+		result.append("}");
+
+		return result.toString();
+	}
 }

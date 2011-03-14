@@ -51,7 +51,7 @@ import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.User;
-import twitter4j.http.RequestToken;
+import twitter4j.auth.RequestToken;
 
 /**
  * Twitter implementation of the provider. This is completely based on the
@@ -199,8 +199,8 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 					"Please call verifyResponse function first to get Access Token");
 		}
 		LOG.info("Fetching user contacts");
-		IDs ids = twitter.getFriendsIDs();
-		int idsarr[] = ids.getIDs();
+		IDs ids = twitter.getFriendsIDs(-1);
+		long idsarr[] = ids.getIDs();
 		int flength = idsarr.length;
 		LOG.debug("Contacts found : " + flength);
 		List<Contact> plist = new ArrayList<Contact>();
@@ -208,16 +208,16 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 			List<User> ulist = new ArrayList<User>();
 			if (flength > 100) {
 				int i = flength / 100;
-				int temparr[];
+				long temparr[];
 				for (int j = 1; j <= i; j++) {
-					temparr = new int[100];
+					temparr = new long[100];
 					for (int k = (j - 1) * 100, c = 0; k < j * 100; k++, c++) {
 						temparr[c] = idsarr[k];
 					}
 					ulist.addAll(twitter.lookupUsers(temparr));
 				}
 				if (flength > i * 100) {
-					temparr = new int[flength - i * 100];
+					temparr = new long[flength - i * 100];
 					for (int k = i * 100, c = 0; k < flength; k++, c++) {
 						temparr[c] = idsarr[k];
 					}
@@ -251,6 +251,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
 	 *            Permission.ALL, Permission.DEFAULT
 	 */
+	@Override
 	public void setPermission(final Permission p) {
 		LOG.debug("Permission requested : " + p.toString());
 		this.scope = p;

@@ -82,7 +82,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	private boolean isVerify;
 	private Token requestToken;
 	private Token accessToken;
-	private OAuthConsumer consu;
+	private OAuthConsumer oauth;
 	private OAuthConfig config;
 
 	public GoogleImpl(final Properties props) throws Exception {
@@ -101,7 +101,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 			throw new SocialAuthConfigurationException(
 					"www.google.com.consumer_key value is null");
 		}
-		consu = new OAuthConsumer(config);
+		oauth = new OAuthConsumer(config);
 		requestToken = null;
 		accessToken = null;
 	}
@@ -117,7 +117,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	public String getLoginRedirectURL(final String returnTo) throws Exception {
 		LOG.info("Determining URL for redirection");
 		String associationURL = OpenIdConsumer
-				.getAssociationURL("https://www.google.com/accounts/o8/ud");
+				.getAssociationURL(REQUEST_TOKEN_URL);
 		Response r = HttpUtil.doHttpRequest(associationURL,
 				MethodType.GET.toString(), null, null);
 		StringBuffer sb = new StringBuffer();
@@ -166,6 +166,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	public Profile verifyResponse(final HttpServletRequest request)
 			throws Exception {
 		LOG.info("Verifying the authentication response from provider");
+		LOG.debug("Verifying the authentication response from provider");
 		if (request.getParameter("openid.mode") != null
 				&& "cancel".equals(request.getParameter("openid.mode"))) {
 			throw new UserDeniedPermissionException();
@@ -179,14 +180,14 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 			if (Permission.AUHTHENTICATE_ONLY.equals(this.scope)) {
 				return getProfile(request);
 			} else {
-				if (request.getParameter("openid.ext2.request_token") != null) {
+				if (request.getParameter(OpenIdConsumer.OPENID_REQUEST_TOKEN) != null) {
 					reqTokenStr = HttpUtil.decodeURIComponent(request
-							.getParameter("openid.ext2.request_token"));
+							.getParameter(OpenIdConsumer.OPENID_REQUEST_TOKEN));
 				}
 				requestToken = new Token();
 				requestToken.setKey(reqTokenStr);
 				LOG.debug("Call to fetch Access Token");
-				accessToken = consu.getAccessToken(ACCESS_TOKEN_URL,
+				accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL,
 						requestToken);
 				isVerify = true;
 				LOG.debug("Obtaining profile from OpenID response");
@@ -232,7 +233,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 		Map<String, String> params = new HashMap<String, String>();
 		Response serviceResponse = null;
 		try {
-			serviceResponse = consu.httpGet(CONTACTS_FEED_URL, null,
+			serviceResponse = oauth.httpGet(CONTACTS_FEED_URL, null,
 					accessToken);
 		} catch (Exception ie) {
 			throw new SocialAuthException(
