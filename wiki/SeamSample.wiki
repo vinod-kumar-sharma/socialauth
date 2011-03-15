@@ -733,7 +733,9 @@ Success view page, it renders on successful login and display various informatio
                                     <tr class="sectiontableentry1">
                                         <td>${contact.firstName}</td>
                                         <td>${contact.email}</td>
-                                        <td><a href="${contact.profileUrl}" target="_new">${contact.profileUrl}</a></td>
+                                        <td>
+                                            <a href="${contact.profileUrl}" target="_new">${contact.profileUrl}</a>
+                                        </td>
                                     </tr>
                                 </ui:repeat>
                             </c:if>
