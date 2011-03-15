@@ -1,0 +1,859 @@
+#summary Shows how to create the sample Seam application
+
+*JBOSS Seam Example *
+Demo application exploring socialauth library.
+
+<wiki:toc max_depth="1" />
+
+
+
+= Introduction =
+
+This article is devoted to the sample seam example where we exploring the open id integration using *socialauth *library. Currently *socialauth* library affirms Google, Yahoo, Facebook, Twitter, Linked In and other Open IDs. This library is the wrapper on different providers and saves a lot of effort while designing/adding functionality to a new/existing application for open id authentication.
+
+
+
+= Prerequisites =
+
+Prior to dig into the actual code, following are few prerequisites which are required on a developer machine.
+
+IDE
+
+ * Install Java-IDE (preferred eclipse 3.3 or latter) ([http://www.eclipse.org/downloads/ download])
+
+   [http://ist.berkeley.edu/as-ag/tools/howto/install-eclipse-win.html Installation instructions]
+
+ * Install JBossTools-2.0  eclipse plug-in  or above
+
+   ([http://www.jboss.org/tools/download/ Update site and installation instructions])
+
+Seam runtime
+
+ * Install jboss-seam-2.2.0.GA ([https://olex.openlogic.com/packages/jboss-seam/ download]) or lat hier in case you are using eclipse 3.4 or later.
+
+   Installation is just to download and unzip it in local drive.
+
+Ant
+
+ * apache-ant-1.8.0 or latter ([http://ant.apache.org/bindownload.cgi download])
+
+   Installation is just to download and unzip it in local drive.
+
+Demo Project
+
+ * Download the demo project from
+
+   http://code.google.com/p/socialauth/source/browse/#svn%2Ftrunk%2FSocialAuthSeam
+
+Server
+
+ * Download JBoss 5.1 ([http://www.jboss.org/jbossas/downloads/ download])
+
+   Installation is just to download and unzip it in local drive.
+
+
+
+= Step 1: Setup a Seam Project =
+
+Please make sure that JBoss Tool plug-in is installed in eclipse. This tool helps user to create a default seam project template and also provide the interface to create various seam artefacts. Please follow below steps to setup a demo project:
+
+ * Select FileàNewàProject and following screen will be appeared.
+
+	http://socialauth.googlecode.com/svn/wiki/images/seam_pic1.JPG
+
+ * Click on Next button and fill in the resultant screen as following.
+
+	http://socialauth.googlecode.com/svn/wiki/images/seam_pic2.JPG
+
+ * Follow the wizard instructions as following
+
+	http://socialauth.googlecode.com/svn/wiki/images/seam_pic3.JPG
+
+	http://socialauth.googlecode.com/svn/wiki/images/seam_pic4.JPG
+
+	http://socialauth.googlecode.com/svn/wiki/images/seam_pic5.JPG
+
+	http://socialauth.googlecode.com/svn/wiki/images/seam_pic6.JPG
+
+
+Please select the seam runtime environment (i.e. path of jboss-seam-2.2.0.GA installed directory) and click on Finish button.
+
+ * Above wizard will create a default seam project (i.e. *‘socialauthseam’*) with all seam configurations in the current workspace.
+
+
+
+=== Seam Project Structure ===
+
+Jbosstool wizard creates primary project and a test project for unit testing. In this document our main focus is on primary project. Please see the structure of primary project in below screenshot.
+
+	http://socialauth.googlecode.com/svn/wiki/images/seam_pic7.JPG
+
+Since JBossTool generates a default seam project so we need to following modifications in default project to align it with the demo application.
+
+Please note that JBoss Tool 3.0 brings out hot and main folders instead of action and model folders which are created with JBoss Tool 2.0. Hence configure the project artefacts as per following mappings in case you are using JBoss Tool 3.0.
+
+action folder -> hot folder
+
+model folder -> main folder
+
+
+
+=== Modifications ===
+
+Please make the following changes to seam project for aligning it to as per demo application.
+
+ * Delete following files from webcontent
+   # Home.xhtml
+   # login.page.xhtml
+   # login. xhtml
+   # layout\display.xhtml
+   # layout\edit.xhtml
+   # layout\loginout.xhtml
+   # layout\template.xhtml
+   # layout\menu.xhtml
+
+ * Comment the persistence unit in META-INF\persistence.xhtml.
+    Since our application does not use db, so we don’t need to define persistence unit at all.
+
+
+
+= Step 2: Setup seam configuration files =
+
+ * components.xml
+
+This file configures Seam and application own components. Generally, we prefer to configure components with annotations (i.e. @Name) but still we can declare it here as well.
+
+Just see the file below, it’s having a component declaration for “*socialauth*” which refers to social auth component class *org.brickred.socialauth.SocialAuth*. This component is part of social auth library and exposes services like login, logout, contact list etc to the demo application classes.
+
+         * <view-handler>: Since JSF provides a high level of plugging features. So this tag is used to specify a custom view handler.
+
+	 * <message-bundle>: Used to specify message resource bundle.
+
+	 * <lifecycle>: Have used to configure phase listener
+
+{{{
+
+<?xml version="1.0" encoding="UTF-8"?>
+<components xmlns="http://jboss.com/products/seam/components"
+	xmlns:core="http://jboss.com/products/seam/core"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://jboss.com/products/seam/core http://jboss.com/products/seam/core-2.0.xsd
+	http://jboss.com/products/seam/components http://jboss.com/products/seam/components-2.0.xsd">
+
+	<core:init jndi-pattern="#{ejbName}/local"/>
+
+	<component name="socialauth" class="org.brickred.socialauth.SocialAuth"/>
+
+</components>
+
+}}}
+
+ * seam.properties
+
+	Includes settings which can be used in components.xml. Apart from this, it is a marker for Seam that an archive (WAR or JAR) includes Seam components. So just create an empty file and keep it in the root of the class path.
+
+ * faces-config.xml
+
+	It’s a normal JSF configuration file. Since default rendering of seam is Java Server Faces so we need this file in WEB-INF folder. This file also comprises settings for message resource bundles and life cycles listeners. Please note that you don’t need to define navigation rules here because we are having pages.xml config file for that.
+
+	Following are few configurations which we have used in demo application:
+
+{{{
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<faces-config version="1.2"
+	xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-facesconfig_1_2.xsd">
+<!-- Facelets support -->
+	<application>
+		<view-handler>com.sun.facelets.FaceletViewHandler</view-handler>
+	</application>
+
+	<application>
+		<message-bundle>org.brickred.socialauthseam.bundle.MessageResources</message-bundle>
+		<locale-config>
+			<default-locale>en</default-locale>
+		</locale-config>
+	</application>
+
+	<lifecycle>
+		<phase-listener>org.brickred.socialauth.SocialAuthPhaseListener</phase-listener>
+	</lifecycle>
+</faces-config>
+
+}}}
+
+Please note that class org.brickred.socialauth.SocialAuthPhaseListener is part of socialauth library. We just need to configure it here.
+
+ * pages.xml
+
+	This file consists of navigation and security rules of a seam project. It privileges the user to declare exceptions which are called by seam framework on corresponding error occurrences.
+
+	E.g. following tag is used to declare a custom navigation and exception respectively.
+
+{{{
+
+<?xml version="1.0" encoding="UTF-8"?>
+<pages xmlns="http://jboss.com/products/seam/pages" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://jboss.com/products/seam/pages http://jboss.com/products/seam/pages-2.2.xsd"
+	no-conversation-view-id="/openid.xhtml" login-view-id="/home.xhtml">
+
+	<page view-id="/mainpage.xhtml">
+		<navigation evaluate="#{socialauth.loginImmediately()}">
+			<rule if-outcome="false">
+				<redirect view-id="/mainpage.xhtml">
+					<message>Socialauth login rejected...</message>
+				</redirect>
+			</rule>
+			<rule if-outcome="true">
+				<redirect view-id="/success.xhtml">
+					<message>Socialauth login successful...</message>
+				</redirect>
+			</rule>
+		</navigation>
+	</page>
+
+	<page view-id="/success.xhtml"/>
+	<exception>
+		<end-conversation/>
+		<redirect view-id="/error.xhtml">
+			<message>Unexpected failure</message>
+		</redirect>
+	</exception>
+</pages>
+
+}}}
+
+
+ * web.xml
+
+	This is standard web configuration file. It doesn’t having any special entry except standard seam configuration and a context parameter for interfacing with socialauth library.
+
+{{{
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<web-app version="2.5"
+	xmlns="http://java.sun.com/xml/ns/javaee"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd">
+<!-- Seam -->
+	<listener>
+		<listener-class>org.jboss.seam.servlet.SeamListener</listener-class>
+	</listener>
+	<context-param>
+		<param-name>javax.faces.DEFAULT_SUFFIX</param-name>
+		<param-value>.xhtml</param-value>
+	</context-param>
+	<context-param>
+		<param-name>facelets.DEVELOPMENT</param-name>
+		<param-value>true</param-value>
+	</context-param>
+	*<context-param>
+		<param-name>successUrl</param-name>
+		<param-value**>/success.xhtml</param-value>
+	</context-param>*
+	<servlet>
+		<servlet-name>Faces Servlet</servlet-name>
+		<servlet-class>javax.faces.webapp.FacesServlet</servlet-class>
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+	<filter>
+		<filter-name>Seam Filter</filter-name>
+		<filter-class>org.jboss.seam.servlet.SeamFilter</filter-class>
+	</filter>
+	<filter-mapping>
+		<filter-name>Seam Filter</filter-name>
+		<url-pattern>*.seam</url-pattern>
+	</filter-mapping>
+	<servlet-mapping>
+		<servlet-name>Faces Servlet</servlet-name>
+		<url-pattern>*.seam</url-pattern>
+	</servlet-mapping>
+	<session-config>
+		<session-timeout>10</session-timeout>
+	</session-config>
+</web-app>
+
+}}}
+
+The *"successUrl"* context parameter in above configuration is a custom parameter which corresponds to the success view id where the application control is redirected by open id provider on successful authentication.
+
+ * jboss-web.xml
+
+	Standard configuration file for defining jndi and other data source details for JBoss server.
+
+
+
+= Step 3: Setup application configuration files =
+
+ * oauth_consumer.properties
+
+Properties file with exclusive settings for different open id providers.
+
+E.g.
+
+#google
+
+www.google.com.consumer_key = opensource.brickred.com
+
+www.google.com.consumer_secret = YC06FqhmCLWvtBg/O4W/aJfj
+
+www.google.com.secure = true
+
+www.google.com.request_token_url = /accounts/OAuthGetRequestToken
+
+www.google.com.authorization_url = /accounts/OAuthAuthorizeToken
+
+www.google.com.access_token_url = /accounts/OAuthGetAccessToken
+
+www.google.com.signature_method = HMAC-SHA1
+
+www.google.com.transport_name = POST
+
+For simplicity please take this file from demo application and keep it in class path. Don’t forget to generate security keys for different vendors.
+
+
+
+= Step 4: Add Libraries =
+
+Please make sure that below jar files to be copied correctly from the demo project into WEB-INF\lib folder of your application. In case you are using JBossTools-3.0 then please replace the WEB-INF\library with demo project library to avoid the jars duplication.
+
+commons-beanutils.jar
+
+commons-codec.jar
+
+commons-digester.jar
+
+commons-httpclient.jar
+
+jboss-el.jar
+
+jboss-seam-debug.jar
+
+jboss-seam-ui.jar
+
+jboss-seam.jar
+
+jsf-facelets.jar
+
+json-20080701.jar
+
+log4j-1.2.15.jar
+
+richfaces-api.jar
+
+richfaces-impl.jar
+
+richfaces-ui.jar
+
+socialauth.jar
+
+twitter4j-core-2.1.3-SNAPSHOT.jar
+
+visural-common-0.3.2.jar
+
+dyuproject-openid-oauth-1.1.7-jarjar.jar
+
+guice-2.0.jar
+
+htmlparser.jar
+
+openid4java.jar
+
+openxri-client.jar
+
+openxri-syntax.jar
+
+Please note that “*socialauth.jar*” should be copied in WEB-INF\lib path. It is the social auth library which revealed the different open id providers to this demo application. This file is bundled with the demo application.
+
+*External libraries:*
+
+Please make sure that you successfully copy the external-lib folder from demo project and keep it in build path. This folder contains JSF implementation jars which have to be in build path for project compilation. This folder resides in root of the demo application.
+
+
+
+= Step 5: Creating the Authenticator component =
+
+Create a seam component i.e. Authenticator. It is wrapped the social library component (SocialAuth) and processes the user’s UI operations.
+
+{{{ 
+
+package org.brickred.socialauthseam.session;
+
+import javax.faces.event.ActionEvent;
+
+import org.brickred.socialauth.SocialAuth;
+
+import org.jboss.seam.annotations.In;
+
+import org.jboss.seam.annotations.Name;
+
+import org.jboss.seam.log.LogProvider;
+
+import org.jboss.seam.log.Logging;
+
+/**
+
+* This is the main component class, it is referred in application pages and
+
+* provides the navigation functionality to the user.
+
+*
+
+* @author lakhdeeps@brickred.com
+
+*
+
+*/
+
+@Name("socialauthenticator")
+
+public class Authenticator {
+
+	private transient LogProvider log = Logging.getLogProvider(SocialAuth.class);
+
+	@In(create = true)
+	SocialAuth socialauth;
+
+	/**
+
+	* Variable for storing open id from main form
+
+	*/
+	private String openID;
+
+	/**
+
+	* Track the user interaction with main page and set the state of components
+
+	* accordingly.
+
+	* @param ActionEvent
+
+	*/
+
+	public void updateId(ActionEvent ae) {
+
+		String btnClicked = ae.getComponent().getId();
+		log.info("*************login method called ************" +socialauth.getId() );
+
+		if (btnClicked.indexOf("facebook") != -1){
+			socialauth.setId("facebook");
+			log.info("***facebook*********" +socialauth.getId() );
+		}else if (btnClicked.indexOf("twitter") != -1){
+			socialauth.setId("twitter");
+			log.info("***twitter*********" +socialauth.getId() );
+		}else if (btnClicked.indexOf("yahoo") != -1){
+			socialauth.setId("yahoo");
+			log.info("***yahoo*********" +socialauth.getId() );
+		}else if (btnClicked.indexOf("hotmail") != -1){
+			socialauth.setId("hotmail");
+			log.info("***hotmail*********" +socialauth.getId() );
+		}else if (btnClicked.indexOf("google") != -1){
+			socialauth.setId("google");
+			log.info("***google*********" +socialauth.getId() );
+		}else if (btnClicked.indexOf("linkedin") != -1){
+			socialauth.setId("linkedin");
+			log.info("***linkedin*********" +socialauth.getId() );
+		}else if (btnClicked.indexOf("foursquare") != -1){
+			socialauth.setId("foursquare");
+			log.info("***foursquare*********" +socialauth.getId() );
+		}else{
+			socialauth.setId(openID);
+			log.info("***openID*********" +socialauth.getId() );
+		}
+	}
+
+	/**
+
+	* Redirect the user back to the main page from success view.
+
+	* @param ActionEvent
+
+	*/
+
+	public String mainPage() {
+		return "/home.xhtml";
+	}
+
+	public String getOpenID() {
+		return openID;
+	}
+
+	public void setOpenID(String openID) {
+		this.openID = openID;
+	}
+
+}
+
+}}}
+
+
+
+= Step 6: Adding resource bundles =
+
+Resource bundle is available in package org.brickred.socialauthseam.bundle under src folder.Please copy the resource bundles from there and configure it in faces-config.xml file. Please make sure that resource bundle file names are same as configured in <message-bundle> tag in faces-config.xml file.
+
+
+
+= Step 7: Writing the template.xhtml =
+
+Main template layout helps in rendering of other view pages.
+
+{{{
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:rich="http://richfaces.org/rich"
+	xmlns:s="http://jboss.com/products/seam/taglib" xmlns:a="http://richfaces.org/a4j"
+	xmlns:c="http://java.sun.com/jstl/core">
+	<f:view>
+		<f:loadBundle basename="org.brickred.socialauthseam.bundle.MessageResources" var="msg"/>
+		<head>
+			<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+			<title>Social Auth</title>
+			<style type="text/css">
+				.showBold{
+					font-weight:bold;
+				}
+				
+				.grey{background-color: gray;color:black;}
+			</style>
+			<link rel="stylesheet" type="text/css" href="./stylesheet/style.css" />
+		</head>
+		<body>
+			<div id="logo">
+				<div id="slogan">&nbsp;</div>
+			</div>
+			<ui:insert name="mainForm">Main Form Goes Here</ui:insert>
+			<div id="footer">
+				<div id="left_footer"><b>&#169; 2010 BrickRed All Rights Reserved&nbsp;.</b></div>
+				<div id="right_footer"><b>BrickRed Technologies Pvt. Ltd</b></div>
+			</div>
+		</body>
+	</f:view>
+</html>
+
+}}}
+
+Note: Please add css and images files from demo application into current project.
+
+
+
+= Step 8: Writing the index.xhtml. =
+
+Please redirect to the “mainpage .seam” once user hits index page of the application.
+
+{{{
+
+<html>
+	<head>
+		<meta http-equiv="Refresh" content="0; URL=home.seam">
+	</head>
+</html>
+
+}}}
+
+
+
+= Step 9: Writing the home.xhtml =
+
+Application home page comprises login links for different providers
+
+{{{
+
+<!DOCTYPE composition PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:rich="http://richfaces.org/rich"
+	xmlns:s="http://jboss.com/products/seam/taglib" xmlns:a="http://richfaces.org/a4j"
+	xmlns:c="http://java.sun.com/jstl/core">
+
+	<ui:composition template="layout/template.xhtml">
+		<ui:define name="mainForm">
+			<div id="main">
+				<div id="sidebar">
+					<h1><a href="http://www.brickred.com/"><img alt="" src="images/logo.png" style="border: 0px" /></a></h1>
+				</div>
+				<div id="text" >
+					<h:form>
+						<table cellpadding="10" cellspacing="10" align="center">
+							<tr><td colspan="6"><h3 align="center">${msg.get("label.welcome")}</h3></td></tr>
+							<tr><td colspan="6"><p align="center">${msg.get("label.pleaseClick")}</p></td></tr>
+							<tr>
+								<td><h:commandButton id="facebook" name="facebook"  action="#{socialauth.login}"
+									value="Facebook Login" actionListener="#{socialauthenticator.updateId}" image="images/facebook_icon.png"/>
+								</td>
+								<td><h:commandButton id="twitter" name="twitter"  action="#{socialauth.login}"
+									value="Twitter Login" actionListener="#{socialauthenticator.updateId}" image="images/twitter_icon.png"/>
+								</td>
+								<td><h:commandButton id="google" name="google"  action="#{socialauth.login}"
+									value="Gmail Login" actionListener="#{socialauthenticator.updateId}" image="images/gmail-icon.jpg"/>
+								</td>
+								<td><h:commandButton id="yahoo" name="yahoo"  action="#{socialauth.login}"	
+									value="Yahoo Login" actionListener="#{socialauthenticator.updateId}" image="images/yahoomail_icon.jpg"/>
+								</td>
+								<td><h:commandButton id="hotmail" name="hotmail"  action="#{socialauth.login}"
+									value="Hotmail Login" actionListener="#{socialauthenticator.updateId}" image="images/hotmail.jpeg"/>
+								</td>
+								<td><h:commandButton id="linkedin" name="linkedin"  action="#{socialauth.login}"
+									value="Hotmail Login" actionListener="#{socialauthenticator.updateId}" image="images/linkedin.gif"/>
+								</td>
+								<td><h:commandButton id="foursquare" name="foursquare"  action="#{socialauth.login}"
+									value="Hotmail Login" actionListener="#{socialauthenticator.updateId}" image="images/foursquare.jpeg"/>
+								</td>
+							</tr>
+						</table>
+					</h:form>
+					<h:form id="my" name="my" >
+						<table cellpadding="10" cellspacing="10" align="center">
+							<tr>
+								<td class="showBold">${msg.get("label.openid")}</td>
+								<td>
+									<h:inputText value="#{socialauthenticator.openID}" id="idfield" required="true" requiredMessage="Please enter valid input" />
+								</td>
+								<td>
+									<h:commandButton id="openid" name="openid"  action="#{socialauth.login}" value="Openid" actionListener="#{socialauthenticator.updateId}"/>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="2" style="text-align:center;color:red">
+									<h:messages/>
+								</td>
+								<td>&nbsp;</td>
+							</tr>
+						</table>
+					</h:form>
+					<br /><br /><br />
+		
+					<p class="additional">
+						${msg.get("msg.footerMsg1")}	
+					</p>
+				</div>
+			</div>
+		</ui:define>
+	</ui:composition>
+</html>
+
+}}}
+
+
+
+= Step 10: Writing the success.xhtml =
+
+Success view page, it renders on successful login and display various information about logged in user.
+
+{{{
+
+<!DOCTYPE composition PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:rich="http://richfaces.org/rich"
+	xmlns:s="http://jboss.com/products/seam/taglib"
+	xmlns:a="http://richfaces.org/a4j"
+	xmlns:c="http://java.sun.com/jstl/core">
+	<ui:composition template="layout/template.xhtml">
+		<ui:define name="mainForm">
+			<div id="main">
+				<div id="sidebar">
+					<h1><a href="http://www.brickred.com/"><img alt="" src="images/logo.png" style="border: 0px" /></a></h1>
+				</div>
+				<div id="text" >
+					<h2 align="center">${msg.get("msg.authenticationSuccessfull")}</h2>
+					<br/>
+					<div align="center">
+						<h:form>
+							<h:commandLink action="#{socialauthenticator.mainPage}" value="Back" actionListener="socialauth.logout" />
+						</h:form>
+					</div>
+					<br />
+					<h3 align="center">${msg.get("label.profileInfo")}</h3>
+					<c:if test="${not empty socialauth.profile}">
+						<table cellspacing="1" border="0" bgcolor="e5e5e5" width="60%" align="center">
+							<tr class="sectiontableheader">
+								<th>${msg.get("label.field")}</th>
+								<th>${msg.get("label.value")}Value</th>
+							</tr>
+							<tr class="sectiontableentry1">
+								<td>${msg.get("label.email")}:</td>
+								<td>${socialauth.profile.email}</td>
+							</tr>
+							<tr class="sectiontableentry2">
+								<td>${msg.get("label.firstName")}:</td>
+								<td>${socialauth.profile.firstName}</td>
+							</tr>
+							<tr class="sectiontableentry1">
+								<td>${msg.get("label.lastName")}:</td>
+								<td>${socialauth.profile.lastName}</td>
+							</tr>
+							<tr class="sectiontableentry2">
+								<td>${msg.get("label.country")}:</td>
+								<td>${socialauth.profile.country}</td>
+							</tr>
+							<tr class="sectiontableentry1">
+								<td>${msg.get("label.language")}:</td>
+								<td>${socialauth.profile.language}</td>
+							</tr>
+							<tr class="sectiontableentry2">
+								<td>${msg.get("label.fullName")}:</td>
+								<td>${socialauth.profile.fullName}</td>
+							</tr>
+							<tr class="sectiontableentry1">
+								<td>${msg.get("label.displayName")}:</td>
+								<td>${socialauth.profile.displayName}</td>
+							</tr>
+							<tr class="sectiontableentry2">
+								<td>${msg.get("label.dob")}:</td>
+								<td>${socialauth.profile.dob}</td>
+							</tr>
+							<tr class="sectiontableentry1">
+								<td>${msg.get("label.gender")}:</td>
+								<td>${socialauth.profile.gender}</td>
+							</tr>
+							<tr class="sectiontableentry2">
+								<td>${msg.get("label.location")}:</td>
+								<td>${socialauth.profile.location}</td>
+							</tr>
+							<tr class="sectiontableentry1">
+								<td>${msg.get("label.profileImage")}:</td>
+								<td>
+									<c:if test="${socialauth.profile.profileImageURL != null}">
+										<img src="${socialauth.profile.profileImageURL}"/>
+									</c:if>
+								</td>
+							</tr>
+							<tr class="sectiontableentry2">
+								<td>${msg.get("label.updateStatus")}:</td>
+								<td>
+									<!--input type="button" value="Click to Update Status" onclick="updateStatus();" id="btnUpdateStatus"/-->
+									<a:form id="updateForm">
+										<input type="hidden" name="statusMessage" id="statusMessage"/>
+										<a:commandButton value="Click to Update Status" action="#{socialAuthUpdateStatus.updateStatus}" onclick="preUpdateStatus();" id="btnUpdateStatus" reRender="statusPanel" oncomplete="enableUpdateStatusButton();"/>
+									</a:form>
+									<h:panelGroup id="statusPanel" >
+										<h:outputText value="#{socialAuthUpdateStatus.status}" rendered="#{not empty socialAuthUpdateStatus.status}" style="color:red"/>
+									</h:panelGroup>
+								</td>
+							</tr>
+						</table>
+						<h3 align="center">${msg.get("label.contactDet")}</h3>
+						<table cellspacing="4" border="0" bgcolor="e5e5e5" align="center" width="60%">
+							<tr class="sectiontableheader">
+								<th width="15%">${msg.get("label.fullName")}</th>
+								<th>${msg.get("label.email")}</th>
+								<th>${msg.get("label.profileURL")}</th>
+							</tr>
+							<c:if test="${not empty socialauth.contactList}">
+								<ui:repeat value="#{socialauth.contactList}" var="contact">
+									<tr class="sectiontableentry1">
+										<td>${contact.firstName}</td>
+										<td>${contact.email}</td>
+										<td><a href="${contact.profileUrl}" target="_new">${contact.profileUrl}</a></td>
+									</tr>
+								</ui:repeat>
+							</c:if>
+							<c:if test="${empty socialauth.contactList}">
+								<tr>
+									<td colspan="4">
+										${msg.get("msg.noContactAvailable")}
+									</td>
+								</tr>
+							</c:if>
+						</table>
+					</c:if>
+					<br /><br /><br /><br /><br /><br /><br /><br /><br />
+					<p class="additional">
+						${msg.get("msg.footerMsg1")}
+					</p>
+				</div>
+			</div>
+			<script>
+				function disableUpdateStatusButton(){
+					var btn = document.getElementById('updateForm:btnUpdateStatus');
+					btn.disabled=true;
+				}
+				function enableUpdateStatusButton(){
+					var btn = document.getElementById('updateForm:btnUpdateStatus');
+					btn.disabled=false;
+				}
+				function preUpdateStatus(){
+					disableUpdateStatusButton();
+					var msg = prompt("Enter your status here:");
+					if(msg == null || msg.length == 0){
+						btn.disabled=false;
+						return false;
+					}
+					document.getElementById('statusMessage').value=msg;
+				}
+			</script>
+		</ui:define>
+	</ui:composition>
+</html>
+
+
+}}}
+
+
+
+= Step 11: Writing the error.xhtml =
+
+Error page displays in case of abnormal behaviour of application.
+
+{{{
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:rich="http://richfaces.org/rich"
+	xmlns:s="http://jboss.com/products/seam/taglib"
+	xmlns:a="http://richfaces.org/a4j"
+	xmlns:c="http://java.sun.com/jstl/core">
+
+	<ui:composition template="layout/template.xhtml">
+		<ui:define name="mainForm">
+			<h1>Error</h1>
+			<p>Something bad happened :-(</p>
+			<h:messages styleClass="message"/>
+		</ui:define>
+	</ui:composition>
+</html>
+
+}}}
+
+
+
+= Step 12: Adding the style css =
+
+Please create a folder call stylesheet under webcontent folder and copy the style.css from demo project.
+
+
+
+= Step 13: Building of war file =
+
+Following are two approaches to produce war file:
+
+First is through command prompt; it requires ant installation. Also make sure that you have set the ant installed directory path correctly. To launch the ant you need to follow below steps:
+
+ # Go to project directory
+ # Type ant          (enter) it will read the build instructions from build.xml file.
+ # On completion of ant script, a war (socialauthseam.war) will be generated in* dist *folder under main project folder
+
+Second way is to launch ant through eclipse as shown in below picture. On completion of ant script, a war file called “socialauthseam.war” will be available in *dist *folder under main project folder. This resultant war is ready for deployment on JBoss server.
+
+
+
+= Step 14: Deployment =
+
+Deployment is the last but not least step of development journey. Please copy the socialauthseam.war file from dist folder to JBoss’ deployment folder. Usually, we deploy the applications at *C:\jboss-5.1.0.GA\server\default\deploy* location in JBoss. Please start the Jboss server by double clicking bin\run.bat file (run.sh on linux/unix).
+
+After server start you can access the application with following url address in web browser.
+
+http://localhost:8080/socialauthseam/
+
+Landing page:
