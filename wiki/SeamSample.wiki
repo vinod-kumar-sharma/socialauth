@@ -520,7 +520,8 @@ Application home page comprises login links for different providers
 
 {{{
 
-<!DOCTYPE composition PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!DOCTYPE composition PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" 
+	"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:ui="http://java.sun.com/jsf/facelets"
       xmlns:h="http://java.sun.com/jsf/html"
@@ -534,7 +535,11 @@ Application home page comprises login links for different providers
 		<ui:define name="mainForm">
 			<div id="main">
 				<div id="sidebar">
-					<h1><a href="http://www.brickred.com/"><img alt="" src="images/logo.png" style="border: 0px" /></a></h1>
+					<h1>
+						<a href="http://www.brickred.com/">
+							<img alt="" src="images/logo.png" style="border: 0px" />
+						</a>
+					</h1>
 				</div>
 				<div id="text" >
 					<h:form>
@@ -543,25 +548,32 @@ Application home page comprises login links for different providers
 							<tr><td colspan="6"><p align="center">${msg.get("label.pleaseClick")}</p></td></tr>
 							<tr>
 								<td><h:commandButton id="facebook" name="facebook"  action="#{socialauth.login}"
-									value="Facebook Login" actionListener="#{socialauthenticator.updateId}" image="images/facebook_icon.png"/>
+									value="Facebook Login" actionListener="#{socialauthenticator.updateId}" 
+									image="images/facebook_icon.png"/>
 								</td>
 								<td><h:commandButton id="twitter" name="twitter"  action="#{socialauth.login}"
-									value="Twitter Login" actionListener="#{socialauthenticator.updateId}" image="images/twitter_icon.png"/>
+									value="Twitter Login" actionListener="#{socialauthenticator.updateId}" 
+									image="images/twitter_icon.png"/>
 								</td>
 								<td><h:commandButton id="google" name="google"  action="#{socialauth.login}"
-									value="Gmail Login" actionListener="#{socialauthenticator.updateId}" image="images/gmail-icon.jpg"/>
+									value="Gmail Login" actionListener="#{socialauthenticator.updateId}" 
+									image="images/gmail-icon.jpg"/>
 								</td>
 								<td><h:commandButton id="yahoo" name="yahoo"  action="#{socialauth.login}"	
-									value="Yahoo Login" actionListener="#{socialauthenticator.updateId}" image="images/yahoomail_icon.jpg"/>
+									value="Yahoo Login" actionListener="#{socialauthenticator.updateId}" 
+									image="images/yahoomail_icon.jpg"/>
 								</td>
 								<td><h:commandButton id="hotmail" name="hotmail"  action="#{socialauth.login}"
-									value="Hotmail Login" actionListener="#{socialauthenticator.updateId}" image="images/hotmail.jpeg"/>
+									value="Hotmail Login" actionListener="#{socialauthenticator.updateId}" 
+									image="images/hotmail.jpeg"/>
 								</td>
 								<td><h:commandButton id="linkedin" name="linkedin"  action="#{socialauth.login}"
-									value="Hotmail Login" actionListener="#{socialauthenticator.updateId}" image="images/linkedin.gif"/>
+									value="Hotmail Login" actionListener="#{socialauthenticator.updateId}" 
+									image="images/linkedin.gif"/>
 								</td>
 								<td><h:commandButton id="foursquare" name="foursquare"  action="#{socialauth.login}"
-									value="Hotmail Login" actionListener="#{socialauthenticator.updateId}" image="images/foursquare.jpeg"/>
+									value="Hotmail Login" actionListener="#{socialauthenticator.updateId}" 
+									image="images/foursquare.jpeg"/>
 								</td>
 							</tr>
 						</table>
@@ -571,10 +583,12 @@ Application home page comprises login links for different providers
 							<tr>
 								<td class="showBold">${msg.get("label.openid")}</td>
 								<td>
-									<h:inputText value="#{socialauthenticator.openID}" id="idfield" required="true" requiredMessage="Please enter valid input" />
+									<h:inputText value="#{socialauthenticator.openID}" id="idfield" required="true" 
+									requiredMessage="Please enter valid input" />
 								</td>
 								<td>
-									<h:commandButton id="openid" name="openid"  action="#{socialauth.login}" value="Openid" actionListener="#{socialauthenticator.updateId}"/>
+									<h:commandButton id="openid" name="openid"  action="#{socialauth.login}" 
+									value="Openid" actionListener="#{socialauthenticator.updateId}"/>
 								</td>
 							</tr>
 							<tr>
