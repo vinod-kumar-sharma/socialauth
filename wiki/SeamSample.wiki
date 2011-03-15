@@ -19,7 +19,7 @@ Prior to dig into the actual code, following are few prerequisites which are req
 
 IDE
  * Install Java-IDE (preferred eclipse 3.3 or latter)([http://www.eclipse.org/downloads/ download])
-      [http://ist.berkeley.edu/as-ag/tools/howto/install-eclipse-win.html Installation instructions]
+[http://ist.berkeley.edu/as-ag/tools/howto/install-eclipse-win.html Installation instructions]
 
  * Install JBossTools-2.0  eclipse plug-in  or above 
       [http://www.jboss.org/tools/download/ Update site and installation instructions])
