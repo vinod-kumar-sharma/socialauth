@@ -17,22 +17,12 @@ This article is devoted to the sample seam example where we exploring the open i
 
 Prior to dig into the actual code, following are few prerequisites which are required on a developer machine.
 
-IDE
- * Install Java-IDE (preferred eclipse 3.3 or latter)([http://www.eclipse.org/downloads/ download]) <br/>[http://ist.berkeley.edu/as-ag/tools/howto/install-eclipse-win.html Installation instructions]
-
- * Install JBossTools-2.0  eclipse plug-in  or above <br/>([http://www.jboss.org/tools/download/ Update site and installation instructions])
-
-Seam runtime
- * Install jboss-seam-2.2.0.GA ([https://olex.openlogic.com/packages/jboss-seam/ download]) or lat hier in case you are using eclipse 3.4 or later.<br/>Installation is just to download and unzip it in local drive.
-
-Ant
- * apache-ant-1.8.0 or latter ([http://ant.apache.org/bindownload.cgi download])<br/>Installation is just to download and unzip it in local drive.
-
-Demo Project
+ #Install Java-IDE (preferred eclipse 3.3 or latter)([http://www.eclipse.org/downloads/ download]) <br/>[http://ist.berkeley.edu/as-ag/tools/howto/install-eclipse-win.html Installation instructions]
+ # Install JBossTools-2.0  eclipse plug-in  or above <br/>([http://www.jboss.org/tools/download/ Update site and installation instructions])
+ # Install jboss-seam-2.2.0.GA ([https://olex.openlogic.com/packages/jboss-seam/ download]) or lat hier in case you are using eclipse 3.4 or later.<br/>Installation is just to download and unzip it in local drive.
+ # apache-ant-1.8.0 or latter ([http://ant.apache.org/bindownload.cgi download])<br/>Installation is just to download and unzip it in local drive.
  # Download the demo project from<br/>http://code.google.com/p/socialauthsourcebrowse#svn%2Ftrunk%2FSocialAuthSeam
-
-Server
- * Download JBoss 5.1 ([http://www.jboss.org/jbossas/downloads/ download])<br/>Installation is just to download and unzip it in local drive.
+ # Download JBoss 5.1 ([http://www.jboss.org/jbossas/downloads/ download])<br/>Installation is just to download and unzip it in local drive.
 
 
 
