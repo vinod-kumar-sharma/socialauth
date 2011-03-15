@@ -20,36 +20,30 @@ Prior to dig into the actual code, following are few prerequisites which are req
 IDE
 
  * Install Java-IDE (preferred eclipse 3.3 or latter) ([http://www.eclipse.org/downloads/ download])
-
-   [http://ist.berkeley.edu/as-ag/tools/howto/install-eclipse-win.html Installation instructions]
+    [http://ist.berkeley.edu/as-ag/tools/howto/install-eclipse-win.html Installation instructions]
 
  * Install JBossTools-2.0  eclipse plug-in  or above
-
    ([http://www.jboss.org/tools/download/ Update site and installation instructions])
 
 Seam runtime
 
  * Install jboss-seam-2.2.0.GA ([https://olex.openlogic.com/packages/jboss-seam/ download]) or lat hier in case you are using eclipse 3.4 or later.
-
-   Installation is just to download and unzip it in local drive.
+    Installation is just to download and unzip it in local drive.
 
 Ant
 
  * apache-ant-1.8.0 or latter ([http://ant.apache.org/bindownload.cgi download])
-
-   Installation is just to download and unzip it in local drive.
+    Installation is just to download and unzip it in local drive.
 
 Demo Project
 
  * Download the demo project from
-
-   http://code.google.com/p/socialauth/source/browse/#svn%2Ftrunk%2FSocialAuthSeam
+     http://code.google.com/p/socialauth/source/browse/#svn%2Ftrunk%2FSocialAuthSeam
 
 Server
 
  * Download JBoss 5.1 ([http://www.jboss.org/jbossas/downloads/ download])
-
-   Installation is just to download and unzip it in local drive.
+     Installation is just to download and unzip it in local drive.
 
 
 
@@ -149,14 +143,11 @@ Just see the file below, it’s having a component declaration for “*socialaut
 }}}
 
  * seam.properties
-
-	Includes settings which can be used in components.xml. Apart from this, it is a marker for Seam that an archive (WAR or JAR) includes Seam components. So just create an empty file and keep it in the root of the class path.
+       Includes settings which can be used in components.xml. Apart from this, it is a marker for Seam that an archive (WAR or JAR) includes Seam components. So just create an empty file and keep it in the root of the class path.
 
  * faces-config.xml
-
-	It’s a normal JSF configuration file. Since default rendering of seam is Java Server Faces so we need this file in WEB-INF folder. This file also comprises settings for message resource bundles and life cycles listeners. Please note that you don’t need to define navigation rules here because we are having pages.xml config file for that.
-
-	Following are few configurations which we have used in demo application:
+       It’s a normal JSF configuration file. Since default rendering of seam is Java Server Faces so we need this file in WEB-INF folder. This file also comprises settings for message resource bundles and life cycles listeners. Please note that you don’t need to define navigation rules here because we are having pages.xml config file for that.
+      Following are few configurations which we have used in demo application:
 
 {{{
 
@@ -185,13 +176,11 @@ Just see the file below, it’s having a component declaration for “*socialaut
 
 }}}
 
-Please note that class org.brickred.socialauth.SocialAuthPhaseListener is part of socialauth library. We just need to configure it here.
+    Please note that class org.brickred.socialauth.SocialAuthPhaseListener is part of socialauth library. We just need to configure it here.
 
  * pages.xml
-
-	This file consists of navigation and security rules of a seam project. It privileges the user to declare exceptions which are called by seam framework on corresponding error occurrences.
-
-	E.g. following tag is used to declare a custom navigation and exception respectively.
+        This file consists of navigation and security rules of a seam project. It privileges the user to declare exceptions which are called by seam framework on corresponding error occurrences.
+        E.g. following tag is used to declare a custom navigation and exception respectively.
 
 {{{
 
@@ -228,8 +217,7 @@ Please note that class org.brickred.socialauth.SocialAuthPhaseListener is part o
 
 
  * web.xml
-
-	This is standard web configuration file. It doesn’t having any special entry except standard seam configuration and a context parameter for interfacing with socialauth library.
+      This is standard web configuration file. It doesn’t having any special entry except standard seam configuration and a context parameter for interfacing with socialauth library.
 
 {{{
 
@@ -279,10 +267,9 @@ Please note that class org.brickred.socialauth.SocialAuthPhaseListener is part o
 
 }}}
 
-The *"successUrl"* context parameter in above configuration is a custom parameter which corresponds to the success view id where the application control is redirected by open id provider on successful authentication.
+     The *"successUrl"* context parameter in above configuration is a custom parameter which corresponds to the success view id where the application control is redirected by open id provider on successful authentication.
 
  * jboss-web.xml
-
 	Standard configuration file for defining jndi and other data source details for JBoss server.
 
 
@@ -291,29 +278,28 @@ The *"successUrl"* context parameter in above configuration is a custom paramete
 
  * oauth_consumer.properties
 
-Properties file with exclusive settings for different open id providers.
+     Properties file with exclusive settings for different open id providers.
+     E.g.
 
-E.g.
+     # google
 
-#google
+    www.google.com.consumer_key = opensource.brickred.com
 
-www.google.com.consumer_key = opensource.brickred.com
+    www.google.com.consumer_secret = YC06FqhmCLWvtBg/O4W/aJfj
 
-www.google.com.consumer_secret = YC06FqhmCLWvtBg/O4W/aJfj
+    www.google.com.secure = true
 
-www.google.com.secure = true
+    www.google.com.request_token_url = /accounts/OAuthGetRequestToken
 
-www.google.com.request_token_url = /accounts/OAuthGetRequestToken
+    www.google.com.authorization_url = /accounts/OAuthAuthorizeToken
 
-www.google.com.authorization_url = /accounts/OAuthAuthorizeToken
+    www.google.com.access_token_url = /accounts/OAuthGetAccessToken
 
-www.google.com.access_token_url = /accounts/OAuthGetAccessToken
+    www.google.com.signature_method = HMAC-SHA1
 
-www.google.com.signature_method = HMAC-SHA1
+    www.google.com.transport_name = POST
 
-www.google.com.transport_name = POST
-
-For simplicity please take this file from demo application and keep it in class path. Don’t forget to generate security keys for different vendors.
+    For simplicity please take this file from demo application and keep it in class path. Don’t forget to generate security keys for different vendors.
 
 
 
@@ -321,51 +307,14 @@ For simplicity please take this file from demo application and keep it in class 
 
 Please make sure that below jar files to be copied correctly from the demo project into WEB-INF\lib folder of your application. In case you are using JBossTools-3.0 then please replace the WEB-INF\library with demo project library to avoid the jars duplication.
 
-commons-beanutils.jar
-
-commons-codec.jar
-
-commons-digester.jar
-
-commons-httpclient.jar
-
-jboss-el.jar
-
-jboss-seam-debug.jar
-
-jboss-seam-ui.jar
-
-jboss-seam.jar
-
-jsf-facelets.jar
-
-json-20080701.jar
-
-log4j-1.2.15.jar
-
-richfaces-api.jar
-
-richfaces-impl.jar
-
-richfaces-ui.jar
-
-socialauth.jar
-
-twitter4j-core-2.1.3-SNAPSHOT.jar
-
-visural-common-0.3.2.jar
-
-dyuproject-openid-oauth-1.1.7-jarjar.jar
-
-guice-2.0.jar
-
-htmlparser.jar
-
-openid4java.jar
-
-openxri-client.jar
-
-openxri-syntax.jar
+|| commons-beanutils.jar || commons-codec.jar || commons-digester.jar ||
+|| jboss-el.jar || jboss-seam-debug.jar ||jboss-seam-ui.jar ||
+|| jboss-seam.jar || jsf-facelets.jar || log4j-1.2.15.jar ||
+|| richfaces-api.jar || richfaces-impl.jar || richfaces-ui.jar ||
+|| openid4java.jar || openxri-client.jar || openxri-syntax.jar ||
+|| htmlparser.jar || json-20080701.jar ||commons-httpclient.jar ||
+|| socialauth.jar || twitter4j-core-2.1.3-SNAPSHOT.jar || visural-common-0.3.2.jar ||
+||dyuproject-openid-oauth-1.1.7-jarjar.jar || guice-2.0.jar ||
 
 Please note that “*socialauth.jar*” should be copied in WEB-INF\lib path. It is the social auth library which revealed the different open id providers to this demo application. This file is bundled with the demo application.
 
@@ -507,10 +456,14 @@ Main template layout helps in rendering of other view pages.
 
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:ui="http://java.sun.com/jsf/facelets"
-	xmlns:h="http://java.sun.com/jsf/html" xmlns:f="http://java.sun.com/jsf/core" xmlns:rich="http://richfaces.org/rich"
-	xmlns:s="http://jboss.com/products/seam/taglib" xmlns:a="http://richfaces.org/a4j"
-	xmlns:c="http://java.sun.com/jstl/core">
+<html xmlns="http://www.w3.org/1999/xhtml" 
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:h="http://java.sun.com/jsf/html" 
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:rich="http://richfaces.org/rich"
+    xmlns:s="http://jboss.com/products/seam/taglib"
+    xmlns:a="http://richfaces.org/a4j"
+    xmlns:c="http://java.sun.com/jstl/core">
 	<f:view>
 		<f:loadBundle basename="org.brickred.socialauthseam.bundle.MessageResources" var="msg"/>
 		<head>
