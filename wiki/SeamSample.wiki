@@ -241,30 +241,17 @@ Please make the following changes to seam project for aligning it to as per demo
 
 
 
-= Step 3: Setup application configuration files =
+= Step 3: Obtain consumer keys and secrets and Setup application configuration file =
 
- * *oauth_consumer.properties* : Properties file with exclusive settings for different open id providers.
-     E.g.
+ This step is very important and the library will NOT work without this.
 
-     '#' google
-
-    www.google.com.consumer_key = opensource.brickred.com
-
-    www.google.com.consumer_secret = YC06FqhmCLWvtBg/O4W/aJfj
-
-    www.google.com.secure = true
-
-    www.google.com.request_token_url = /accounts/OAuthGetRequestToken
-
-    www.google.com.authorization_url = /accounts/OAuthAuthorizeToken
-
-    www.google.com.access_token_url = /accounts/OAuthGetAccessToken
-
-    www.google.com.signature_method = HMAC-SHA1
-
-    www.google.com.transport_name = POST
-
-    For simplicity please take this file from demo application and keep it in class path. Don’t forget to generate security keys for different vendors.
+  * Consumer key and secret - Get your consumer keys and secrets by registering with any provider given below. OpenID does not require this step.
+    # Google [Google (show screenshot)] - http://code.google.com/apis/accounts/docs/RegistrationForWebAppsAuto.html 
+    # Yahoo [Yahoo (show screenshot)] - https://developer.apps.yahoo.com/dashboard/createKey.html
+    # Twitter  - http://twitter.com/apps
+    # Facebook  - http://www.facebook.com/developers/apps.php
+    # Hotmail [Hotmail (show screenshot)] - http://msdn.microsoft.com/en-us/library/cc287659.aspx
+  * Create a properties like the sample [SampleProperties oauth_consumer.properties] using the consumer key and secrets obtained above. This file should be included in your classpath, for example WEB-INF/classes directory
 
 
 
