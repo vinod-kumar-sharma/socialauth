@@ -9,7 +9,7 @@ Demo application exploring socialauth library.
 
 = Introduction =
 
-This article is devoted to the sample seam example where we exploring the open id integration using *socialauth *library. Currently *socialauth* library affirms Gmail, Hotmail, Yahoo, Twitter, Facebook, LinkedIn, Foursquare, MySpace as well as through OpenID providers like myopenid.com. This library is the wrapper on different providers and saves a lot of effort while designing/adding functionality to a new/existing application for open id authentication.
+This article is devoted to the sample seam example where we exploring the open id integration using *socialauth *library. Currently *socialauth* library affirms Gmail, Hotmail, Yahoo, Twitter, Facebook, !LinkedIn, Foursquare, !MySpace as well as through OpenID providers like myopenid.com. This library is the wrapper on different providers and saves a lot of effort while designing/adding functionality to a new/existing application for open id authentication.
 
 
 
