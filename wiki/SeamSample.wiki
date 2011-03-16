@@ -9,7 +9,7 @@ Demo application exploring socialauth library.
 
 = Introduction =
 
-This article is devoted to the sample seam example where we exploring the open id integration using *socialauth *library. Currently *socialauth* library affirms Google, Yahoo, Facebook, Twitter, Linked In and other Open IDs. This library is the wrapper on different providers and saves a lot of effort while designing/adding functionality to a new/existing application for open id authentication.
+This article is devoted to the sample seam example where we exploring the open id integration using *socialauth *library. Currently *socialauth* library affirms Gmail, Hotmail, Yahoo, Twitter, Facebook, LinkedIn, Foursquare, MySpace as well as through OpenID providers like myopenid.com. This library is the wrapper on different providers and saves a lot of effort while designing/adding functionality to a new/existing application for open id authentication.
 
 
 
@@ -17,7 +17,7 @@ This article is devoted to the sample seam example where we exploring the open i
 
 Prior to dig into the actual code, following are few prerequisites which are required on a developer machine.
 
- #Install Java-IDE (preferred eclipse 3.3 or latter)([http://www.eclipse.org/downloads/ download]) <br/>[http://ist.berkeley.edu/as-ag/tools/howto/install-eclipse-win.html Installation instructions]
+ #!Install Java-IDE (preferred eclipse 3.3 or latter)([http://www.eclipse.org/downloads/ download]) <br/>[http://ist.berkeley.edu/as-ag/tools/howto/install-eclipse-win.html Installation instructions]
  # Install JBossTools-2.0  eclipse plug-in  or above <br/>([http://www.jboss.org/tools/download/ Update site and installation instructions])
  # Install jboss-seam-2.2.0.GA ([https://olex.openlogic.com/packages/jboss-seam/ download]) or lat hier in case you are using eclipse 3.4 or later.<br/>Installation is just to download and unzip it in local drive.
  # apache-ant-1.8.0 or latter ([http://ant.apache.org/bindownload.cgi download])<br/>Installation is just to download and unzip it in local drive.
@@ -85,8 +85,7 @@ Please make the following changes to seam project for aligning it to as per demo
    # layout\template.xhtml
    # layout\menu.xhtml
 
- * Comment the persistence unit in META-INF\persistence.xhtml.
-    Since our application does not use db, so we don’t need to define persistence unit at all.
+ * Comment the persistence unit in META-INF\persistence.xhtml.<br/>Since our application does not use db, so we don’t need to define persistence unit at all.
 
 
 
@@ -96,13 +95,13 @@ Please make the following changes to seam project for aligning it to as per demo
 
 This file configures Seam and application own components. Generally, we prefer to configure components with annotations (i.e. @Name) but still we can declare it here as well.
 
-Just see the file below, it’s having a component declaration for “*socialauth*” which refers to social auth component class *org.brickred.socialauth.SocialAuth*. This component is part of social auth library and exposes services like login, logout, contact list etc to the demo application classes.
+Just see the file below, it’s having a component declaration for *"socialauth"* which refers to social auth component class *org.brickred.socialauth.SocialAuth*. This component is part of social auth library and exposes services like login, logout, contact list etc to the demo application classes.
 
-         * <view-handler>: Since JSF provides a high level of plugging features. So this tag is used to specify a custom view handler.
+         * {{{<view-handler>}}}: Since JSF provides a high level of plugging features. So this tag is used to specify a custom view handler.
 
-	 * <message-bundle>: Used to specify message resource bundle.
+	 * {{{<message-bundle>}}}: Used to specify message resource bundle.
 
-	 * <lifecycle>: Have used to configure phase listener
+	 * {{{<lifecycle>}}}: Have used to configure phase listener
 
 {{{
 
@@ -393,8 +392,8 @@ public class Authenticator {
 
 = Step 6: Adding resource bundles =
 
-Resource bundle is available in package org.brickred.socialauthseam.bundle under src folder.Please copy the resource bundles from there and configure it in faces-config.xml file. Please make sure that resource bundle file names are same as configured in <message-bundle> tag in faces-config.xml file.
-
+Resource bundle is available in package org.brickred.socialauthseam.bundle under src folder.Please copy the resource bundles from there and configure it in faces-config.xml file. Please make sure that resource bundle file names are same as configured in {{{<message-bundle>}}} tag in faces-config.xml file.
+<br/>
 
 
 = Step 7: Writing the template.xhtml =
