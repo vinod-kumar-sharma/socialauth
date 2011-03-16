@@ -91,17 +91,7 @@ Please make the following changes to seam project for aligning it to as per demo
 
 = Step 2: Setup seam configuration files =
 
- * components.xml
-
-This file configures Seam and application own components. Generally, we prefer to configure components with annotations (i.e. @Name) but still we can declare it here as well.
-
-Just see the file below, it’s having a component declaration for *"socialauth"* which refers to social auth component class *org.brickred.socialauth.SocialAuth*. This component is part of social auth library and exposes services like login, logout, contact list etc to the demo application classes.
-
-         * {{{<view-handler>}}}: Since JSF provides a high level of plugging features. So this tag is used to specify a custom view handler.
-
-	 * {{{<message-bundle>}}}: Used to specify message resource bundle.
-
-	 * {{{<lifecycle>}}}: Have used to configure phase listener
+ * components.xml : This file configures Seam and application own components. Generally, we prefer to configure components with annotations (i.e. @Name) but still we can declare it here as well.<br/> Just see the file below, it’s having a component declaration for *"socialauth"* which refers to social auth component class *org.brickred.socialauth.SocialAuth*. This component is part of social auth library and exposes services like login, logout, contact list etc to the demo application classes.
 
 {{{
 
@@ -124,6 +114,9 @@ Just see the file below, it’s having a component declaration for *"socialauth"
 
  * *faces-config.xml* : It’s a normal JSF configuration file. Since default rendering of seam is Java Server Faces so we need this file in WEB-INF folder. This file also comprises settings for message resource bundles and life cycles listeners. Please note that you don’t need to define navigation rules here because we are having pages.xml config file for that.
       Following are few configurations which we have used in demo application:
+   * {{{<view-handler>}}}: Since JSF provides a high level of plugging features. So this tag is used to specify a custom view handler.
+   * {{{<message-bundle>}}}: Used to specify message resource bundle.
+   * {{{<lifecycle>}}}: Have used to configure phase listener 
 
 {{{
 
