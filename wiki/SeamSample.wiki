@@ -19,7 +19,7 @@ Prior to dig into the actual code, following are few prerequisites which are req
 
  #!Install Java-IDE (preferred eclipse 3.3 or latter)([http://www.eclipse.org/downloads/ download]) <br/>[http://ist.berkeley.edu/as-ag/tools/howto/install-eclipse-win.html Installation instructions]
  # Install JBossTools-2.0  eclipse plug-in  or above <br/>([http://www.jboss.org/tools/download/ Update site and installation instructions])
- # Install jboss-seam-2.2.0.GA ([https://olex.openlogic.com/packages/jboss-seam/ download]) or lat hier in case you are using eclipse 3.4 or later.<br/>Installation is just to download and unzip it in local drive.
+ # Install jboss-seam-2.2.0.GA ([https://olex.openlogic.com/packages/jboss-seam/ download]) or later in case you are using eclipse 3.4 or later.<br/>Installation is just to download and unzip it in local drive.
  # apache-ant-1.8.0 or latter ([http://ant.apache.org/bindownload.cgi download])<br/>Installation is just to download and unzip it in local drive.
  # Download the demo project from<br/>http://code.google.com/p/socialauthsourcebrowse#svn%2Ftrunk%2FSocialAuthSeam
  # Download JBoss 5.1 ([http://www.jboss.org/jbossas/downloads/ download])<br/>Installation is just to download and unzip it in local drive.
@@ -278,7 +278,7 @@ Please make sure that you successfully copy the external-lib folder from demo pr
 
 = Step 5: Creating the Authenticator component =
 
-Create a seam component i.e. Authenticator. It is wrapped the social library component (!SocialAuth) and processes the user’s UI operations.
+Create a seam component i.e. Authenticator. This class comprises Jboss seam component i.e. "socialauth" bundled with socialauth library that helps to delegate the authentication to OpenId/ oAiuth providers like Yahoo, Facebook, LindIn etc. This class consists of updateID() method which sets the crossponding value of selected openid/oAuth provider from home page.<br/>Assigned value is used by PhaseListener (bundled with socialauth library) and listener is responsible for invoking of actual authentication provider.
 
 {{{ 
 
@@ -319,7 +319,9 @@ public class Authenticator {
 
 		String btnClicked = ae.getComponent().getId();
 		log.info("*************login method called ************" +socialauth.getId() );
-
+                ExternalContext context = javax.faces.context.FacesContext.getCurrentInstance().getExternalContext();
+                String viewUrl = context.getInitParameter("successUrl");
+                socialauth.setViewUrl(viewUrl);
 		if (btnClicked.indexOf("facebook") != -1){
 			socialauth.setId("facebook");
 			log.info("***facebook*********" +socialauth.getId() );
