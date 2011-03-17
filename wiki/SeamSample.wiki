@@ -372,9 +372,9 @@ public class Authenticator {
 
 
 
-= Step 6: Creating the UpdateStatus component
+= Step 6: Creating the !UpdateStatus component
 
-Seam component which sets the profile status for a particular user account. It delegate status update task by calling  setStatus() and updateStatus() methods on SocialAuth component. It comprises of single method updateStatus() which is called by UpdateStatus button on success view page.
+Seam component which sets the profile status for a particular user account. It delegate status update task by calling  setStatus() and updateStatus() methods on SocialAuth component. It comprises of single method updateStatus() which is called by !UpdateStatus button on success view page.
 
 {{{
 package org.brickred.socialauthseam.session;
