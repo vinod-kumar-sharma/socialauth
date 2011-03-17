@@ -1,0 +1,106 @@
+#summary Getting Started with implementing SocialAuth in Seam Application
+
+= Getting Started =
+
+== Prerequisites ==
+Authenticating using the external oAuth providers requires that we register our application with the providers and obtain a key/secret from them that will be configured in our application. So following steps are needed to be set up before we can begin.
+
+  * Public domain - You will need a public domain for testing. You should have a public domain because most of the providers require a public domain to be specified when you register an application with them. You can do some testing on your development machine but it will be quite limited.
+
+== Obtain consumer keys and secrets ==
+This step is very important and the library will NOT work without this.
+
+  * Consumer key and secret - Get your consumer keys and secrets by registering with any provider given below. OpenID does not require this step.
+    # Google [Google (show screenshot)] - http://code.google.com/apis/accounts/docs/RegistrationForWebAppsAuto.html 
+    # Yahoo [Yahoo (show screenshot)] - https://developer.apps.yahoo.com/dashboard/createKey.html
+    # Twitter  - http://twitter.com/apps
+    # Facebook  - http://www.facebook.com/developers/apps.php
+    # Hotmail [Hotmail (show screenshot)] - http://msdn.microsoft.com/en-us/library/cc287659.aspx
+  * Create a properties like the sample [SampleProperties oauth_consumer.properties] using the consumer key and secrets obtained above. This file should be included in your classpath, for example WEB-INF/classes directory
+
+== Download the jar ==
+  # Download the [http://socialauth.googlecode.com/files/socialauth-1.0-beta2.jar socialauth-1.0-beta2.jar] 
+  # Download the [http://socialauth.googlecode.com/files/dependencies.zip dependencies] Please note that you may not need all of them - for example jboss-seam.jar is not needed if you are building a Struts application. jsf-api is not needed if your application is JSP based.
+  # Include all the jars in your project
+
+== Implementation ==
+
+Socialauth.jar library consists with two fundamental classes which support JBoss seam application. Functionality of these classes is as below:
+
+ # !SocialAuth.class : It's inbuilt seam component responsible for invoking crossponding requested provider.
+ # !SocialAuthPhaseListener : Calls verify() method to get access token.
+
+ * Add socialauth component definition in your seam component.xml file
+
+{{{
+<component name="socialauth" class="org.brickred.socialauth.SocialAuth"/>
+}}}
+
+ * Add successUrl (view url) in web.xml as context param
+
+{{{
+<context-param>
+        <param-name>successUrl</param-name>
+        <param-value>/success.xhtml</param-value>
+ </context-param>
+}}}
+
+ * Register phase listener in faces-config.xml
+
+{{{
+<lifecycle>
+        <phase-listener>org.brickred.socialauth.SocialAuthPhaseListener</phase-listener>
+</lifecycle>
+}}}
+
+ * Create Authenticator component in your application.<br/> This class comprises Jboss seam component i.e. "socialauth" bundled with socialauth library that helps to delegate the authentication to !OpenId/ oAuth providers like Yahoo, Facebook, !LinkedIn etc. This class consists of updateID() method which sets the coressponding value of selected openid/oAuth provider from home page.<br/>Assigned value is used by !PhaseListener (bundled with socialauth library) and listener is responsible for invoking of actual authentication provider.
+
+Inject !SocialAuth Component
+{{{
+@In(create = true)
+SocialAuth socialauth;
+}}}
+
+updateId() method to set requested provider id
+{{{
+public void updateId(ActionEvent ae) {
+                //get requested provider id
+		String btnClicked = ae.getComponent().getId();
+
+                //get success url from context param
+		ExternalContext context = javax.faces.context.FacesContext.getCurrentInstance().getExternalContext();
+                String viewUrl = context.getInitParameter("successUrl");
+
+                 //set success URL in socialauth component
+                socialauth.setViewUrl(viewUrl);
+ 
+                //set provider id in socialauth component
+		if (btnClicked.indexOf("facebook") != -1){
+			socialauth.setId("facebook");
+			log.info("***facebook*********" +socialauth.getId() );
+		}else if..........
+}
+
+}}}
+
+
+
+ * Create home.xhtmlwhich comprises login links for different providers. When user clicks on any button, the updateId() method of Authenticator class will be invoked which sets the requested provider id like "facebook", "twitter" etc. in !SocialAuth component. After that login() method of !SocialAuth component will be called. 
+
+{{{
+<h:commandButton id="facebook" name="facebook"  action="#{socialauth.login}" 
+    value="Facebook Login" actionListener="#{socialauthenticator.updateId}"
+     image="images/facebook_icon.png"/
+}}}
+
+ * Create Success view page success.xhtml, it renders on successful login and display various information about logged in user.<br/><br/>   You can get profile object and contact list in following manner
+
+{{{
+//profile object
+socialauth.profile
+
+//get contacts list
+socialauth.contactList
+}}}
+
+        
