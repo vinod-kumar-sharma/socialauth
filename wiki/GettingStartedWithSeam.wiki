@@ -20,48 +20,36 @@ This step is very important and the library will NOT work without this.
 
 == Download the jar ==
   # Download the [http://socialauth.googlecode.com/files/socialauth-1.0-beta2.jar socialauth-1.0-beta2.jar] 
-  # Download the [http://socialauth.googlecode.com/files/dependencies.zip dependencies] Please note that you may not need all of them - for example jboss-seam.jar is not needed if you are building a Struts application. jsf-api is not needed if your application is JSP based.
+  # Download the [http://socialauth.googlecode.com/files/dependencies.zip dependencies]
   # Include all the jars in your project
 
 == Implementation ==
 
-Socialauth.jar library consists with two fundamental classes which support JBoss seam application. Functionality of these classes is as below:
+Socialauth.jar library consists of just two fundamental classes which support JBoss seam application. !SocialAuth bean is the seam component responsible for calling the corresponding requested provider like facebook, yahoo or google. !SocialAuthPhaseListener is the listener that processes the redirection from a provider.
 
- # !SocialAuth.class : It's inbuilt seam component responsible for invoking crossponding requested provider.
- # !SocialAuthPhaseListener : Calls verify() method to get access token.
-
- * Add socialauth component definition in your seam component.xml file
-
+ # Add socialauth component definition in your seam component.xml file
 {{{
 <component name="socialauth" class="org.brickred.socialauth.SocialAuth"/>
 }}}
-
- * Add successUrl (view url) in web.xml as context param
-
+ # Add the view in your web.xml which will be displayed after successful authentication using SocialAuth
 {{{
 <context-param>
         <param-name>successUrl</param-name>
         <param-value>/success.xhtml</param-value>
  </context-param>
 }}}
-
- * Register phase listener in faces-config.xml
-
+ # Register the phase listener in faces-config.xml
 {{{
 <lifecycle>
         <phase-listener>org.brickred.socialauth.SocialAuthPhaseListener</phase-listener>
 </lifecycle>
 }}}
-
- * Create Authenticator component in your application.<br/> This class comprises Jboss seam component i.e. "socialauth" bundled with socialauth library that helps to delegate the authentication to !OpenId/ oAuth providers like Yahoo, Facebook, !LinkedIn etc. This class consists of updateID() method which sets the coressponding value of selected openid/oAuth provider from home page.<br/>Assigned value is used by !PhaseListener (bundled with socialauth library) and listener is responsible for invoking of actual authentication provider.
-
-Inject !SocialAuth Component
+ # Inject !SocialAuth Component
 {{{
 @In(create = true)
 SocialAuth socialauth;
 }}}
-
-updateId() method to set requested provider id
+ # Create Authenticator component in your application.<br/> This class comprises Jboss seam component i.e. "socialauth" bundled with socialauth library that helps to delegate the authentication to !OpenId/ oAuth providers like Yahoo, Facebook, !LinkedIn etc. This class consists of updateID() method which sets the coressponding value of selected openid/oAuth provider from home page.<br/>Assigned value is used by !PhaseListener (bundled with socialauth library) and listener is responsible for invoking of actual authentication provider. updateId() method to set requested provider id
 {{{
 public void updateId(ActionEvent ae) {
                 //get requested provider id
@@ -82,19 +70,13 @@ public void updateId(ActionEvent ae) {
 }
 
 }}}
-
-
-
- * Create home.xhtmlwhich comprises login links for different providers. When user clicks on any button, the updateId() method of Authenticator class will be invoked which sets the requested provider id like "facebook", "twitter" etc. in !SocialAuth component. After that login() method of !SocialAuth component will be called. 
-
+ # Create home.xhtmlwhich comprises login links for different providers. When user clicks on any button, the updateId() method of Authenticator class will be invoked which sets the requested provider id like "facebook", "twitter" etc. in !SocialAuth component. After that login() method of !SocialAuth component will be called. 
 {{{
 <h:commandButton id="facebook" name="facebook"  action="#{socialauth.login}" 
     value="Facebook Login" actionListener="#{socialauthenticator.updateId}"
      image="images/facebook_icon.png"/
 }}}
-
- * Create Success view page success.xhtml, it renders on successful login and display various information about logged in user.<br/><br/>   You can get profile object and contact list in following manner
-
+ # Create Success view page success.xhtml, it renders on successful login and display various information about logged in user.<br/><br/>   You can get profile object and contact list in following manner
 {{{
 //profile object
 socialauth.profile
