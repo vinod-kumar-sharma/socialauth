@@ -278,7 +278,7 @@ Please make sure that you successfully copy the external-lib folder from demo pr
 
 = Step 5: Creating the Authenticator component =
 
-Create a seam component i.e. Authenticator. This class comprises Jboss seam component i.e. "socialauth" bundled with socialauth library that helps to delegate the authentication to !OpenId/ oAuth providers like Yahoo, Facebook, !LinkedIn etc. This class consists of updateID() method which sets the crossponding value of selected Openid/oAuth provider from home page.<br/>Assigned value is used by !PhaseListener (bundled with socialauth library) and listener is responsible for invoking of actual authentication provider.
+Create a seam component i.e. Authenticator. This class comprises Jboss seam component i.e. "socialauth" bundled with socialauth library that helps to delegate the authentication to !OpenId/ oAuth providers like Yahoo, Facebook, !LinkedIn etc. This class consists of updateID() method which sets the coressponding value of selected Openid/oAuth provider from home page.<br/>Assigned value is used by !PhaseListener (bundled with socialauth library) and listener is responsible for invoking of actual authentication provider.
 
 {{{ 
 
