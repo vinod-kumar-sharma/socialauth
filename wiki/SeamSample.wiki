@@ -278,7 +278,7 @@ Please make sure that you successfully copy the external-lib folder from demo pr
 
 = Step 5: Creating the Authenticator component =
 
-Create a seam component i.e. Authenticator. This class comprises Jboss seam component i.e. "socialauth" bundled with socialauth library that helps to delegate the authentication to !OpenId/ oAiuth providers like Yahoo, Facebook, !LinkedIn etc. This class consists of updateID() method which sets the crossponding value of selected openid/oAuth provider from home page.<br/>Assigned value is used by !PhaseListener (bundled with socialauth library) and listener is responsible for invoking of actual authentication provider.
+Create a seam component i.e. Authenticator. This class comprises Jboss seam component i.e. "socialauth" bundled with socialauth library that helps to delegate the authentication to !OpenId/ oAuth providers like Yahoo, Facebook, !LinkedIn etc. This class consists of updateID() method which sets the crossponding value of selected Openid/oAuth provider from home page.<br/>Assigned value is used by !PhaseListener (bundled with socialauth library) and listener is responsible for invoking of actual authentication provider.
 
 {{{ 
 
@@ -374,7 +374,7 @@ public class Authenticator {
 
 = Step 6: Creating the !UpdateStatus component =
 
-Seam component which sets the profile status for a particular user account. It delegate status update task by calling  setStatus() and updateStatus() methods on SocialAuth component. It comprises of single method updateStatus() which is called by !UpdateStatus button on success view page.
+Seam component which sets the profile status for a particular user account. It delegate status update task by calling  setStatus() and updateStatus() methods on !SocialAuth component. It comprises of single method updateStatus() which is called by !UpdateStatus button on success view page.
 
 {{{
 package org.brickred.socialauthseam.session;
@@ -504,7 +504,7 @@ Please redirect to the “mainpage .seam” once user hits index page of the app
 
 = Step 10: Writing the home.xhtml =
 
-Application home page comprises login links for different providers
+Application home page comprises login links for different providers. When user clicks on any button, the updateId() method of Authenticator class will be invoked which sets the requested provider id like "facebook", "twitter" etc. in !SocialAuth component. After that login() method of !SocialAuth component will be called.
 
 {{{
 
