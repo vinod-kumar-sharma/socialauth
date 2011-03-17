@@ -44,12 +44,12 @@ Socialauth.jar library consists of just two fundamental classes which support JB
         <phase-listener>org.brickred.socialauth.SocialAuthPhaseListener</phase-listener>
 </lifecycle>
 }}}
- # Inject !SocialAuth Component
+ # Inject !SocialAuth Component in the component you will use for processing authentication
 {{{
 @In(create = true)
 SocialAuth socialauth;
 }}}
- # Pass the provider you would like to use, for example, "facebook", "yahoo" or any other. This may happen by detecting which icon the user clicked on, or by just passing a static string containing provider id if you are using just a single provider
+ # In the same component above, use the following code to pass the provider you would like to use, for example, "facebook", "yahoo" or any other. This may happen by detecting which icon the user clicked on, or by just passing a static string containing provider id if you are using just a single provider
 {{{
 //get success url from context param
 ExternalContext context = javax.faces.context.FacesContext.getCurrentInstance().getExternalContext();
