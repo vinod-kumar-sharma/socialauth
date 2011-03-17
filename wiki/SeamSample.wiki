@@ -825,5 +825,3 @@ Deployment is the last but not least step of development journey. Please copy th
 After server start you can access the application with following url address in web browser.
 
 http://localhost:8080/socialauthseam/
-
-Landing page:
