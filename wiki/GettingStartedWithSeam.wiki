@@ -49,34 +49,20 @@ Socialauth.jar library consists of just two fundamental classes which support JB
 @In(create = true)
 SocialAuth socialauth;
 }}}
- # Create Authenticator component in your application.<br/> This class comprises Jboss seam component i.e. "socialauth" bundled with socialauth library that helps to delegate the authentication to !OpenId/ oAuth providers like Yahoo, Facebook, !LinkedIn etc. This class consists of updateID() method which sets the coressponding value of selected openid/oAuth provider from home page.<br/>Assigned value is used by !PhaseListener (bundled with socialauth library) and listener is responsible for invoking of actual authentication provider. updateId() method to set requested provider id
+ # Pass the provider you would like to use, for example, "facebook", "yahoo" or any other. This may happen by detecting which icon the user clicked on, or by just passing a static string containing provider id if you are using just a single provider
 {{{
-public void updateId(ActionEvent ae) {
-                //get requested provider id
-		String btnClicked = ae.getComponent().getId();
+//get success url from context param
+ExternalContext context = javax.faces.context.FacesContext.getCurrentInstance().getExternalContext();
+String viewUrl = context.getInitParameter("successUrl");
 
-                //get success url from context param
-		ExternalContext context = javax.faces.context.FacesContext.getCurrentInstance().getExternalContext();
-                String viewUrl = context.getInitParameter("successUrl");
-
-                 //set success URL in socialauth component
-                socialauth.setViewUrl(viewUrl);
+//set success URL in socialauth component
+socialauth.setViewUrl(viewUrl);
  
-                //set provider id in socialauth component
-		if (btnClicked.indexOf("facebook") != -1){
-			socialauth.setId("facebook");
-			log.info("***facebook*********" +socialauth.getId() );
-		}else if..........
-}
+//set provider id in socialauth component
+socialauth.setId("facebook");
+}}}
 
-}}}
- # Create home.xhtmlwhich comprises login links for different providers. When user clicks on any button, the updateId() method of Authenticator class will be invoked which sets the requested provider id like "facebook", "twitter" etc. in !SocialAuth component. After that login() method of !SocialAuth component will be called. 
-{{{
-<h:commandButton id="facebook" name="facebook"  action="#{socialauth.login}" 
-    value="Facebook Login" actionListener="#{socialauthenticator.updateId}"
-     image="images/facebook_icon.png"/
-}}}
- # Create Success view page success.xhtml, it renders on successful login and display various information about logged in user.<br/><br/>   You can get profile object and contact list in following manner
+ # Create Success view page success.xhtml, it renders on successful login and displays various information about the logged in user.<br/><br/>   You can get profile object and contact list in following manner
 {{{
 //profile object
 socialauth.profile
