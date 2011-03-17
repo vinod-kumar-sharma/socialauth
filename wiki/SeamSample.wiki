@@ -278,7 +278,7 @@ Please make sure that you successfully copy the external-lib folder from demo pr
 
 = Step 5: Creating the Authenticator component =
 
-Create a seam component i.e. Authenticator. This class comprises Jboss seam component i.e. "socialauth" bundled with socialauth library that helps to delegate the authentication to OpenId/ oAiuth providers like Yahoo, Facebook, LindIn etc. This class consists of updateID() method which sets the crossponding value of selected openid/oAuth provider from home page.<br/>Assigned value is used by PhaseListener (bundled with socialauth library) and listener is responsible for invoking of actual authentication provider.
+Create a seam component i.e. Authenticator. This class comprises Jboss seam component i.e. "socialauth" bundled with socialauth library that helps to delegate the authentication to !OpenId/ oAiuth providers like Yahoo, Facebook, !LinkedIn etc. This class consists of updateID() method which sets the crossponding value of selected openid/oAuth provider from home page.<br/>Assigned value is used by !PhaseListener (bundled with socialauth library) and listener is responsible for invoking of actual authentication provider.
 
 {{{ 
 
@@ -372,13 +372,71 @@ public class Authenticator {
 
 
 
-= Step 6: Adding resource bundles =
+= Step 6: Creating the UpdateStatus component
+
+Seam component which sets the profile status for a particular user account. It delegate status update task by calling  setStatus() and updateStatus() methods on SocialAuth component. It comprises of single method updateStatus() which is called by UpdateStatus button on success view page.
+
+{{{
+package org.brickred.socialauthseam.session;
+import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
+import org.brickred.socialauth.SocialAuth;
+import org.jboss.seam.annotations.In;
+import org.jboss.seam.annotations.Name;
+import org.jboss.seam.log.LogProvider;
+import org.jboss.seam.log.Logging;
+
+/**
+ * This class used to update the user status on various public sites.
+ * 
+ * @author lakhdeeps@brickred.com
+ * 
+ */
+
+@Name("socialAuthUpdateStatus")
+public class UpdateStatus {
+    private transient LogProvider log = Logging
+            .getLogProvider(SocialAuth.class);
+
+    @In(create = true)
+    SocialAuth socialauth;
+
+    String statusText;
+    
+    /**
+     * Method which updates the status on profile.
+     * 
+     * @param ActionEvent
+     * @throws Exception 
+     */
+
+    public void updateStatus() throws Exception {
+        final HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
+        String statusText= request.getParameter("statusMessage");
+        if(statusText!=null && !statusText.equals("")){
+            socialauth.setStatus(statusText);
+            socialauth.updateStatus();
+            setStatus("Status Updated Successfully");
+        }
+    }
+
+    public String getStatus() {
+        return statusText;
+    }
+
+    public void setStatus(String statusText) {
+        this.statusText = statusText;
+    }
+}
+}}}
+
+= Step 7: Adding resource bundles =
 
 Resource bundle is available in package org.brickred.socialauthseam.bundle under src folder.Please copy the resource bundles from there and configure it in faces-config.xml file. Please make sure that resource bundle file names are same as configured in {{{<message-bundle>}}} tag in faces-config.xml file.
 <br/>
 
 
-= Step 7: Writing the template.xhtml =
+= Step 8: Writing the template.xhtml =
 
 Main template layout helps in rendering of other view pages.
 
@@ -427,7 +485,7 @@ Note: Please add css and images files from demo application into current project
 
 
 
-= Step 8: Writing the index.xhtml. =
+= Step 9: Writing the index.xhtml. =
 
 Please redirect to the “mainpage .seam” once user hits index page of the application.
 
@@ -443,7 +501,7 @@ Please redirect to the “mainpage .seam” once user hits index page of the app
 
 
 
-= Step 9: Writing the home.xhtml =
+= Step 10: Writing the home.xhtml =
 
 Application home page comprises login links for different providers
 
@@ -543,7 +601,7 @@ Application home page comprises login links for different providers
 
 
 
-= Step 10: Writing the success.xhtml =
+= Step 11: Writing the success.xhtml =
 
 Success view page, it renders on successful login and display various information about logged in user.
 
@@ -711,7 +769,7 @@ Success view page, it renders on successful login and display various informatio
 
 
 
-= Step 11: Writing the error.xhtml =
+= Step 12: Writing the error.xhtml =
 
 Error page displays in case of abnormal behaviour of application.
 
@@ -739,13 +797,13 @@ Error page displays in case of abnormal behaviour of application.
 
 
 
-= Step 12: Adding the style css =
+= Step 13: Adding the style css =
 
 Please create a folder call stylesheet under webcontent folder and copy the style.css from demo project.
 
 
 
-= Step 13: Building of war file =
+= Step 14: Building of war file =
 
 Following are two approaches to produce war file:
 
@@ -759,7 +817,7 @@ Second way is to launch ant through eclipse as shown in below picture. On comple
 
 
 
-= Step 14: Deployment =
+= Step 15: Deployment =
 
 Deployment is the last but not least step of development journey. Please copy the socialauthseam.war file from dist folder to JBoss’ deployment folder. Usually, we deploy the applications at *C:\jboss-5.1.0.GA\server\default\deploy* location in JBoss. Please start the Jboss server by double clicking bin\run.bat file (run.sh on linux/unix).
 
