@@ -132,7 +132,7 @@ Please make the following changes to seam project for aligning it to as per demo
     Please note that class org.brickred.socialauth.!SocialAuthPhaseListener is part of socialauth library. We just need to configure it here.
 
  * *pages.xml* : This file consists of navigation and security rules of a seam project. It privileges the user to declare exceptions which are called by seam framework on corresponding error occurrences.
-        E.g. following tag is used to declare a custom navigation and exception respectively.
+       In context to this demo application, we have configured 'success' view id which renders on successful login and displays various information about the logged in user.
 
 {{{
 
@@ -140,21 +140,6 @@ Please make the following changes to seam project for aligning it to as per demo
 <pages xmlns="http://jboss.com/products/seam/pages" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://jboss.com/products/seam/pages http://jboss.com/products/seam/pages-2.2.xsd"
 	no-conversation-view-id="/openid.xhtml" login-view-id="/home.xhtml">
-
-	<page view-id="/home.xhtml">
-		<navigation evaluate="#{socialauth.loginImmediately()}">
-			<rule if-outcome="false">
-				<redirect view-id="/home.xhtml">
-					<message>Socialauth login rejected...</message>
-				</redirect>
-			</rule>
-			<rule if-outcome="true">
-				<redirect view-id="/success.xhtml">
-					<message>Socialauth login successful...</message>
-				</redirect>
-			</rule>
-		</navigation>
-	</page>
 
 	<page view-id="/success.xhtml"/>
 	<exception>
