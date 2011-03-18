@@ -30,27 +30,10 @@ Prior to dig into the actual code, following are few prerequisites which are req
 
 Please make sure that JBoss Tool plug-in is installed in eclipse. This tool helps user to create a default seam project template and also provide the interface to create various seam artefacts. Please follow below steps to setup a demo project:
 
- * Select File->New->Project and following screen will be appeared.
-
-	http://socialauth.googlecode.com/svn/wiki/images/seam_pic1.JPG
-
- * Click on Next button and fill in the resultant screen as following.
-
-	http://socialauth.googlecode.com/svn/wiki/images/seam_pic2.JPG
-
- * Follow the wizard instructions as following
-
-	http://socialauth.googlecode.com/svn/wiki/images/seam_pic3.JPG
-
-	http://socialauth.googlecode.com/svn/wiki/images/seam_pic4.JPG
-
-	http://socialauth.googlecode.com/svn/wiki/images/seam_pic5.JPG
-
-	http://socialauth.googlecode.com/svn/wiki/images/seam_pic6.JPG
-
-
+ # Select File->New->Project and following screen will be appeared.<br/>http://socialauth.googlecode.com/svn/wiki/images/seam_pic1.JPG<br/>
+ # Click on Next button and fill in the resultant screen as following.<br/>http://socialauth.googlecode.com/svn/wiki/images/seam_pic2.JPG
+ # Follow the wizard instructions as following<br/>http://socialauth.googlecode.com/svn/wiki/images/seam_pic3.JPG<br/>http://socialauth.googlecode.com/svn/wiki/images/seam_pic4.JPG<br/>http://socialauth.googlecode.com/svn/wiki/images/seam_pic5.JPG<br/>http://socialauth.googlecode.com/svn/wiki/images/seam_pic6.JPG<br/>
       Please select the seam runtime environment (i.e. path of jboss-seam-2.2.0.GA installed directory) and click on Finish button.
-
  * Above wizard will create a default seam project (i.e. *‘socialauthseam’*) with all seam configurations in the current workspace.
 
 
@@ -146,7 +129,7 @@ Please make the following changes to seam project for aligning it to as per demo
 
 }}}
 
-    Please note that class org.brickred.socialauth.SocialAuthPhaseListener is part of socialauth library. We just need to configure it here.
+    Please note that class org.brickred.socialauth.!SocialAuthPhaseListener is part of socialauth library. We just need to configure it here.
 
  * *pages.xml* : This file consists of navigation and security rules of a seam project. It privileges the user to declare exceptions which are called by seam framework on corresponding error occurrences.
         E.g. following tag is used to declare a custom navigation and exception respectively.
@@ -185,7 +168,7 @@ Please make the following changes to seam project for aligning it to as per demo
 }}}
 
 
- * *web.xml* : This is standard web configuration file. It doesn’t having any special entry except standard seam configuration and a context parameter for interfacing with socialauth library.
+ * *web.xml* : This is standard web configuration file. This contains  standard seam configuration and a context parameter *"successUrl"* for interfacing with socialauth library. The *"successUrl"* context parameter value corresponds to the success view id where the application control is redirected by open id provider on successful authentication.
 
 {{{
 
@@ -235,7 +218,7 @@ Please make the following changes to seam project for aligning it to as per demo
 
 }}}
 
-     The *"successUrl"* context parameter in above configuration is a custom parameter which corresponds to the success view id where the application control is redirected by open id provider on successful authentication.
+     
 
  * *jboss-web.xml* : Standard configuration file for defining jndi and other data source details for JBoss server.
 
@@ -276,168 +259,14 @@ Please make sure that you successfully copy the external-lib folder from demo pr
 
 
 
-= Step 5: Creating the Authenticator component =
-
-Create a seam component i.e. Authenticator. This class comprises Jboss seam component i.e. "socialauth" bundled with socialauth library that helps to delegate the authentication to !OpenId/ oAuth providers like Yahoo, Facebook, !LinkedIn etc. This class consists of updateID() method which sets the coressponding value of selected Openid/oAuth provider from home page.<br/>Assigned value is used by !PhaseListener (bundled with socialauth library) and listener is responsible for invoking of actual authentication provider.
-
-{{{ 
-
-package org.brickred.socialauthseam.session;
-
-import javax.faces.event.ActionEvent;
-import org.brickred.socialauth.SocialAuth;
-import org.jboss.seam.annotations.In;
-import org.jboss.seam.annotations.Name;
-import org.jboss.seam.log.LogProvider;
-import org.jboss.seam.log.Logging;
-
-/**
-* This is the main component class, it is referred in application pages and
-* provides the navigation functionality to the user.
-* @author lakhdeeps@brickred.com
-*/
-
-@Name("socialauthenticator")
-public class Authenticator {
-
-	private transient LogProvider log = Logging.getLogProvider(SocialAuth.class);
-
-	@In(create = true)
-	SocialAuth socialauth;
-
-	/**
-	* Variable for storing open id from main form
-	*/
-	private String openID;
-
-	/**
-	* Track the user interaction with main page and set the state of components accordingly.
-	* @param ActionEvent
-	*/
-
-	public void updateId(ActionEvent ae) {
-
-		String btnClicked = ae.getComponent().getId();
-		log.info("*************login method called ************" +socialauth.getId() );
-                ExternalContext context = javax.faces.context.FacesContext.getCurrentInstance().getExternalContext();
-                String viewUrl = context.getInitParameter("successUrl");
-                socialauth.setViewUrl(viewUrl);
-		if (btnClicked.indexOf("facebook") != -1){
-			socialauth.setId("facebook");
-			log.info("***facebook*********" +socialauth.getId() );
-		}else if (btnClicked.indexOf("twitter") != -1){
-			socialauth.setId("twitter");
-			log.info("***twitter*********" +socialauth.getId() );
-		}else if (btnClicked.indexOf("yahoo") != -1){
-			socialauth.setId("yahoo");
-			log.info("***yahoo*********" +socialauth.getId() );
-		}else if (btnClicked.indexOf("hotmail") != -1){
-			socialauth.setId("hotmail");
-			log.info("***hotmail*********" +socialauth.getId() );
-		}else if (btnClicked.indexOf("google") != -1){
-			socialauth.setId("google");
-			log.info("***google*********" +socialauth.getId() );
-		}else if (btnClicked.indexOf("linkedin") != -1){
-			socialauth.setId("linkedin");
-			log.info("***linkedin*********" +socialauth.getId() );
-		}else if (btnClicked.indexOf("foursquare") != -1){
-			socialauth.setId("foursquare");
-			log.info("***foursquare*********" +socialauth.getId() );
-		}else{
-			socialauth.setId(openID);
-			log.info("***openID*********" +socialauth.getId() );
-		}
-	}
-
-	/**
-	* Redirect the user back to the main page from success view.
-	* @param ActionEvent
-	*/
-
-	public String mainPage() {
-		return "/home.xhtml";
-	}
-
-	public String getOpenID() {
-		return openID;
-	}
-
-	public void setOpenID(String openID) {
-		this.openID = openID;
-	}
-
-}
-
-}}}
-
-
-
-= Step 6: Creating the !UpdateStatus component =
-
-Seam component which sets the profile status for a particular user account. It delegate status update task by calling  setStatus() and updateStatus() methods on !SocialAuth component. It comprises of single method updateStatus() which is called by !UpdateStatus button on success view page.
-
-{{{
-package org.brickred.socialauthseam.session;
-import javax.faces.context.FacesContext;
-import javax.servlet.http.HttpServletRequest;
-import org.brickred.socialauth.SocialAuth;
-import org.jboss.seam.annotations.In;
-import org.jboss.seam.annotations.Name;
-import org.jboss.seam.log.LogProvider;
-import org.jboss.seam.log.Logging;
-
-/**
- * This class used to update the user status on various public sites.
- * 
- * @author lakhdeeps@brickred.com
- * 
- */
-
-@Name("socialAuthUpdateStatus")
-public class UpdateStatus {
-    private transient LogProvider log = Logging
-            .getLogProvider(SocialAuth.class);
-
-    @In(create = true)
-    SocialAuth socialauth;
-
-    String statusText;
-    
-    /**
-     * Method which updates the status on profile.
-     * 
-     * @param ActionEvent
-     * @throws Exception 
-     */
-
-    public void updateStatus() throws Exception {
-        final HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance()
-        .getExternalContext().getRequest();
-        String statusText= request.getParameter("statusMessage");
-        if(statusText!=null && !statusText.equals("")){
-            socialauth.setStatus(statusText);
-            socialauth.updateStatus();
-            setStatus("Status Updated Successfully");
-        }
-    }
-
-    public String getStatus() {
-        return statusText;
-    }
-
-    public void setStatus(String statusText) {
-        this.statusText = statusText;
-    }
-}
-}}}
-
-= Step 7: Adding resource bundles =
+= Step 5: Adding resource bundles =
 
 Resource bundle is available in package org.brickred.socialauthseam.bundle under src folder.Please copy the resource bundles from there and configure it in faces-config.xml file. Please make sure that resource bundle file names are same as configured in {{{<message-bundle>}}} tag in faces-config.xml file.
 <br/>
 
 
-= Step 8: Writing the template.xhtml =
+
+= Step 6: Writing the template.xhtml =
 
 Main template layout helps in rendering of other view pages.
 
@@ -486,9 +315,9 @@ Note: Please add css and images files from demo application into current project
 
 
 
-= Step 9: Writing the index.xhtml. =
+= Step 7: Writing the index.xhtml. =
 
-Please redirect to the “mainpage .seam” once user hits index page of the application.
+Please redirect to the “home.seam” once user hits index page of the application.
 
 {{{
 
@@ -502,7 +331,7 @@ Please redirect to the “mainpage .seam” once user hits index page of the app
 
 
 
-= Step 10: Writing the home.xhtml =
+= Step 8: Writing the home.xhtml =
 
 Application home page comprises login links for different providers. When user clicks on any button, the updateId() method of Authenticator class will be invoked which sets the requested provider id like "facebook", "twitter" etc. in !SocialAuth component. After that login() method of !SocialAuth component will be called.
 
@@ -601,10 +430,105 @@ Application home page comprises login links for different providers. When user c
 }}}
 
 
+= Step 9: Creating the Authenticator component =
 
-= Step 11: Writing the success.xhtml =
+In the above home.xhtml file, you notice that listner is attached with each button. So Create a seam component i.e. Authenticator. This class comprises Jboss seam component i.e. "socialauth" bundled with socialauth library that helps to delegate the authentication to !OpenId/ oAuth providers like Yahoo, Facebook, !LinkedIn etc. This class consists of updateID() method which sets the coressponding value of selected Openid/oAuth provider from home page.<br/>It also sets the viewUrl in !SocialAuth component from conext parameter *"successUrl"* which is declared in web.xml file.
 
-Success view page, it renders on successful login and display various information about logged in user.
+{{{ 
+
+package org.brickred.socialauthseam.session;
+
+import javax.faces.event.ActionEvent;
+import org.brickred.socialauth.SocialAuth;
+import org.jboss.seam.annotations.In;
+import org.jboss.seam.annotations.Name;
+import org.jboss.seam.log.LogProvider;
+import org.jboss.seam.log.Logging;
+
+/**
+* This is the main component class, it is referred in application pages and
+* provides the navigation functionality to the user.
+* @author lakhdeeps@brickred.com
+*/
+
+@Name("socialauthenticator")
+public class Authenticator {
+
+	private transient LogProvider log = Logging.getLogProvider(SocialAuth.class);
+
+	@In(create = true)
+	SocialAuth socialauth;
+
+	/**
+	* Variable for storing open id from main form
+	*/
+	private String openID;
+
+	/**
+	* Track the user interaction with main page and set the state of components accordingly.
+	* @param ActionEvent
+	*/
+
+	public void updateId(ActionEvent ae) {
+
+		String btnClicked = ae.getComponent().getId();
+		log.info("*************login method called ************" +socialauth.getId() );
+                ExternalContext context = javax.faces.context.FacesContext.getCurrentInstance().getExternalContext();
+                String viewUrl = context.getInitParameter("successUrl");
+                socialauth.setViewUrl(viewUrl);
+		if (btnClicked.indexOf("facebook") != -1){
+			socialauth.setId("facebook");
+			log.info("***facebook*********" +socialauth.getId() );
+		}else if (btnClicked.indexOf("twitter") != -1){
+			socialauth.setId("twitter");
+			log.info("***twitter*********" +socialauth.getId() );
+		}else if (btnClicked.indexOf("yahoo") != -1){
+			socialauth.setId("yahoo");
+			log.info("***yahoo*********" +socialauth.getId() );
+		}else if (btnClicked.indexOf("hotmail") != -1){
+			socialauth.setId("hotmail");
+			log.info("***hotmail*********" +socialauth.getId() );
+		}else if (btnClicked.indexOf("google") != -1){
+			socialauth.setId("google");
+			log.info("***google*********" +socialauth.getId() );
+		}else if (btnClicked.indexOf("linkedin") != -1){
+			socialauth.setId("linkedin");
+			log.info("***linkedin*********" +socialauth.getId() );
+		}else if (btnClicked.indexOf("foursquare") != -1){
+			socialauth.setId("foursquare");
+			log.info("***foursquare*********" +socialauth.getId() );
+		}else{
+			socialauth.setId(openID);
+			log.info("***openID*********" +socialauth.getId() );
+		}
+	}
+
+	/**
+	* Redirect the user back to the main page from success view.
+	* @param ActionEvent
+	*/
+
+	public String mainPage() {
+		return "/home.xhtml";
+	}
+
+	public String getOpenID() {
+		return openID;
+	}
+
+	public void setOpenID(String openID) {
+		this.openID = openID;
+	}
+
+}
+
+}}}
+
+
+
+= Step 10: Writing the success.xhtml =
+
+Success view page, it shows profile and contacts list after successful login. 
 
 {{{
 
@@ -767,6 +691,82 @@ Success view page, it renders on successful login and display various informatio
 
 
 }}}
+
+
+= Step 6: Creating the !UpdateStatus component =
+
+Seam component which sets the profile status for a particular user account. It delegate status update task by calling  setStatus() and updateStatus() methods on !SocialAuth component. It comprises of single method updateStatus() which is called by !UpdateStatus button on success view page.
+
+{{{
+package org.brickred.socialauthseam.session;
+import javax.faces.context.FacesContext;
+import javax.servlet.http.HttpServletRequest;
+import org.brickred.socialauth.SocialAuth;
+import org.jboss.seam.annotations.In;
+import org.jboss.seam.annotations.Name;
+import org.jboss.seam.log.LogProvider;
+import org.jboss.seam.log.Logging;
+
+/**
+ * This class used to update the user status on various public sites.
+ * 
+ * @author lakhdeeps@brickred.com
+ * 
+ */
+
+@Name("socialAuthUpdateStatus")
+public class UpdateStatus {
+    private transient LogProvider log = Logging
+            .getLogProvider(SocialAuth.class);
+
+    @In(create = true)
+    SocialAuth socialauth;
+
+    String statusText;
+    
+    /**
+     * Method which updates the status on profile.
+     * 
+     * @param ActionEvent
+     * @throws Exception 
+     */
+
+    public void updateStatus() throws Exception {
+        final HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance()
+        .getExternalContext().getRequest();
+        String statusText= request.getParameter("statusMessage");
+        if(statusText!=null && !statusText.equals("")){
+            socialauth.setStatus(statusText);
+            socialauth.updateStatus();
+            setStatus("Status Updated Successfully");
+        }
+    }
+
+    public String getStatus() {
+        return statusText;
+    }
+
+    public void setStatus(String statusText) {
+        this.statusText = statusText;
+    }
+}
+}}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
