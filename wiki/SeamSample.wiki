@@ -455,7 +455,8 @@ import org.jboss.seam.log.Logging;
 public class Authenticator {
 
 	private transient LogProvider log = Logging.getLogProvider(SocialAuth.class);
-
+       
+        //Inject SocialAuth component
 	@In(create = true)
 	SocialAuth socialauth;
 
@@ -472,34 +473,29 @@ public class Authenticator {
 	public void updateId(ActionEvent ae) {
 
 		String btnClicked = ae.getComponent().getId();
-		log.info("*************login method called ************" +socialauth.getId() );
-                ExternalContext context = javax.faces.context.FacesContext.getCurrentInstance().getExternalContext();
+
+                //Retrieve the successUrl context parameter
+		ExternalContext context = javax.faces.context.FacesContext.getCurrentInstance().getExternalContext();
                 String viewUrl = context.getInitParameter("successUrl");
+               
+                //set success view in SocialAuth component
                 socialauth.setViewUrl(viewUrl);
 		if (btnClicked.indexOf("facebook") != -1){
 			socialauth.setId("facebook");
-			log.info("***facebook*********" +socialauth.getId() );
 		}else if (btnClicked.indexOf("twitter") != -1){
 			socialauth.setId("twitter");
-			log.info("***twitter*********" +socialauth.getId() );
 		}else if (btnClicked.indexOf("yahoo") != -1){
 			socialauth.setId("yahoo");
-			log.info("***yahoo*********" +socialauth.getId() );
 		}else if (btnClicked.indexOf("hotmail") != -1){
 			socialauth.setId("hotmail");
-			log.info("***hotmail*********" +socialauth.getId() );
 		}else if (btnClicked.indexOf("google") != -1){
 			socialauth.setId("google");
-			log.info("***google*********" +socialauth.getId() );
 		}else if (btnClicked.indexOf("linkedin") != -1){
 			socialauth.setId("linkedin");
-			log.info("***linkedin*********" +socialauth.getId() );
 		}else if (btnClicked.indexOf("foursquare") != -1){
 			socialauth.setId("foursquare");
-			log.info("***foursquare*********" +socialauth.getId() );
 		}else{
 			socialauth.setId(openID);
-			log.info("***openID*********" +socialauth.getId() );
 		}
 	}
 
