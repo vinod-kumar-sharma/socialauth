@@ -418,7 +418,7 @@ Application home page comprises login links for different providers. When user c
 = Step 9: Creating the Authenticator component =
 
 
-In the above home.xhtml, a actionListener is attached with various buttons which are associated with  handler method- updateId() of Authenticator component class. This class comprises Jboss seam component i.e. "socialauth" bundled with socialauth library that helps to delegate the authentication to OpenId/ oAuth providers like Yahoo, Facebook, LinkedIn etc. The method updateID() is called from the UI (home.xhtml) which set the coressponding value of selected Openid/oAuth provider in socialauth component.<br/>It also sets the viewUrl in !SocialAuth component from conext parameter *"successUrl"* which is declared in web.xml file.
+In the above home.xhtml, a actionListener is attached with various buttons which are associated with  handler method- updateId() of Authenticator component class. This class comprises Jboss seam component i.e. "socialauth" bundled with socialauth library that helps to delegate the authentication to !OpenId/ oAuth providers like Yahoo, Facebook, !LinkedIn etc. The method updateID() is called from the UI (home.xhtml) which set the coressponding value of selected Openid/oAuth provider in socialauth component.<br/>It also sets the viewUrl in !SocialAuth component from conext parameter *"successUrl"* which is declared in web.xml file.
 
 {{{ 
 
@@ -510,7 +510,7 @@ public class Authenticator {
 
 = Step 10: Writing the success.xhtml =
 
-Success view page, it shows profile and contacts list after successful login. 
+Success view page, it shows profile and contacts list after successful login. socialauth.profile and socialauth.contactList is used to show the user profile and contacts list respectively. E.g "${socialauth.profile.email}" is used to show the email of user.
 
 {{{
 
