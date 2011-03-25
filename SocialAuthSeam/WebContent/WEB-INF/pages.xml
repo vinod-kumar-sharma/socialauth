@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <pages xmlns="http://jboss.com/products/seam/pages" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://jboss.com/products/seam/pages http://jboss.com/products/seam/pages-2.2.xsd"
-    no-conversation-view-id="/openid.xhtml" login-view-id="/home.xhtml">
+    no-conversation-view-id="/home.xhtml" login-view-id="/home.xhtml">
 
-	<page view-id="/mainpage.xhtml">
+	<page view-id="/home.xhtml">
         <navigation evaluate="#{socialauth.loginImmediately()}">
             <rule if-outcome="false">
-                <redirect view-id="/mainpage.xhtml">
+                <redirect view-id="/home.xhtml">
                     <message>Socialauth login rejected...</message>
                 </redirect>
             </rule>
