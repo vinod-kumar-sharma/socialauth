@@ -26,8 +26,10 @@
 package org.brickred.socialauth.provider;
 
 import java.io.Serializable;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
@@ -43,21 +45,19 @@ import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
-import org.brickred.socialauth.exception.UserDeniedPermissionException;
+import org.brickred.socialauth.util.Constants;
+import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
-
-import twitter4j.IDs;
-import twitter4j.Twitter;
-import twitter4j.TwitterException;
-import twitter4j.TwitterFactory;
-import twitter4j.User;
-import twitter4j.auth.RequestToken;
+import org.brickred.socialauth.util.OAuthConsumer;
+import org.brickred.socialauth.util.Response;
+import org.brickred.socialauth.util.Token;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
- * Twitter implementation of the provider. This is completely based on the
- * twitter4j library.
+ * Twitter implementation of the provider.
  * 
- * @author abhinavm@brickred.com
+ * @author tarunn@brickred.com
  * 
  */
 
@@ -65,15 +65,23 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 		Serializable {
 
 	private static final long serialVersionUID = 1908393649053616794L;
+	private static final String REQUEST_TOKEN_URL = "http://api.twitter.com/oauth/request_token";
+	private static final String AUTHORIZATION_URL = "https://api.twitter.com/oauth/authorize";
+	private static final String ACCESS_TOKEN_URL = "https://api.twitter.com/oauth/access_token";
+	private static final String PROFILE_URL = "http://api.twitter.com/1/users/show.json?screen_name=";
+	private static final String CONTACTS_URL = "http://api.twitter.com/1/friends/ids.json?screen_name=%1$s&cursor=-1";
+	private static final String LOOKUP_URL = "http://api.twitter.com/1/users/lookup.json?user_id=";
+	private static final String UPDATE_STATUS_URL = "http://api.twitter.com/1/statuses/update.json?status=";
 	private static final String PROPERTY_DOMAIN = "twitter.com";
 	private final Log LOG = LogFactory.getLog(TwitterImpl.class);
 
-	private Twitter twitter;
-	private RequestToken requestToken;
 	private Permission scope;
 	private Properties properties;
 	private boolean isVerify;
+	private Token requestToken;
+	private Token accessToken;
 	private OAuthConfig config;
+	private OAuthConsumer oauth;
 
 	public TwitterImpl(final Properties props) throws Exception {
 		try {
@@ -90,11 +98,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 			throw new SocialAuthConfigurationException(
 					"twitter.com.consumer_key value is null");
 		}
-		TwitterFactory factory = new TwitterFactory();
-		twitter = factory.getInstance();
-
-		twitter.setOAuthConsumer(config.get_consumerKey(),
-				config.get_consumerSecret());
+		oauth = new OAuthConsumer(config);
 	}
 
 	/**
@@ -104,20 +108,23 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	 * 
 	 * @throws Exception
 	 */
-
 	@Override
-	public String getLoginRedirectURL(final String redirect_uri)
-			throws Exception {
+	public String getLoginRedirectURL(final String returnTo) throws Exception {
 		LOG.info("Determining URL for redirection");
 		setProviderState(true);
+		LOG.debug("Call to fetch Request Token");
 		try {
-			requestToken = twitter.getOAuthRequestToken(redirect_uri);
-			String url = requestToken.getAuthenticationURL();
-			LOG.info("Redirection to following URL should happen : " + url);
-			return url;
-		} catch (Exception e) {
-			throw new SocialAuthException(e);
+			requestToken = oauth.getRequestToken(REQUEST_TOKEN_URL, returnTo);
+		} catch (SocialAuthException ex) {
+			String msg = ex.getMessage()
+					+ "OR you have not set any scope while registering your application. You will have to select atlest read public profile scope while registering your application";
+			throw new SocialAuthException(msg, ex);
 		}
+		StringBuilder urlBuffer = oauth.buildAuthUrl(AUTHORIZATION_URL,
+				requestToken, returnTo);
+		LOG.info("Redirection to following URL should happen : "
+				+ urlBuffer.toString());
+		return urlBuffer.toString();
 	}
 
 	/**
@@ -133,30 +140,74 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public Profile verifyResponse(final HttpServletRequest request)
 			throws Exception {
-		LOG.info("Retrieving Access Token in verify response function");
-		if (request.getParameter("denied") != null) {
-			throw new UserDeniedPermissionException();
-		}
+		LOG.info("Verifying the authentication response from provider");
 		if (!isProviderState()) {
 			throw new ProviderStateException();
 		}
-		String verifier = request.getParameter("oauth_verifier");
+		if (requestToken == null) {
+			throw new SocialAuthException("Request token is null");
+		}
+		String verifier = request.getParameter(Constants.OAUTH_VERIFIER);
+		if (verifier != null) {
+			requestToken.setAttribute(Constants.OAUTH_VERIFIER, verifier);
+		}
+
+		LOG.debug("Call to fetch Access Token");
+		accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL, requestToken);
+		isVerify = true;
+		return getUserProfile();
+	}
+
+	private Profile getUserProfile() throws Exception {
+		Profile profile = new Profile();
+		String url = PROFILE_URL + accessToken.getAttribute("screen_name");
+		LOG.debug("Obtaining user profile. Profile URL : " + url);
+		Response serviceResponse = null;
 		try {
-			twitter.getOAuthAccessToken(requestToken, verifier);
-			isVerify = true;
-			LOG.debug("Obtaining user profile");
-			Profile p = new Profile();
-			p.setValidatedId(String.valueOf(twitter.getId()));
-			p.setDisplayName(twitter.getScreenName());
-			User twitterUser = twitter.showUser(p.getDisplayName());
-			p.setFullName(twitterUser.getName());
-			p.setLocation(twitterUser.getLocation());
-			p.setLanguage(twitterUser.getLang());
-			p.setProfileImageURL(twitterUser.getProfileImageURL().toString());
-			LOG.debug("User profile : " + p.toString());
-			return p;
-		} catch (TwitterException e) {
-			throw e;
+			serviceResponse = oauth.httpGet(url, null, accessToken);
+		} catch (Exception e) {
+			throw new SocialAuthException(
+					"Failed to retrieve the user profile from  " + url);
+		}
+		if (serviceResponse.getStatus() != 200) {
+			throw new SocialAuthException(
+					"Failed to retrieve the user profile from  " + url
+							+ ". Staus :" + serviceResponse.getStatus());
+		}
+		String result;
+		try {
+			result = serviceResponse
+					.getResponseBodyAsString(Constants.ENCODING);
+			LOG.debug("User Profile :" + result);
+		} catch (Exception exc) {
+			throw new SocialAuthException("Failed to read response from  "
+					+ url);
+		}
+		try {
+			JSONObject pObj = new JSONObject(result);
+			if (pObj.has("id_str")) {
+				profile.setValidatedId(pObj.getString("id_str"));
+			}
+			if (pObj.has("name")) {
+				profile.setFullName(pObj.getString("name"));
+			}
+			if (pObj.has("location")) {
+				profile.setLocation(pObj.getString("location"));
+			}
+			if (pObj.has("screen_name")) {
+				profile.setDisplayName(pObj.getString("screen_name"));
+			}
+			if (pObj.has("lang")) {
+				profile.setLanguage(pObj.getString("lang"));
+			}
+			if (pObj.has("profile_image_url")) {
+				profile.setProfileImageURL(pObj.getString("profile_image_url"));
+			}
+			return profile;
+		} catch (Exception e) {
+			throw new ServerDataException(
+					"Failed to parse the user profile json : " + result);
+
 		}
 	}
 
@@ -167,7 +218,6 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	 *            Message to be shown as user's status
 	 * @throws Exception
 	 */
-
 	@Override
 	public void updateStatus(final String msg) throws Exception {
 		LOG.info("Updatting status " + msg);
@@ -178,61 +228,138 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 		if (msg == null || msg.trim().length() == 0) {
 			throw new ServerDataException("Status cannot be blank");
 		}
+		String url = UPDATE_STATUS_URL
+				+ URLEncoder.encode(msg, Constants.ENCODING);
+		Response serviceResponse = null;
 		try {
-			twitter.updateStatus(msg);
+			serviceResponse = oauth
+					.httpPost(url, null, null, null, accessToken);
 		} catch (Exception e) {
-			throw new SocialAuthException(e);
+			throw new SocialAuthException("Failed to update status on " + url,
+					e);
+		}
+		System.out.println(serviceResponse.getStatus());
+		System.out.println(serviceResponse
+				.getResponseBodyAsString(Constants.ENCODING));
+		if (serviceResponse.getStatus() != 200) {
+			throw new SocialAuthException("Failed to update status on " + url
+					+ ". Staus :" + serviceResponse.getStatus());
 		}
 	}
 
 	/**
 	 * Gets the list of followers of the user and their screen name.
 	 * 
-	 * @return List of contact objects representing Contacts. Only name and
-	 *         screen name will be available
+	 * @return List of contact objects representing Contacts. Only name, screen
+	 *         name and profile URL will be available
 	 */
-
 	@Override
 	public List<Contact> getContactList() throws Exception {
 		if (!isVerify) {
 			throw new SocialAuthException(
 					"Please call verifyResponse function first to get Access Token");
 		}
-		LOG.info("Fetching user contacts");
-		IDs ids = twitter.getFriendsIDs(-1);
-		long idsarr[] = ids.getIDs();
-		int flength = idsarr.length;
-		LOG.debug("Contacts found : " + flength);
+		String url = String.format(CONTACTS_URL,
+				accessToken.getAttribute("screen_name"));
 		List<Contact> plist = new ArrayList<Contact>();
-		if (flength > 0) {
-			List<User> ulist = new ArrayList<User>();
-			if (flength > 100) {
-				int i = flength / 100;
-				long temparr[];
-				for (int j = 1; j <= i; j++) {
-					temparr = new long[100];
-					for (int k = (j - 1) * 100, c = 0; k < j * 100; k++, c++) {
-						temparr[c] = idsarr[k];
-					}
-					ulist.addAll(twitter.lookupUsers(temparr));
+		LOG.info("Fetching contacts from " + url);
+		Response serviceResponse = null;
+		try {
+			serviceResponse = oauth.httpGet(url, null, accessToken);
+		} catch (Exception ie) {
+			throw new SocialAuthException(
+					"Failed to retrieve the contacts from " + url, ie);
+		}
+		String result;
+		try {
+			result = serviceResponse
+					.getResponseBodyAsString(Constants.ENCODING);
+		} catch (Exception e) {
+			throw new ServerDataException("Failed to get response from " + url);
+		}
+		LOG.debug("User friends ids : " + result);
+		try {
+			JSONObject jobj = new JSONObject(result);
+			if (jobj.has("ids")) {
+				JSONArray idList = jobj.getJSONArray("ids");
+				int flength = idList.length();
+				int ids[] = new int[flength];
+				for (int i = 0; i < idList.length(); i++) {
+					ids[i] = idList.getInt(i);
 				}
-				if (flength > i * 100) {
-					temparr = new long[flength - i * 100];
-					for (int k = i * 100, c = 0; k < flength; k++, c++) {
-						temparr[c] = idsarr[k];
+				if (flength > 0) {
+					if (flength > 100) {
+						int i = flength / 100;
+						int temparr[];
+						for (int j = 1; j <= i; j++) {
+							temparr = new int[100];
+							for (int k = (j - 1) * 100, c = 0; k < j * 100; k++, c++) {
+								temparr[c] = ids[k];
+							}
+							plist.addAll(lookupUsers(temparr));
+						}
+						if (flength > i * 100) {
+							temparr = new int[flength - i * 100];
+							for (int k = i * 100, c = 0; k < flength; k++, c++) {
+								temparr[c] = ids[k];
+							}
+							plist.addAll(lookupUsers(temparr));
+						}
+					} else {
+						plist.addAll(lookupUsers(ids));
 					}
-					ulist.addAll(twitter.lookupUsers(temparr));
 				}
-			} else {
-				ulist.addAll(twitter.lookupUsers(idsarr));
 			}
-			for (User u : ulist) {
-				Contact p = new Contact();
-				p.setFirstName(u.getName());
-				p.setProfileUrl("http://" + PROPERTY_DOMAIN + "/"
-						+ u.getScreenName());
-				plist.add(p);
+		} catch (Exception e) {
+			throw new ServerDataException(
+					"Failed to parse the user friends json : " + result, e);
+		}
+		return plist;
+	}
+
+	private List<Contact> lookupUsers(final int fids[]) throws Exception {
+		StringBuilder strb = new StringBuilder();
+		List<Contact> plist = new ArrayList<Contact>();
+		for (int value : fids) {
+			if (strb.length() != 0) {
+				strb.append(",");
 			}
+			strb.append(value);
+		}
+		String url = LOOKUP_URL + strb.toString();
+		LOG.debug("Fetching info of following users : " + url);
+		Response serviceResponse = null;
+		try {
+			serviceResponse = oauth.httpGet(url, null, accessToken);
+		} catch (Exception ie) {
+			throw new SocialAuthException(
+					"Failed to retrieve the contacts from " + url, ie);
+		}
+		String result;
+		try {
+			result = serviceResponse
+					.getResponseBodyAsString(Constants.ENCODING);
+		} catch (Exception e) {
+			throw new ServerDataException("Failed to get response from " + url);
+		}
+		LOG.debug("Users info : " + result);
+		try {
+			JSONArray jarr = new JSONArray(result);
+			for (int i = 0; i < jarr.length(); i++) {
+				JSONObject jobj = jarr.getJSONObject(i);
+				Contact cont = new Contact();
+				if (jobj.has("name")) {
+					cont.setFirstName(jobj.getString("name"));
+				}
+				if (jobj.has("screen_name")) {
+					cont.setDisplayName(jobj.getString("screen_name"));
+					cont.setProfileUrl("http://" + PROPERTY_DOMAIN + "/"
+							+ jobj.getString("screen_name"));
+				}
+				plist.add(cont);
+			}
+		} catch (Exception e) {
+			throw e;
 		}
 		return plist;
 	}
@@ -242,7 +369,8 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public void logout() {
-		twitter = null;
+		requestToken = null;
+		accessToken = null;
 	}
 
 	/**
@@ -255,6 +383,65 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	public void setPermission(final Permission p) {
 		LOG.debug("Permission requested : " + p.toString());
 		this.scope = p;
+	}
+
+	/**
+	 * Makes OAuth signed HTTP request to a given URL. It attaches Authorization
+	 * header with HTTP request.
+	 * 
+	 * @param url
+	 *            URL to make HTTP request.
+	 * @param methodType
+	 *            Method type can be GET, POST or PUT
+	 * @param params
+	 *            Any additional parameters whose signature need to compute.
+	 *            Only used in case of "POST" and "PUT" method type.
+	 * @param headerParams
+	 *            Any additional parameters need to pass as Header Parameters
+	 * @param body
+	 *            Request Body
+	 * @return Response object
+	 * @throws Exception
+	 */
+	@Override
+	public Response api(final String url, final String methodType,
+			final Map<String, String> params,
+			final Map<String, String> headerParams, final String body)
+			throws Exception {
+		if (!isProviderState()) {
+			throw new ProviderStateException();
+		}
+		if (!isVerify) {
+			throw new SocialAuthException(
+					"Please call verifyResponse function first to get Access Token");
+		}
+		Response response = null;
+		LOG.debug("Calling URL : " + url);
+		if (MethodType.GET.toString().equals(methodType)) {
+			try {
+				response = oauth.httpGet(url, headerParams, accessToken);
+			} catch (Exception ie) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + url, ie);
+			}
+		} else if (MethodType.PUT.toString().equals(methodType)) {
+			try {
+				response = oauth.httpPut(url, params, headerParams, body,
+						accessToken);
+			} catch (Exception e) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + url, e);
+			}
+		} else if (MethodType.POST.toString().equals(methodType)) {
+			try {
+				response = oauth.httpPost(url, params, headerParams, body,
+						accessToken);
+			} catch (Exception e) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + url, e);
+			}
+		}
+		return response;
 	}
 
 }
