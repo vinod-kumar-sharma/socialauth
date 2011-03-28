@@ -38,7 +38,7 @@ import org.brickred.socialauth.exception.SocialAuthException;
 
 /**
  * This class is used to make HTTP requests. We did try NOT writing this class
- * and intead use Apache Commons HTTP Client. However it has been reported by
+ * and instead use Apache Commons HTTP Client. However it has been reported by
  * users that Commons HTTP Client does not work on Google AppEngine. Hence we
  * have handcoded this class using HTTPURLConnection and incorporated only as
  * much functionality as is needed for OAuth clients.
@@ -136,7 +136,7 @@ public class HttpUtil {
 
 	private static final String ALLOWED_CHARS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_.!~*'()";
 
-	public static String encodeURIComponent123(final String value)
+	public static String encodeURIComponent(final String value)
 			throws Exception {
 		if (value == null) {
 			return "";
@@ -153,35 +153,17 @@ public class HttpUtil {
 		}
 	}
 
-	/**
-	 * It encodes the given string
+	/*
+	 * public static String encodeURIComponent(final String input) { if (input
+	 * == null || input.trim().length() == 0) { return input; }
 	 * 
-	 * @param input
-	 * @return
+	 * int l = input.length(); StringBuilder o = new StringBuilder(l * 3); try {
+	 * for (int i = 0; i < l; i++) { String e = input.substring(i, i + 1); if
+	 * (ALLOWED_CHARS.indexOf(e) == -1) { byte[] b = e.getBytes("utf-8");
+	 * o.append(getHex(b)); continue; } o.append(e); } return o.toString(); }
+	 * catch (UnsupportedEncodingException e) { e.printStackTrace(); } return
+	 * input; }
 	 */
-	public static String encodeURIComponent(final String input) {
-		if (input == null || input.trim().length() == 0) {
-			return input;
-		}
-
-		int l = input.length();
-		StringBuilder o = new StringBuilder(l * 3);
-		try {
-			for (int i = 0; i < l; i++) {
-				String e = input.substring(i, i + 1);
-				if (ALLOWED_CHARS.indexOf(e) == -1) {
-					byte[] b = e.getBytes("utf-8");
-					o.append(getHex(b));
-					continue;
-				}
-				o.append(e);
-			}
-			return o.toString();
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
-		return input;
-	}
 
 	private static String getHex(final byte buf[]) {
 		StringBuilder o = new StringBuilder(buf.length * 3);

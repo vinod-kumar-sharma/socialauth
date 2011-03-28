@@ -162,7 +162,6 @@ public class OAuthConsumer implements Serializable, Constants {
 		LOG.debug("Preparing to get Request Token");
 		LOG.debug("Given Request Token URL : " + reqTokenURL);
 		LOG.debug("Given CallBack URL : " + callbackURL);
-		boolean valid = reqTokenURL.length() > 0 && callbackURL.length() > 0;
 		Token token = null;
 		Map<String, String> params = new HashMap<String, String>();
 		params.put(OAUTH_CALLBACK, callbackURL);
