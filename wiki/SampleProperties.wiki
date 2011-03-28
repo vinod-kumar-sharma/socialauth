@@ -43,7 +43,9 @@ foursquare.com.consumer_key = JQKEM1PHWFW4YF2YPEQBRRESXE3SBGNCYJWWDTZKF3IZNJ3V
 foursquare.com.consumer_secret = 4IILLDFDVPP2LC554S4KXKETQNTDKPDSEVCKVHA2QEHKYBEQ
 
 #Implementations
-#you can provide your custom provider here e.g 'myprovider' is your provider id and 'org.brickred.socialauth.provider.GoogleImpl' is your provider implementation. provider id should be prefixed here with 'socialauth.'
+#you can provide your custom provider here e.g 'myprovider' is your provider id 
+#and 'org.brickred.socialauth.provider.GoogleImpl' is your provider implementation. 
+#provider id should be prefixed here with 'socialauth.'
 socialauth.myprovider = org.brickred.socialauth.provider.GoogleImpl
 
 }}}
