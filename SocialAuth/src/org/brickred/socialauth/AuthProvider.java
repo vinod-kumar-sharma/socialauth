@@ -25,8 +25,11 @@
 package org.brickred.socialauth;
 
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
+
+import org.brickred.socialauth.util.Response;
 
 /**
  * This is the main interface representing an authentication provider. First we
@@ -111,4 +114,28 @@ public interface AuthProvider {
 	 *            Permission.ALL, Permission.DEFAULT
 	 */
 	public void setPermission(final Permission p);
+
+	/**
+	 * Makes OAuth signed HTTP request to a given URL for making any provider
+	 * specific calls. For more information, read the comments of this function
+	 * in different provider.
+	 * 
+	 * @param url
+	 *            URL to make HTTP request.
+	 * @param methodType
+	 *            Method type can be GET, POST or PUT
+	 * @param params
+	 *            Any additional parameters whose signature need to compute.
+	 *            Only used in case of "POST" and "PUT" method type.
+	 * @param headerParams
+	 *            Any additional parameters need to pass as Header Parameters
+	 * @param body
+	 *            Request Body
+	 * @return Response object
+	 * @throws Exception
+	 */
+	public Response api(String url, final String methodType,
+			final Map<String, String> params,
+			final Map<String, String> headerParams, final String body)
+			throws Exception;
 }
