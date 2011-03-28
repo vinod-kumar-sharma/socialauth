@@ -20,7 +20,7 @@ This step is very important and the library will NOT work without this.
 
 == Download the jar ==
   # Download the [http://socialauth.googlecode.com/files/socialauth-1.1-beta1.jar socialauth-1.1-beta1.jar] 
-  # Download the [http://socialauth.googlecode.com/files/dependencies1.1.zip dependencies]
+  # Download the [http://socialauth.googlecode.com/files/dependencies-1.1.zip dependencies]
   # Include all the jars in your project
 
 == Implementation ==
