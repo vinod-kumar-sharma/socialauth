@@ -27,7 +27,6 @@ package org.brickred.socialauth.provider;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -47,6 +46,7 @@ import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.exception.UserDeniedPermissionException;
 import org.brickred.socialauth.util.Constants;
+import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.OAuthConsumer;
 import org.brickred.socialauth.util.Response;
@@ -240,11 +240,10 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 			throw new ServerDataException("Status cannot be blank");
 		}
 		LOG.info("Updating status " + msg + " on " + UPDATE_STATUS_URL);
-		Map<String, String> params = new HashMap<String, String>();
 		String msgBody = "{\"status\":\"" + msg + "\"}";
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpPut(UPDATE_STATUS_URL, params, null,
+			serviceResponse = oauth.httpPut(UPDATE_STATUS_URL, null, null,
 					msgBody, accessToken, false);
 		} catch (Exception ie) {
 			throw new SocialAuthException("Failed to update status on "
@@ -269,6 +268,7 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
 	 *            Permission.ALL, Permission.DEFAULT
 	 */
+	@Override
 	public void setPermission(final Permission p) {
 		LOG.debug("Permission requested : " + p.toString());
 		this.scope = p;
@@ -340,5 +340,64 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 		}
 
 		return profile;
+	}
+
+	/**
+	 * Makes OAuth signed HTTP request to a given URL. It attaches Authorization
+	 * header with HTTP request.
+	 * 
+	 * @param url
+	 *            URL to make HTTP request.
+	 * @param methodType
+	 *            Method type can be GET, POST or PUT
+	 * @param params
+	 *            Any additional parameters whose signature need to compute.
+	 *            Only used in case of "POST" and "PUT" method type.
+	 * @param headerParams
+	 *            Any additional parameters need to pass as Header Parameters
+	 * @param body
+	 *            Request Body
+	 * @return Response object
+	 * @throws Exception
+	 */
+	@Override
+	public Response api(final String url, final String methodType,
+			final Map<String, String> params,
+			final Map<String, String> headerParams, final String body)
+			throws Exception {
+		if (!isProviderState()) {
+			throw new ProviderStateException();
+		}
+		if (!isVerify) {
+			throw new SocialAuthException(
+					"Please call verifyResponse function first to get Access Token");
+		}
+		Response response = null;
+		LOG.debug("Calling URL : " + url);
+		if (MethodType.GET.toString().equals(methodType)) {
+			try {
+				response = oauth.httpGet(url, headerParams, accessToken);
+			} catch (Exception ie) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + url, ie);
+			}
+		} else if (MethodType.PUT.toString().equals(methodType)) {
+			try {
+				response = oauth.httpPut(url, params, headerParams, body,
+						accessToken);
+			} catch (Exception e) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + url, e);
+			}
+		} else if (MethodType.POST.toString().equals(methodType)) {
+			try {
+				response = oauth.httpPost(url, params, headerParams, body,
+						accessToken);
+			} catch (Exception e) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + url, e);
+			}
+		}
+		return response;
 	}
 }

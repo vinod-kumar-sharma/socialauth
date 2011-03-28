@@ -30,6 +30,7 @@ import java.io.Serializable;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
@@ -381,6 +382,68 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 	public void setPermission(final Permission p) {
 		LOG.debug("Permission requested : " + p.toString());
 		this.scope = p;
+	}
+
+	/**
+	 * Makes HTTP request to a given URL.It attaches access token in URL.
+	 * 
+	 * @param url
+	 *            URL to make HTTP request.
+	 * @param methodType
+	 *            Method type can be GET, POST or PUT
+	 * @param params
+	 *            Not using this parameter in Google API function
+	 * @param headerParams
+	 *            Parameters need to pass as Header Parameters
+	 * @param body
+	 *            Request Body
+	 * @return Response object
+	 * @throws Exception
+	 */
+	@Override
+	public Response api(final String url, final String methodType,
+			final Map<String, String> params,
+			final Map<String, String> headerParams, final String body)
+			throws Exception {
+		Response response = null;
+		if (!isProviderState()) {
+			throw new ProviderStateException();
+		}
+		if (!isVerify) {
+			throw new SocialAuthException(
+					"Please call verifyResponse function first to get Access Token");
+		}
+		if (MethodType.GET.toString().equals(methodType)) {
+			String urlStr = url;
+			try {
+				char separator = url.indexOf('?') == -1 ? '?' : '&';
+				urlStr = urlStr + separator + "access_token=" + accessToken;
+				LOG.debug("Calling URL : " + urlStr);
+				response = HttpUtil.doHttpRequest(urlStr,
+						MethodType.GET.toString(), null, headerParams);
+			} catch (Exception e) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + urlStr, e);
+			}
+		} else if (MethodType.PUT.toString().equals(methodType)
+				|| MethodType.POST.toString().equals(methodType)) {
+			StringBuilder strb = new StringBuilder();
+			strb.append("access_token=").append(accessToken);
+			if (body != null) {
+				strb.append("&").append(body);
+			}
+			try {
+				LOG.debug("Calling URL : " + url);
+				LOG.debug("Request Body : " + strb.toString());
+				response = HttpUtil.doHttpRequest(url, methodType,
+						strb.toString(), headerParams);
+			} catch (Exception e) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + url, e);
+			}
+
+		}
+		return response;
 	}
 
 }

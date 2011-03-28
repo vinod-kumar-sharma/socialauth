@@ -46,6 +46,7 @@ import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.util.Constants;
+import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.OAuthConsumer;
 import org.brickred.socialauth.util.Response;
@@ -73,7 +74,7 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 	private static final String ACCESS_TOKEN_URL = "https://api.linkedin.com/uas/oauth/accessToken";
 	private static final String CONNECTION_URL = "http://api.linkedin.com/v1/people/~/connections:(id,first-name,last-name,public-profile-url)";
 	private static final String UPDATE_STATUS_URL = "http://api.linkedin.com/v1/people/~/shares";
-	private static final String PROFILE_URL = "https://api.linkedin.com/v1/people/~:(id,first-name,last-name,languages,date-of-birth,picture-url,location:(name))";
+	private static final String PROFILE_URL = "http://api.linkedin.com/v1/people/~:(id,first-name,last-name,languages,date-of-birth,picture-url,location:(name))";
 	private static final String STATUS_BODY = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><share><comment>%1$s</comment><visibility><code>anyone</code></visibility></share>";
 	private static final String PROPERTY_DOMAIN = "api.linkedin.com";
 	private final Log LOG = LogFactory.getLog(LinkedInImpl.class);
@@ -238,13 +239,12 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 					"Status cannot be more than 700 characters.");
 		}
 		LOG.info("Updating status " + msg + " on " + UPDATE_STATUS_URL);
-		Map<String, String> params = new HashMap<String, String>();
 		Map<String, String> headerParams = new HashMap<String, String>();
 		headerParams.put("Content-Type", "text/xml");
 		String msgBody = String.format(STATUS_BODY, msg);
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpPost(UPDATE_STATUS_URL, params,
+			serviceResponse = oauth.httpPost(UPDATE_STATUS_URL, null,
 					headerParams, msgBody, accessToken);
 		} catch (Exception ie) {
 			throw new SocialAuthException("Failed to update status on "
@@ -341,9 +341,68 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
 	 *            Permission.ALL, Permission.DEFAULT
 	 */
+	@Override
 	public void setPermission(final Permission p) {
 		LOG.debug("Permission requested : " + p.toString());
 		this.scope = p;
 	}
 
+	/**
+	 * Makes OAuth signed HTTP request to a given URL. It attaches Authorization
+	 * header with HTTP request.
+	 * 
+	 * @param url
+	 *            URL to make HTTP request.
+	 * @param methodType
+	 *            Method type can be GET, POST or PUT
+	 * @param params
+	 *            Any additional parameters whose signature need to compute.
+	 *            Only used in case of "POST" and "PUT" method type.
+	 * @param headerParams
+	 *            Any additional parameters need to pass as Header Parameters
+	 * @param body
+	 *            Request Body
+	 * @return Response object
+	 * @throws Exception
+	 */
+	@Override
+	public Response api(final String url, final String methodType,
+			final Map<String, String> params,
+			final Map<String, String> headerParams, final String body)
+			throws Exception {
+		if (!isProviderState()) {
+			throw new ProviderStateException();
+		}
+		if (!isVerify) {
+			throw new SocialAuthException(
+					"Please call verifyResponse function first to get Access Token");
+		}
+		Response response = null;
+		LOG.debug("Calling URL : " + url);
+		if (MethodType.GET.toString().equals(methodType)) {
+			try {
+				response = oauth.httpGet(url, headerParams, accessToken);
+			} catch (Exception ie) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + url, ie);
+			}
+		} else if (MethodType.PUT.toString().equals(methodType)) {
+			try {
+				response = oauth.httpPut(url, params, headerParams, body,
+						accessToken);
+			} catch (Exception e) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + url, e);
+			}
+		} else if (MethodType.POST.toString().equals(methodType)) {
+			try {
+				response = oauth.httpPost(url, params, headerParams, body,
+						accessToken);
+			} catch (Exception e) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + url, e);
+			}
+		}
+		return response;
+	}
 }

@@ -157,6 +157,7 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 		strb.append("&wrap_callback=").append(redirectUri);
 		strb.append("&wrap_verification_code=").append(code);
 		strb.append("&idtype=CID");
+		LOG.debug("Parameters for access token : " + strb.toString());
 		Response serviceResponse;
 		try {
 			serviceResponse = HttpUtil.doHttpRequest(ACCESS_TOKEN_URL,
@@ -242,27 +243,33 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 		}
 		String u = String.format(CONTACTS_URL, uid);
 		LOG.info("Fetching contacts from " + u);
+		return getContacts(u, 0);
+	}
+
+	private List<Contact> getContacts(final String url, final int page)
+			throws Exception {
 		Map<String, String> headerParam = new HashMap<String, String>();
 		headerParam.put("Authorization", "WRAP access_token=" + accessToken);
 		headerParam.put("Content-Type", "application/json");
 		headerParam.put("Accept", "application/json");
 		Response serviceResponse;
 		try {
-			serviceResponse = HttpUtil.doHttpRequest(u, "GET", null,
+			serviceResponse = HttpUtil.doHttpRequest(url, "GET", null,
 					headerParam);
 		} catch (Exception e) {
-			throw e;
+			throw new SocialAuthException("Error while getting contacts from "
+					+ url, e);
 		}
 		if (serviceResponse.getStatus() != 200) {
 			throw new SocialAuthException("Error while getting contacts from "
-					+ u + "Status : " + serviceResponse.getStatus());
+					+ url + "Status : " + serviceResponse.getStatus());
 		}
 		String result;
 		try {
 			result = serviceResponse
 					.getResponseBodyAsString(Constants.ENCODING);
 		} catch (Exception e) {
-			throw new ServerDataException("Failed to get response from " + u);
+			throw new ServerDataException("Failed to get response from " + url);
 		}
 		LOG.debug("User Contacts list in JSON " + result);
 		JSONObject resp = new JSONObject(result);
@@ -272,11 +279,12 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 			LOG.debug("Contacts Found : " + addArr.length());
 			for (int i = 0; i < addArr.length(); i++) {
 				JSONObject obj = addArr.getJSONObject(i);
+				Contact p = new Contact();
 				if (obj.has("emails")) {
 					JSONArray emailArr = obj.getJSONArray("emails");
 					int emailCount = emailArr.length();
 					if (emailCount > 0) {
-						Contact p = new Contact();
+
 						JSONObject eobj = emailArr.getJSONObject(0);
 						if (eobj.has("value")) {
 							p.setEmail(eobj.getString("value"));
@@ -291,23 +299,32 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 							}
 							p.setOtherEmails(sarr);
 						}
-						if (obj.has("name")) {
-							JSONObject nameObj = obj.getJSONObject("name");
-							if (nameObj.has("familyName")) {
-								p.setLastName(nameObj.getString("familyName"));
-							}
-							if (nameObj.has("formatted")) {
-								p.setDisplayName(nameObj.getString("formatted"));
-							}
-							if (nameObj.has("givenName")) {
-								p.setFirstName(nameObj.getString("givenName"));
-							}
-						}
-						plist.add(p);
+
 					}
 				}
+				if (obj.has("name")) {
+					JSONObject nameObj = obj.getJSONObject("name");
+					if (nameObj.has("familyName")) {
+						p.setLastName(nameObj.getString("familyName"));
+					}
+					if (nameObj.has("formatted")) {
+						p.setDisplayName(nameObj.getString("formatted"));
+					}
+					if (nameObj.has("givenName")) {
+						p.setFirstName(nameObj.getString("givenName"));
+					}
+				}
+				plist.add(p);
 			}
-
+		}
+		if (resp.has("totalResults")) {
+			int total = resp.getInt("totalResults");
+			if (total == 100) {
+				int p = page + 1;
+				String u = String.format(CONTACTS_URL, uid);
+				u += "&$skip=" + (p * 100);
+				plist.addAll(getContacts(u, p));
+			}
 		}
 		serviceResponse.close();
 		return plist;
@@ -443,6 +460,61 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public void setPermission(final Permission p) {
 		this.scope = p;
+	}
+
+	/**
+	 * Makes OAuth signed HTTP request to a given URL. It attaches CID in URL
+	 * and Authorization header to make HTTP request. URL string should contain
+	 * "format specifier" for CID.
+	 * 
+	 * @param url
+	 *            URL to make HTTP request. It should contain format specifier
+	 *            to pass CID. E.g.
+	 *            "http://apis.live.net/V4.1/cid-%1$s/Contacts/AllContacts?$type=portable"
+	 *            . This URL contains format specifier "%1$s", which will be
+	 *            replaced by CID.
+	 * @param methodType
+	 *            Method type can be GET, POST or PUT
+	 * @param params
+	 *            Any additional parameters whose signature need to compute.
+	 *            Only used in case of "POST" and "PUT" method type.
+	 * @param headerParams
+	 *            Any additional parameters need to pass as Header Parameters
+	 * @param body
+	 *            Request Body
+	 * @return Response object
+	 * @throws Exception
+	 */
+	@Override
+	public Response api(final String url, final String methodType,
+			final Map<String, String> params,
+			final Map<String, String> headerParams, final String body)
+			throws Exception {
+		Map<String, String> headerParam = new HashMap<String, String>();
+		headerParam.put("Content-Type", "application/json");
+		headerParam.put("Accept", "application/json");
+		if (headerParams != null) {
+			headerParam.putAll(headerParams);
+		}
+		headerParam.put("Authorization", "WRAP access_token=" + accessToken);
+		Response serviceResponse;
+		String urlStr = String.format(url, uid);
+		LOG.debug("Calling URL : " + urlStr);
+		LOG.debug("Header Params : " + headerParam.toString());
+		try {
+			serviceResponse = HttpUtil.doHttpRequest(urlStr, methodType, body,
+					headerParam);
+		} catch (Exception e) {
+			throw new SocialAuthException(
+					"Error while making request to URL : " + urlStr, e);
+		}
+		if (serviceResponse.getStatus() != 200) {
+			LOG.debug("Return statuc for URL " + urlStr + " is "
+					+ serviceResponse.getStatus());
+			throw new SocialAuthException("Error while making request to URL :"
+					+ urlStr + "Status : " + serviceResponse.getStatus());
+		}
+		return serviceResponse;
 	}
 
 }

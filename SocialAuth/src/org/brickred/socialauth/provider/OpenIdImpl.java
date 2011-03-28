@@ -27,6 +27,7 @@ package org.brickred.socialauth.provider;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
@@ -40,6 +41,7 @@ import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.util.Response;
 import org.openid4java.OpenIDException;
 import org.openid4java.consumer.ConsumerException;
 import org.openid4java.consumer.ConsumerManager;
@@ -60,6 +62,7 @@ import org.openid4java.message.ax.FetchResponse;
  */
 public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 
+	private static final long serialVersionUID = -6349104612642490031L;
 	private final Log LOG = LogFactory.getLog(OpenIdImpl.class);
 
 	private ConsumerManager manager;
@@ -260,5 +263,26 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 	@Override
 	public void setPermission(final Permission p) {
 		LOG.warn("Setting Permission for openid is not valid.");
+	}
+
+	/**
+	 * Not implemented for OpenId provider.
+	 * 
+	 * @param url
+	 * @param methodType
+	 * @param params
+	 * @param headerParams
+	 * @param body
+	 * @return
+	 * @throws Exception
+	 */
+	@Override
+	public Response api(final String url, final String methodType,
+			final Map<String, String> params,
+			final Map<String, String> headerParams, final String body)
+			throws Exception {
+		LOG.warn("WARNING: API method is not implemented for OpenId");
+		throw new SocialAuthException(
+				"API method is not implemented for OpenId");
 	}
 }
