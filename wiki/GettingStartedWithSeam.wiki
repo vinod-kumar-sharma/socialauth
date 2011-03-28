@@ -19,8 +19,8 @@ This step is very important and the library will NOT work without this.
   * Create a properties like the sample [SampleProperties oauth_consumer.properties] using the consumer key and secrets obtained above. This file should be included in your classpath, for example WEB-INF/classes directory
 
 == Download the jar ==
-  # Download the [http://socialauth.googlecode.com/files/socialauth-1.0-beta2.jar socialauth-1.0-beta2.jar] 
-  # Download the [http://socialauth.googlecode.com/files/dependencies.zip dependencies]
+  # Download the [http://socialauth.googlecode.com/files/socialauth-1.1-beta1.jar socialauth-1.1-beta1.jar] 
+  # Download the [http://socialauth.googlecode.com/files/dependencies1.1.zip dependencies]
   # Include all the jars in your project
 
 == Implementation ==
