@@ -49,6 +49,7 @@ import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.util.OAuthConfig;
+import org.brickred.socialauth.util.Response;
 
 /**
  * The implementation for the AOL provider. AOL returns very limited profile
@@ -223,5 +224,13 @@ public class AolImpl implements AuthProvider {
 	@Override
 	public void setPermission(final Permission p) {
 		LOG.debug("Permission requested : " + p.toString());
+	}
+
+	@Override
+	public Response api(final String url, final String methodType,
+			final Map<String, String> params,
+			final Map<String, String> headerParams, final String body)
+			throws Exception {
+		return null;
 	}
 }

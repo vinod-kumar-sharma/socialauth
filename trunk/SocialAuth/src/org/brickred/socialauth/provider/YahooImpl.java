@@ -27,7 +27,6 @@ package org.brickred.socialauth.provider;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -46,6 +45,7 @@ import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.util.Constants;
+import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.OAuthConsumer;
 import org.brickred.socialauth.util.Response;
@@ -362,11 +362,10 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 		String url = String.format(UPDATE_STATUS_URL,
 				accessToken.getAttribute("xoauth_yahoo_guid"));
 		LOG.info("Updating status " + msg + " on " + url);
-		Map<String, String> params = new HashMap<String, String>();
 		String msgBody = "{\"status\":{\"message\":\"" + msg + "\"}}";
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpPut(url, params, null, msgBody,
+			serviceResponse = oauth.httpPut(url, null, null, msgBody,
 					accessToken);
 		} catch (Exception ie) {
 			throw new SocialAuthException("Failed to update status on " + url,
@@ -399,8 +398,75 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
 	 *            Permission.ALL, Permission.DEFAULT
 	 */
+	@Override
 	public void setPermission(final Permission p) {
 		LOG.debug("Permission requested : " + p.toString());
 		this.scope = p;
+	}
+
+	/**
+	 * Makes OAuth signed HTTP request to a given URL. It attaches GUID in URL
+	 * and Authorization header to make HTTP request. URL string should contain
+	 * "format specifier" for GUID.
+	 * 
+	 * @param url
+	 *            URL to make HTTP request. It should contain format specifier
+	 *            to pass GUID. E.g.
+	 *            "http://social.yahooapis.com/v1/user/%1$s/profile?format=json"
+	 *            . This URL contains format specifier "%1$s", which will be
+	 *            replaced by GUID.
+	 * @param methodType
+	 *            Method type can be GET, POST or PUT
+	 * @param params
+	 *            Any additional parameters whose signature we want to compute.
+	 *            Only used in case of "POST" and "PUT" method type.
+	 * @param headerParams
+	 *            Any additional parameters need to pass as Header Parameters.
+	 * @param body
+	 *            Request Body
+	 * @return Response object
+	 * @throws Exception
+	 */
+	@Override
+	public Response api(final String url, final String methodType,
+			final Map<String, String> params,
+			final Map<String, String> headerParams, final String body)
+			throws Exception {
+		if (!isProviderState()) {
+			throw new ProviderStateException();
+		}
+		if (!isVerify) {
+			throw new SocialAuthException(
+					"Please call verifyResponse function first to get Access Token");
+		}
+		Response response = null;
+		String urlStr = String.format(url,
+				accessToken.getAttribute("xoauth_yahoo_guid"));
+		LOG.debug("Calling URL : " + urlStr);
+		if (MethodType.GET.toString().equals(methodType)) {
+			try {
+				response = oauth.httpGet(urlStr, headerParams, accessToken);
+			} catch (Exception ie) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + urlStr, ie);
+			}
+		} else if (MethodType.PUT.toString().equals(methodType)) {
+			try {
+				response = oauth.httpPut(urlStr, params, headerParams, body,
+						accessToken);
+			} catch (Exception e) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + urlStr, e);
+			}
+		} else if (MethodType.POST.toString().equals(methodType)) {
+			try {
+				response = oauth.httpPost(urlStr, params, headerParams, body,
+						accessToken);
+			} catch (Exception e) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + urlStr, e);
+			}
+		}
+		return response;
 	}
 }

@@ -29,7 +29,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -189,6 +188,11 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 				LOG.debug("Call to fetch Access Token");
 				accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL,
 						requestToken);
+				if (accessToken == null) {
+					throw new SocialAuthConfigurationException(
+							"Application keys are not correct. "
+									+ "The server running the application should be same that was registered to get the keys.");
+				}
 				isVerify = true;
 				LOG.debug("Obtaining profile from OpenID response");
 				return getProfile(request);
@@ -224,13 +228,6 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 			throw new SocialAuthException(
 					"Please call verifyResponse function first to get Access Token");
 		}
-		if (accessToken == null) {
-			throw new SocialAuthConfigurationException(
-					"Application keys are not correct. "
-							+ "The server running the application should be same that was registered to get the keys.");
-		}
-
-		Map<String, String> params = new HashMap<String, String>();
 		Response serviceResponse = null;
 		try {
 			serviceResponse = oauth.httpGet(CONTACTS_FEED_URL, null,
@@ -331,4 +328,47 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 		this.scope = p;
 	}
 
+	/**
+	 * Makes OAuth signed HTTP - GET request to a given URL. It attaches
+	 * Authorization header with HTTP request.
+	 * 
+	 * @param url
+	 *            URL to make HTTP request.
+	 * @param methodType
+	 *            Method type should be GET
+	 * @param params
+	 *            Not using this parameter in Google API function
+	 * @param headerParams
+	 *            Any additional parameters need to pass as Header Parameters
+	 * @param body
+	 *            Request Body
+	 * @return Response object
+	 * @throws Exception
+	 */
+	@Override
+	public Response api(final String url, final String methodType,
+			final Map<String, String> params,
+			final Map<String, String> headerParams, final String body)
+			throws Exception {
+		if (!isProviderState()) {
+			throw new ProviderStateException();
+		}
+		if (!isVerify) {
+			throw new SocialAuthException(
+					"Please call verifyResponse function first to get Access Token");
+		}
+		Response serviceResponse = null;
+		if (!MethodType.GET.toString().equals(methodType)) {
+			throw new SocialAuthException(
+					"Only GET method is implemented in Google API function");
+		}
+		LOG.debug("Calling URL : " + url);
+		try {
+			serviceResponse = oauth.httpGet(url, headerParams, accessToken);
+		} catch (Exception ie) {
+			throw new SocialAuthException(
+					"Error while making request to URL : " + url, ie);
+		}
+		return serviceResponse;
+	}
 }

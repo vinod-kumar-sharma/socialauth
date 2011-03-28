@@ -28,6 +28,7 @@ package org.brickred.socialauth.provider;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
@@ -68,7 +69,7 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 	private static final String ACCESS_TOKEN_URL = "https://foursquare.com/oauth2/access_token";
 	private static final String VIEW_PROFILE_URL = "http://foursquare.com/user/";
 	private static final String PROPERTY_DOMAIN = "foursquare.com";
-	private final Log LOG = LogFactory.getLog(YahooImpl.class);
+	private final Log LOG = LogFactory.getLog(FourSquareImpl.class);
 
 	private Permission scope;
 	private Properties properties;
@@ -358,5 +359,60 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 	public void setPermission(final Permission p) {
 		LOG.debug("Permission requested : " + p.toString());
 		this.scope = p;
+	}
+
+	/**
+	 * Makes HTTP request to a given URL. It attaches access token in URL.
+	 * 
+	 * @param url
+	 *            URL to make HTTP request.
+	 * @param methodType
+	 *            Method type can be GET, POST or PUT
+	 * @param params
+	 *            Not in use for FourSquare api function. You can pass required
+	 *            parameter in query string.
+	 * @param headerParams
+	 *            Parameters need to pass as Header Parameters
+	 * @param body
+	 *            Request Body
+	 * @return Response object
+	 * @throws Exception
+	 */
+	@Override
+	public Response api(final String url, final String methodType,
+			final Map<String, String> params,
+			final Map<String, String> headerParams, final String body)
+			throws Exception {
+		Response response = null;
+		if (!isProviderState()) {
+			throw new ProviderStateException();
+		}
+		if (!isVerify) {
+			throw new SocialAuthException(
+					"Please call verifyResponse function first to get Access Token");
+		}
+		char separator = url.indexOf('?') == -1 ? '?' : '&';
+		String urlStr = url + separator + "oauth_token=" + accessToken;
+		LOG.debug("Calling URL : " + urlStr);
+		if (MethodType.GET.toString().equals(methodType)) {
+			try {
+				response = HttpUtil.doHttpRequest(urlStr,
+						MethodType.GET.toString(), null, headerParams);
+			} catch (Exception e) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + urlStr, e);
+			}
+		} else if (MethodType.PUT.toString().equals(methodType)
+				|| MethodType.POST.toString().equals(methodType)) {
+			try {
+				response = HttpUtil.doHttpRequest(urlStr, methodType, body,
+						headerParams);
+			} catch (Exception e) {
+				throw new SocialAuthException(
+						"Error while making request to URL : " + urlStr, e);
+			}
+
+		}
+		return response;
 	}
 }
