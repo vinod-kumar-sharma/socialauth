@@ -226,12 +226,17 @@ public class OAuthConsumer implements Serializable, Constants {
 		LOG.debug(config.get_signatureMethod()
 				+ " Signature for access token : " + sig);
 		params.put(OAUTH_SIGNATURE, sig);
-		reqURL += "?" + HttpUtil.buildParams(params);
+		String body = null;
+		if (MethodType.GET.toString().equals(config.get_transportName())) {
+			reqURL += "?" + HttpUtil.buildParams(params);
+		} else {
+			body = HttpUtil.buildParams(params);
+		}
 		LOG.debug("Access Token URL : " + reqURL);
 		Response response = null;
 		try {
 			response = HttpUtil.doHttpRequest(reqURL,
-					config.get_transportName(), null, null);
+					config.get_transportName(), body, null);
 		} catch (Exception e) {
 			LOG.debug("Error while getting Access Token");
 			throw new SocialAuthException("Error while getting Access Token", e);
