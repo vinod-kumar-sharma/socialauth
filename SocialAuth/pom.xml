@@ -1,10 +1,30 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.brickred.socialauth</groupId>
+	<groupId>org.brickred</groupId>
 	<artifactId>socialauth</artifactId>
+	<name>socialauth</name>
 	<version>1.1-beta1</version>
-
+	<description>SocialAuth library</description>
+	<url>http://code.google.com/p/socialauth/</url>
+	<licenses>
+		<license>
+			<name>The MIT License</name>
+			<url>http://www.opensource.org/licenses/mit-license.php</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<scm>
+		<connection>scm:svn:http://socialauth.googlecode.com/svn/trunk/</connection>
+		<url>http://socialauth.googlecode.com/svn/trunk/</url>
+	</scm>
+	<developers>
+		<developer>
+			<id>tsg</id>
+			<name>TSG BrickRed</name>
+			<email>tsg@brickred.com</email>
+		</developer>
+	</developers>
 	<dependencies>
 		<dependency>
 			<groupId>javax.servlet</groupId>
@@ -19,7 +39,7 @@
 		<dependency>
 			<groupId>org.openid4java</groupId>
 			<artifactId>openid4java</artifactId>
-			<version>[0.9.5,)</version>
+			<version>0.9.5</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.openid4java</groupId>
