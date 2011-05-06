@@ -103,6 +103,13 @@ public interface AuthProvider {
 	public List<Contact> getContactList() throws Exception;
 
 	/**
+	 * Retrieves the user profile.
+	 * 
+	 * @return Profile object containing the profile information.
+	 */
+	public Profile getUserProfile();
+
+	/**
 	 * Logout
 	 */
 	public void logout();
