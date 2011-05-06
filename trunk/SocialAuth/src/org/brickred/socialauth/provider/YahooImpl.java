@@ -83,6 +83,7 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 	private Token accessToken;
 	private OAuthConsumer oauth;
 	private OAuthConfig config;
+	private Profile userProfile;
 
 	public YahooImpl(final Properties props) throws Exception {
 		try {
@@ -158,10 +159,11 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 		accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL, requestToken);
 
 		isVerify = true;
-		return getUserProfile();
+		userProfile = getProfile();
+		return userProfile;
 	}
 
-	private Profile getUserProfile() throws Exception {
+	private Profile getProfile() throws Exception {
 		LOG.debug("Obtaining user profile");
 		Profile profile = new Profile();
 		String guid = (String) accessToken.getAttribute("xoauth_yahoo_guid");
@@ -468,5 +470,14 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 			}
 		}
 		return response;
+	}
+
+	/**
+	 * Retrieves the user profile.
+	 * 
+	 * @return Profile object containing the profile information.
+	 */
+	public Profile getUserProfile() {
+		return userProfile;
 	}
 }

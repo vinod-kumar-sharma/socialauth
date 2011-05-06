@@ -83,6 +83,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	private Token accessToken;
 	private OAuthConsumer oauth;
 	private OAuthConfig config;
+	private Profile userProfile;
 
 	public GoogleImpl(final Properties props) throws Exception {
 
@@ -203,7 +204,8 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	}
 
 	private Profile getProfile(final HttpServletRequest req) {
-		return OpenIdConsumer.getUserInfo(req);
+		userProfile = OpenIdConsumer.getUserInfo(req);
+		return userProfile;
 	}
 
 	@Override
@@ -370,5 +372,14 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 					"Error while making request to URL : " + url, ie);
 		}
 		return serviceResponse;
+	}
+
+	/**
+	 * Retrieves the user profile.
+	 * 
+	 * @return Profile object containing the profile information.
+	 */
+	public Profile getUserProfile() {
+		return userProfile;
 	}
 }

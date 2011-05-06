@@ -76,8 +76,9 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 	private boolean isVerify;
 	private Token requestToken;
 	private Token accessToken;
-	OAuthConsumer oauth;
-	OAuthConfig config;
+	private OAuthConsumer oauth;
+	private OAuthConfig config;
+	private Profile userProfile;
 
 	public MySpaceImpl(final Properties props) throws Exception {
 		try {
@@ -152,7 +153,8 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 		accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL, requestToken);
 
 		isVerify = true;
-		return getUserProfile();
+		userProfile = getProfile();
+		return userProfile;
 	}
 
 	/**
@@ -274,7 +276,7 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 		this.scope = p;
 	}
 
-	private Profile getUserProfile() throws Exception {
+	private Profile getProfile() throws Exception {
 		LOG.debug("Obtaining user profile");
 		Profile profile = new Profile();
 
@@ -399,5 +401,14 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 			}
 		}
 		return response;
+	}
+
+	/**
+	 * Retrieves the user profile.
+	 * 
+	 * @return Profile object containing the profile information.
+	 */
+	public Profile getUserProfile() {
+		return userProfile;
 	}
 }

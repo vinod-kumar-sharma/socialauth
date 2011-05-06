@@ -83,6 +83,7 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	private Properties properties;
 	private boolean isVerify;
 	private OAuthConfig config;
+	private Profile userProfile;
 
 	public HotmailImpl(final Properties props) throws Exception {
 		try {
@@ -211,8 +212,8 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 			if (accessToken != null && expires != null) {
 				isVerify = true;
 				LOG.debug("Obtaining user profile");
-				Profile p = getUserProfile();
-				return p;
+				userProfile = getProfile();
+				return userProfile;
 
 			} else {
 				throw new SocialAuthException(
@@ -379,7 +380,7 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 		accessToken = null;
 	}
 
-	private Profile getUserProfile() throws Exception {
+	private Profile getProfile() throws Exception {
 		Profile p = new Profile();
 		String u = String.format(PROFILE_URL, uid, uid);
 		Map<String, String> headerParam = new HashMap<String, String>();
@@ -515,6 +516,15 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 					+ urlStr + "Status : " + serviceResponse.getStatus());
 		}
 		return serviceResponse;
+	}
+
+	/**
+	 * Retrieves the user profile.
+	 * 
+	 * @return Profile object containing the profile information.
+	 */
+	public Profile getUserProfile() {
+		return userProfile;
 	}
 
 }
