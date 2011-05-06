@@ -77,6 +77,7 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 	private String redirectUri;
 	private String accessToken;
 	private OAuthConfig config;
+	private Profile userProfile;
 
 	public FourSquareImpl(final Properties props) throws Exception {
 		try {
@@ -177,8 +178,8 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 			if (accessToken != null) {
 				isVerify = true;
 				LOG.debug("Obtaining user profile");
-				Profile p = getUserProfile();
-				return p;
+				userProfile = getProfile();
+				return userProfile;
 
 			} else {
 				throw new SocialAuthException(
@@ -190,7 +191,7 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 		}
 	}
 
-	private Profile getUserProfile() throws Exception {
+	private Profile getProfile() throws Exception {
 		LOG.debug("Obtaining user profile");
 		Profile profile = new Profile();
 		String u = PROFILE_URL + accessToken;
@@ -414,5 +415,14 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 
 		}
 		return response;
+	}
+
+	/**
+	 * Retrieves the user profile.
+	 * 
+	 * @return Profile object containing the profile information.
+	 */
+	public Profile getUserProfile() {
+		return userProfile;
 	}
 }

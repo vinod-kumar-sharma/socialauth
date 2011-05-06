@@ -285,4 +285,13 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 		throw new SocialAuthException(
 				"API method is not implemented for OpenId");
 	}
+
+	/**
+	 * Retrieves the user profile. Null in case of OpenId provider.
+	 * 
+	 * @return Profile object containing the profile information.
+	 */
+	public Profile getUserProfile() {
+		return null;
+	}
 }

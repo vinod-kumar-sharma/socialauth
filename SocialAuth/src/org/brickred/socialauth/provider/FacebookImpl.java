@@ -81,6 +81,7 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 	private Properties properties;
 	private boolean isVerify;
 	private OAuthConfig config;
+	private Profile userProfile;
 
 	// / set this to the list of extended permissions you want
 	private static final String[] AllPerms = new String[] { "publish_stream",
@@ -268,7 +269,7 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 				p.setLanguage(a[0]);
 				p.setCountry(a[1]);
 			}
-
+			userProfile = p;
 			return p;
 
 		} catch (Exception ex) {
@@ -444,6 +445,15 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 
 		}
 		return response;
+	}
+
+	/**
+	 * Retrieves the user profile.
+	 * 
+	 * @return Profile object containing the profile information.
+	 */
+	public Profile getUserProfile() {
+		return userProfile;
 	}
 
 }

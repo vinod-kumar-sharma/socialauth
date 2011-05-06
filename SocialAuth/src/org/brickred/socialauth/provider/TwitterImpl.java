@@ -82,6 +82,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	private Token accessToken;
 	private OAuthConfig config;
 	private OAuthConsumer oauth;
+	private Profile userProfile;
 
 	public TwitterImpl(final Properties props) throws Exception {
 		try {
@@ -155,10 +156,11 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 		LOG.debug("Call to fetch Access Token");
 		accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL, requestToken);
 		isVerify = true;
-		return getUserProfile();
+		userProfile = getProfile();
+		return userProfile;
 	}
 
-	private Profile getUserProfile() throws Exception {
+	private Profile getProfile() throws Exception {
 		Profile profile = new Profile();
 		String url = PROFILE_URL + accessToken.getAttribute("screen_name");
 		LOG.debug("Obtaining user profile. Profile URL : " + url);
@@ -442,6 +444,15 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 			}
 		}
 		return response;
+	}
+
+	/**
+	 * Retrieves the user profile.
+	 * 
+	 * @return Profile object containing the profile information.
+	 */
+	public Profile getUserProfile() {
+		return userProfile;
 	}
 
 }

@@ -233,4 +233,13 @@ public class AolImpl implements AuthProvider {
 			throws Exception {
 		return null;
 	}
+
+	/**
+	 * Retrieves the user profile.
+	 * 
+	 * @return Profile object containing the profile information.
+	 */
+	public Profile getUserProfile() {
+		return null;
+	}
 }
