@@ -153,6 +153,23 @@ public class AuthProviderFactory {
 
 	}
 
+	/**
+	 * 
+	 * @param id
+	 *            the id of requested provider. It can be facebook, foursquare,
+	 *            google, hotmail, linkedin,myspace, twitter, yahoo.
+	 * @param properties
+	 *            properties containing key/secret for different providers and
+	 *            information of custom provider.
+	 * @return AuthProvider the instance of requested provider based on given
+	 *         id. If id is a URL it returns the OpenId provider.
+	 * @throws Exception
+	 */
+	public static AuthProvider getInstance(final String id,
+			final Properties properties) throws Exception {
+		return loadProvider(id, properties);
+	}
+
 	private static AuthProvider getProvider(final String id,
 			final String fileName, final ClassLoader classLoader)
 			throws Exception {
@@ -184,10 +201,17 @@ public class AuthProviderFactory {
 					+ fileName);
 		}
 
-		Class obj = providerMap.get(id);
+		provider = loadProvider(id, props);
+		return provider;
+	}
+
+	private static AuthProvider loadProvider(final String id,
+			final Properties props) throws Exception {
+		Class<?> obj = providerMap.get(id);
+		AuthProvider provider;
 		if (obj == null) {
 			try {
-				URL url = new URL(id);
+				new URL(id); // just validating, don't need the value
 				obj = providerMap.get("openid");
 			} catch (MalformedURLException me) {
 				throw new SocialAuthException(id
@@ -196,7 +220,7 @@ public class AuthProviderFactory {
 		}
 
 		try {
-			Constructor cons = obj.getConstructor(Properties.class);
+			Constructor<?> cons = obj.getConstructor(Properties.class);
 			provider = (AuthProvider) cons.newInstance(props);
 		} catch (NoSuchMethodException me) {
 			LOG.warn(obj.getName() + " does not implement a constructor "
