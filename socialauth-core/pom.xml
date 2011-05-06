@@ -4,7 +4,7 @@
 	<groupId>org.brickred</groupId>
 	<artifactId>socialauth</artifactId>
 	<name>socialauth</name>
-	<version>1.1-beta1</version>
+	<version>1.2-beta1</version>
 	<description>SocialAuth library</description>
 	<url>http://code.google.com/p/socialauth/</url>
 	<licenses>
@@ -63,18 +63,6 @@
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging</artifactId>
 			<version>1.1</version>
-		</dependency>
-		<dependency>
-			<groupId>org.jboss.seam</groupId>
-			<artifactId>jboss-seam</artifactId>
-			<version>[2.2.0.GA,)</version>
-			<optional>true</optional>
-		</dependency>
-		<dependency>
-			<groupId>javax.faces</groupId>
-			<artifactId>jsf-api</artifactId>
-			<version>1.2_12</version>
-			<optional>true</optional>
 		</dependency>
 	</dependencies>
 
