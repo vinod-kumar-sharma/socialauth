@@ -24,7 +24,6 @@
  */
 package com.auth.actions;
 
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,6 +56,7 @@ import com.auth.form.AuthForm;
 public class SocialAuthSuccessAction extends Action {
 
 	final Log LOG = LogFactory.getLog(SocialAuthSuccessAction.class);
+
 	/**
 	 * Displays the user profile and contacts for the given provider.
 	 * 
@@ -77,7 +77,6 @@ public class SocialAuthSuccessAction extends Action {
 	public ActionForward execute(final ActionMapping mapping,
 			final ActionForm form, final HttpServletRequest request,
 			final HttpServletResponse response) throws Exception {
-
 
 		AuthForm authForm = (AuthForm) form;
 		AuthProvider provider = authForm.getProvider();
