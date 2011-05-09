@@ -33,6 +33,7 @@ import org.apache.struts.action.Action;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
+import org.apache.struts.util.RequestUtils;
 import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.AuthProviderFactory;
 
@@ -71,7 +72,6 @@ public class SocialAuthenticationAction extends Action {
 	 *             if an error occurs
 	 */
 
-
 	@Override
 	public ActionForward execute(final ActionMapping mapping,
 			final ActionForm form, final HttpServletRequest request,
@@ -80,7 +80,8 @@ public class SocialAuthenticationAction extends Action {
 		AuthForm authForm = (AuthForm) form;
 		String id = authForm.getId();
 		AuthProvider provider = AuthProviderFactory.getInstance(id);
-		String returnToUrl = "http://opensource.brickred.com/socialauthdemo/socialAuthSuccessAction.do";
+		String returnToUrl = RequestUtils.absoluteURL(request,
+				"/socialAuthSuccessAction.do").toString();
 		System.out.println("Return URL..." + returnToUrl);
 		authForm.setProvider(provider);
 		String url = provider.getLoginRedirectURL(returnToUrl);
