@@ -1,4 +1,4 @@
-<project name="socialauthdemo" default="deploy-socialauth">
+<project name="socialauth-struts-demo" default="deploy-socialauth-struts-demo">
 	
 	<property name="basedir" value="." />	
 	<property file="${basedir}/env.properties" />
@@ -9,13 +9,13 @@
 	<property name="libDir" value="${webDir}/WEB-INF/lib" />
 	<property name="metainfDir" value="${webDir}/WEB-INF/META-INF" />
 	<property name="deployDir" value="${tomcat.home}/webapps" />	
-	<property name="warDirectory" value="${deployDir}/socialauthdemo" />
+	<property name="warDirectory" value="${deployDir}/socialauth-struts-demo" />
 
 	<path id="libraries">
 		<fileset dir="${libDir}">
 			<include name="**/*.jar" />
 		</fileset>
-		<fileset dir="${tomcat.home}/common/lib">
+		<fileset dir="${tomcat.home}/lib">
 			<include name="**/*.jar" />
 		</fileset>
 	</path>
@@ -24,7 +24,7 @@
 		<delete dir="${buildDir}" failonerror="true" />
 		<delete dir="${distDir}" failonerror="true" />
 		<delete dir="${warDirectory}" failonerror="true" />
-		<delete file="${tomcat.home}/webapps/socialauthapp.war"/>
+		<delete file="${tomcat.home}/webapps/socialauth-struts-demo.war"/>
 	</target>
 
 	<target name="init" depends="clean">
@@ -43,7 +43,7 @@
 	</target>
 	
 	<target name="warInternal" depends="copyTask" >
-		<war destfile="${distDir}/socialauthdemo.war" basedir="${webDir}"
+		<war destfile="${distDir}/socialauth-struts-demo.war" basedir="${webDir}"
 			webxml="${webDir}/WEB-INF/web.xml" >
 			
 			<classes dir="${buildDir}">
@@ -55,7 +55,7 @@
 		</war>
 	</target>
 	
-	<target name="deploy-socialauth" depends="warInternal" description="Build and test EAR, update db if required, deploy locally">
+	<target name="deploy-socialauth-struts-demo" depends="warInternal" description="Build and test EAR, update db if required, deploy locally">
 		<echo message="Final packaging" />
 		<copy todir="${deployDir}">
 			<fileset dir="${distDir}"/>
