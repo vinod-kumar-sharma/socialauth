@@ -27,7 +27,7 @@ package org.brickred.socialauthseam.session;
 import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 
-import org.brickred.socialauth.SocialAuth;
+import org.brickred.socialauth.seam.SocialAuth;
 import org.jboss.seam.annotations.In;
 import org.jboss.seam.annotations.Name;
 import org.jboss.seam.log.LogProvider;
@@ -49,18 +49,19 @@ public class UpdateStatus {
 	SocialAuth socialauth;
 
 	String statusText;
-	
+
 	/**
 	 * Method which updates the status on profile.
 	 * 
 	 * @param ActionEvent
-	 * @throws Exception 
+	 * @throws Exception
 	 */
 
 	public void updateStatus() throws Exception {
-		final HttpServletRequest request = (HttpServletRequest) FacesContext.getCurrentInstance().getExternalContext().getRequest();
-		String statusText= request.getParameter("statusMessage");
-		if(statusText!=null && !statusText.equals("")){
+		final HttpServletRequest request = (HttpServletRequest) FacesContext
+				.getCurrentInstance().getExternalContext().getRequest();
+		String statusText = request.getParameter("statusMessage");
+		if (statusText != null && !statusText.equals("")) {
 			socialauth.setStatus(statusText);
 			socialauth.updateStatus();
 			setStatus("Status Updated Successfully");
