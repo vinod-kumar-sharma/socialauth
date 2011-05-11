@@ -141,6 +141,7 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 
 			return authReq.getDestinationUrl(true);
 		} catch (OpenIDException e) {
+			e.printStackTrace();
 		}
 
 		return null;
@@ -232,7 +233,7 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 	public void updateStatus(final String msg) throws Exception {
 		LOG.warn("WARNING: Not implemented for OpenId");
 		throw new SocialAuthException(
-				"Update Status is not implemented for Gmail");
+				"Update Status is not implemented for OpenId");
 	}
 
 	/**
