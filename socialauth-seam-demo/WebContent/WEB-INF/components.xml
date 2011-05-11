@@ -6,6 +6,6 @@
                 "http://jboss.com/products/seam/core http://jboss.com/products/seam/core-2.0.xsd 
                  http://jboss.com/products/seam/components http://jboss.com/products/seam/components-2.0.xsd">
   	<core:init jndi-pattern="#{ejbName}/local"/>
-	<component name="socialauth" class="org.brickred.socialauth.SocialAuth"/>
+	<component name="socialauth" class="org.brickred.socialauth.seam.SocialAuth"/>
     
 </components>

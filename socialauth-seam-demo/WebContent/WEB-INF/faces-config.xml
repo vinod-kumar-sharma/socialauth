@@ -19,6 +19,6 @@
     </application>
 	
     <lifecycle>
-        <phase-listener>org.brickred.socialauth.SocialAuthPhaseListener</phase-listener>
+        <phase-listener>org.brickred.socialauth.seam.SocialAuthPhaseListener</phase-listener>
     </lifecycle>
 </faces-config>
