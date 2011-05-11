@@ -26,7 +26,7 @@ package org.brickred.socialauthseam.session;
 
 import javax.faces.event.ActionEvent;
 
-import org.brickred.socialauth.SocialAuth;
+import org.brickred.socialauth.seam.SocialAuth;
 import org.jboss.seam.annotations.In;
 import org.jboss.seam.annotations.Name;
 import org.jboss.seam.log.LogProvider;
@@ -35,9 +35,9 @@ import org.jboss.seam.log.Logging;
 /**
  * This is the main component class, it is referred in application pages and
  * provides the navigation functionality to the user.
- *
+ * 
  * @author lakhdeeps@brickred.com
- *
+ * 
  */
 
 @Name("socialauthenticator")
@@ -56,49 +56,49 @@ public class Authenticator {
 	/**
 	 * Track the user interaction with main page and set the state of components
 	 * accordingly.
-	 *
+	 * 
 	 * @param ActionEvent
 	 */
 
 	public void updateId(ActionEvent ae) {
-			String btnClicked = ae.getComponent().getId();
-			log.info("*************login method called ************" +socialauth.getId() );
-			socialauth.setViewUrl("/success.xhtml");
-			
-			if (btnClicked.indexOf("facebook") != -1){
-				socialauth.setId("facebook");
-				log.info("***facebook*********" +socialauth.getId() );
-			}
-			else if (btnClicked.indexOf("twitter") != -1){
-				socialauth.setId("twitter");
-				log.info("***twitter*********" +socialauth.getId() );
-			}
-			else if (btnClicked.indexOf("yahoo") != -1){
-				socialauth.setId("yahoo");
-				log.info("***yahoo*********" +socialauth.getId() );
-			}
-			else if (btnClicked.indexOf("hotmail") != -1){
-				socialauth.setId("hotmail");
-				log.info("***hotmail*********" +socialauth.getId() );
-			}else if (btnClicked.indexOf("google") != -1){
-				socialauth.setId("google");
-				log.info("***google*********" +socialauth.getId() );
-			}else if (btnClicked.indexOf("linkedin") != -1){
-				socialauth.setId("linkedin");
-				log.info("***linkedin*********" +socialauth.getId() );
-			}else if (btnClicked.indexOf("foursquare") != -1){
-				socialauth.setId("foursquare");
-				log.info("***foursquare*********" +socialauth.getId() );
-			}
-			else{
-				socialauth.setId(openID);
-				log.info("***openID*********" +socialauth.getId() );
-			}
+		String btnClicked = ae.getComponent().getId();
+		log.info("*************login method called ************"
+				+ socialauth.getId());
+		socialauth.setViewUrl("/success.xhtml");
+
+		if (btnClicked.indexOf("facebook") != -1) {
+			socialauth.setId("facebook");
+			log.info("***facebook*********" + socialauth.getId());
+		} else if (btnClicked.indexOf("twitter") != -1) {
+			socialauth.setId("twitter");
+			log.info("***twitter*********" + socialauth.getId());
+		} else if (btnClicked.indexOf("yahoo") != -1) {
+			socialauth.setId("yahoo");
+			log.info("***yahoo*********" + socialauth.getId());
+		} else if (btnClicked.indexOf("hotmail") != -1) {
+			socialauth.setId("hotmail");
+			log.info("***hotmail*********" + socialauth.getId());
+		} else if (btnClicked.indexOf("google") != -1) {
+			socialauth.setId("google");
+			log.info("***google*********" + socialauth.getId());
+		} else if (btnClicked.indexOf("linkedin") != -1) {
+			socialauth.setId("linkedin");
+			log.info("***linkedin*********" + socialauth.getId());
+		} else if (btnClicked.indexOf("foursquare") != -1) {
+			socialauth.setId("foursquare");
+			log.info("***foursquare*********" + socialauth.getId());
+		} else if (btnClicked.indexOf("myspace") != -1) {
+			socialauth.setId("myspace");
+			log.info("***myspace*********" + socialauth.getId());
+		} else {
+			socialauth.setId(openID);
+			log.info("***openID*********" + socialauth.getId());
+		}
 	}
 
 	/**
 	 * Redirect the user back to the main page from success view.
-	 *
+	 * 
 	 * @param ActionEvent
 	 */
 	public String mainPage() {
