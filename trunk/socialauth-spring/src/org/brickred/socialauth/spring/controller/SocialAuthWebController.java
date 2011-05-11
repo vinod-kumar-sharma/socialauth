@@ -117,14 +117,14 @@ public class SocialAuthWebController {
 		return "redirect:/" + successPageURL;
 	}
 
-	@RequestMapping(params = "openid.ext2.request_token")
-	public String googleCallback(HttpServletRequest request) {
+	@RequestMapping(params = "wrap_verification_code")
+	public String hotmailCallback(HttpServletRequest request) {
 		callback(request);
 		return "redirect:/" + successPageURL;
 	}
 
-	@RequestMapping(params = "wrap_verification_code")
-	public String hotmailCallback(HttpServletRequest request) {
+	@RequestMapping(params = "openid.claimed_id")
+	public String openidCallback(HttpServletRequest request) {
 		callback(request);
 		return "redirect:/" + successPageURL;
 	}
