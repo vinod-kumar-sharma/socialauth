@@ -184,7 +184,6 @@ public class AuthProviderFactory {
 		try {
 			InputStream in = loader.getResourceAsStream(fileName);
 			props.load(in);
-			props.setProperty("id", id);
 			for (Iterator iter = props.keySet().iterator(); iter.hasNext();) {
 				String str = (String) iter.next();
 				if (str.startsWith("socialauth.")) {
@@ -208,6 +207,7 @@ public class AuthProviderFactory {
 	private static AuthProvider loadProvider(final String id,
 			final Properties props) throws Exception {
 		Class<?> obj = providerMap.get(id);
+		props.setProperty("id", id);
 		AuthProvider provider;
 		if (obj == null) {
 			try {
