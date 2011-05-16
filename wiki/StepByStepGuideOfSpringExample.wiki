@@ -411,3 +411,60 @@ It is the view returns by success controller. It shows the user profile and cont
 </body>
 </html>
 }}}
+
+= Step 8. : Create the update status controller =
+
+It gets the instance of the requested provider from “socialAuthTemplate” and calls the updateStatus() method and returns the view statusSuccess.jsp with the updated status success/failure message.
+
+{{{
+package org.brickred.controller;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.spring.bean.SocialAuthTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.servlet.ModelAndView;
+
+@Controller
+public class UpdateStatusController {
+	@Autowired
+	private SocialAuthTemplate socialAuthTemplate;
+
+	@RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
+	public ModelAndView getRedirectURL(HttpServletRequest request)
+			throws Exception {
+		ModelAndView mv = new ModelAndView();
+		AuthProvider provider = socialAuthTemplate.getProvider();
+		String statusMsg = request.getParameter("statusMessage");
+		try {
+			provider.updateStatus(statusMsg);
+			mv.addObject("Message", "Status Updated successfully");
+		} catch (SocialAuthException e) {
+			mv.addObject("Message", e.getMessage());
+			e.printStackTrace();
+		}
+		mv.setViewName("/jsp/statusSuccess.jsp");
+
+		return mv;
+	}
+}
+}}}
+
+
+= Step 9. : statusSuccess.jsp =
+
+It shows the updated status success/failure message.
+
+{{{
+
+<%
+if(request.getAttribute("Message")!=null){
+	out.print(request.getAttribute("Message"));
+}%>
+
+}}}
