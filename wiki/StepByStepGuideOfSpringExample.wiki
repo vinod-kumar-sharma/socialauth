@@ -468,3 +468,5 @@ if(request.getAttribute("Message")!=null){
 }%>
 
 }}}
+
+You can get the entire source code of the sample by browsing the source code. Hope this guide would have been of help. If you have any questions, please [http://code.google.com/p/socialauth/issues/entry report any issues]. 
