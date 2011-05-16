@@ -7,7 +7,7 @@ Demo application exploring socialauth library.
 
 = Introduction =
 
-This is the step by step guide to show how to develop a Spring application using socialauth-core and socialauth-spring library. 
+This is the step by step guide to show how to develop a Spring application using socialauth library. This requires the jars for socialauth-core and socialauth-spring.
 
 = Step 1. Create the structure =
 
