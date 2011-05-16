@@ -1,0 +1,6 @@
+#summary step by step guide for obtaining consumer key and consumer secret.
+
+Go to the URL: https://foursquare.com/oauth/
+
+= Step 1=
+http://socialauth.googlecode.com/svn/wiki/images/foursquare-1.JPG
