@@ -98,7 +98,7 @@ This file contains key/value pair to store the application key and secret for di
 }}}
 
 
-= Step 4. :  root-context.xml file =
+= Step 4. root-context.xml file =
 
 This is a spring configuration file for our application. This file contains the following bean definition:-
  # Import the properties.xml file.
@@ -140,7 +140,7 @@ This is a spring configuration file for our application. This file contains the 
 }}}
 
 
-= Step 5. :  Coding the index page =
+= Step 5. Coding the index page =
 
 Now let us code the index page with the following code. In this page, we just create various icons that the user can click upon and attach them with the action that will process the authentication. Here attached action in “socialauth.do” which maps to the “org.brickred.socialauth.spring.controller.SocialAuthWebController”. 
 
@@ -223,7 +223,7 @@ Now let us code the index page with the following code. In this page, we just cr
 </html>
 }}}
 
-= Step 6. : Creating the success controller =
+= Step 6. Creating the success controller =
 
 Now we create a success action whose path is given in “SocialAuthWebController” constructor in root-context.xml. It gets the instance of the requested provider from “socialAuthTemplate” to get required information from providers like user profile, contacts etc.
 
@@ -276,7 +276,7 @@ public class SuccessController {
 }
 }}}
 
-= Step 7. : Displaying the result with authSuccess.jsp =
+= Step 7. Displaying the result with authSuccess.jsp =
 
 It is the view returns by success controller. It shows the user profile and contacts. It also has update status button.
 
@@ -412,7 +412,7 @@ It is the view returns by success controller. It shows the user profile and cont
 </html>
 }}}
 
-= Step 8. : Create the update status controller =
+= Step 8. Create the update status controller =
 
 It gets the instance of the requested provider from “socialAuthTemplate” and calls the updateStatus() method and returns the view statusSuccess.jsp with the updated status success/failure message.
 
@@ -456,7 +456,7 @@ public class UpdateStatusController {
 }}}
 
 
-= Step 9. : statusSuccess.jsp =
+= Step 9. statusSuccess.jsp =
 
 It shows the updated status success/failure message.
 
