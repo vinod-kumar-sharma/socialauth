@@ -15,7 +15,7 @@ See our [http://opensource.brickred.com/socialauthdemo/ Struts demo in action] !
   # Jars are also uploaded on public maven repository Sonatype
 
 ==Why !SocialAuth==
-There are so many libraries out there which implement OpenID and oAuth, so why another !library? 
+There are so many libraries out there which implement OpenID and oAuth, so why another library? 
 There many practical challenges that we faced while doing the implementation of above use cases. None of them is insurmountable but the developer could spend a couple of weeks solving these, which we actually did and hence decided to make things better for the community. 
   * There are many libraries for implementing Open ID and many for implementing oAuth. It becomes a difficult exercise to choose one that will do the integration quickly with the providers you want.
   * Some libraries do not implement all the features and it becomes known only in the later stages of implementation – for example we found out that openid4java does not implement the hybrid protocol. We also found out that it is not easy to integrate dyuproject library.
@@ -37,7 +37,7 @@ http://socialauth.googlecode.com/svn/wiki/images/socialauth_flow_diagram_2.jpg
 
 
 ==Getting Started==
-We are sure you now want to get started with the code. We support Struts based, Spring based application as well as JBoss Seam based application. You can download the current version and dependencies or you can use maven dependency. For more information have a look at [GetStarted Get Started !page].
+We are sure you now want to get started with the code. We support Struts based, Spring based application as well as JBoss Seam based application. You can download the current version and dependencies or you can use maven dependency. For more information have a look at [GetStarted Get Started page ].
 
 Please keep in mind that all features may not be implemented in all providers, for example, you can’t update your status on Hotmail and you can’t import contacts from Facebook yet. Some of the limitations are inherent, for example Twitter doesn’t give out the email address while giving other user details.
 
