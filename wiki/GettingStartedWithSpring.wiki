@@ -94,7 +94,7 @@ socialauth-spring.jar contains two classes which support Spring application. !So
     <param-value>/WEB-INF/root-context.xml</param-value>
 </init-param>
 }}}
- # Call “socialAuthWebController” to initiate connection with provider using  *“/socialauth{pattern}?id={providerId}”* where  pattern depends on your configuration, for example .do and the providerId may be one of facebook,foursquare, google,hotmail,linkedin,myspace, openid, twitter, yahoo.
+ # Call "socialAuthWebController" to initiate connection with provider using  "/socialauth{pattern}?id={providerId}" where  pattern depends on your configuration, for example ".do" and the providerId may be one of facebook, foursquare, google, hotmail, linkedin, myspace, openid, twitter OR yahoo.
  # On Success page you can get the provider object by using
 {{{
 AuthProvider provider = socialAuthTemplate.getProvider();
