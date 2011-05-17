@@ -114,14 +114,14 @@ Using the socialauth.jar consists of two main steps:
 
 That is all you have to do, really. We have the following tracks available on how to use !SocialAuth with different frameworks.
 
- * [GettingStartedWithSeam Developing a JSF or JBoss Seam application using socialauth]
+ * [GettingStartedWithSeam Developing a JSF or JBoss Seam 2.0 application using socialauth]
  * [GettingStartedWithYourOwnFramework  Developing a Struts application using socialauth]
  * [GettingStartedWithSpring Developing a Spring MVC application using socialauth]
- * Guide using good old Servlets - Coming Soon !
+ * Guides using good old Servlets and CDI / Seam 3.0 - Coming Soon !
 
 If you are new to these frameworks or face issues in following the above guides, we also have step-by-step guides available.
 
- * [SeamSample  Step by Step JSF or JBoss Seam application using socialauth]
+ * [SeamSample  Step by Step JSF or JBoss Seam 2.0 application using socialauth]
  * [StrutsSample Step by Step Struts application using socialauth]
  * [StepByStepGuideOfSpringExample  Step by Step Spring MVC application using socialauth]
 
