@@ -1,0 +1,58 @@
+#summary Getting Started with implementing SocialAuth in Spring Application
+
+= Getting Started =
+
+== Prerequisites ==
+Authenticating using the external oAuth providers requires that we register our application with the providers and obtain a key/secret from them that will be configured in our application. So following steps are needed to be set up before we can begin.
+
+  * Public domain - You will need a public domain for testing. You should have a public domain because most of the providers require a public domain to be specified when you register an application with them. You can do some testing on your development machine but it will be quite limited.
+
+== Obtain consumer keys and secrets ==
+This step is very important and the library will NOT work without this. For more info read [GettingStarted GettingStarted ]
+
+== Download the jar ==
+  # Download the [http://socialauth.googlecode.com/files/socialauth-1.2-beta1.jar socialauth-1.2-beta1.jar] 
+  # Download the [http://socialauth.googlecode.com/files/socialauth-spring-1.2-beta1.jar socialauth-spring-1.2-beta1.jar] 
+  # Download the [http://socialauth.googlecode.com/files/dependencies-1.1.zip dependencies]
+  # Include all the jars in your project
+
+== Implementation ==
+
+Socialauth-spring.jar contains two classes which support Spring application. SocialAuthWebController is the main controller for managing socialauth-provider connection flow. It redirects to the actual provider for login and handles the callback. Once the user provides credentials and the provider redirects back to your application, one of the callback methods is called. Other class is SocialAuthTemplate which is the wrapping bean for the provider.
+
+ # Create properties.xml file which contains all the application key/secret for different providers.
+ # Import properties file in root-context.xml
+{{{
+<import resource="properties.xml" />
+}}}
+ # Add a bean entry named “socialAuthTemplate”,with  scope set to session on root-context.xml file.
+{{{
+<bean id="socialAuthTemplate" class="org.brickred.socialauth.spring.bean.SocialAuthTemplate" scope="session">
+    <aop:scoped-proxy/>
+</bean>
+    }}}
+ # In root-context.xml file add a bean entry named “socialAuthWebController” and specify the class as “org.brickred.socialauth.controller.SocialAuthWebController”. This required three argument to pass in constructor definition. First is application url with context, second is success page url and third one is properties file.
+{{{
+<bean id="socialAuthWebController" class="org.brickred.socialauth.spring.controller.SocialAuthWebController">
+    <constructor-arg value="http://opensource.brickred.com/socialauth-spring-demo" />
+    <constructor-arg value="authSuccess.do" />
+    <constructor-arg ref="socialAuthProperties" />
+</bean>
+    }}}
+ # In web.xml file passed the path of spring configuration file “root-context.xml” in inti-param.
+{{{
+<init-param>
+    <param-name>contextConfigLocation</param-name>
+    <param-value>/WEB-INF/root-context.xml</param-value>
+</init-param>
+}}}
+ # Call “socialAuthWebController” to initiate connection with provider using  *“/socialauth{pattern}?id={providerId}”* where  pattern depends on your configuration, for example .do and the providerId may be one of facebook,foursquare, google,hotmail,linkedin,myspace, openid, twitter, yahoo.
+ # On Success page you can get the provider object by using
+{{{
+AuthProvider provider = socialAuthTemplate.getProvider();
+}}}
+ # You can get profile object and contact list to display by using the provider object.
+{{{
+provider.getContactList()
+provider.getUserProfile()
+}}}
