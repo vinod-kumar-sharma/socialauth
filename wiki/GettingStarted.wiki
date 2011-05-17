@@ -5,7 +5,7 @@
 == Step 1. Prerequisites ==
 Authenticating using the external oAuth providers requires that we register our application with the providers and obtain a key/secret from them that will be configured in our application. So following steps are needed to be set up before we can begin.
 
-  # Public domain - You will need a public domain for testing. You should have a public domain because most of the providers require a public domain to be specified when you register an application with them. You can do some testing on your development machine but it will be quite limited.
+  # Public domain - You will need a public domain for testing. You should have a public domain because most of the providers require a public domain to be specified when you register an application with them.
   # Get the API Keys: You can get the API keys from the following URLs. 
     * Google [Google (show screenshot)] - http://code.google.com/apis/accounts/docs/RegistrationForWebAppsAuto.html 
     * Yahoo [Yahoo (show screenshot)] - https://developer.apps.yahoo.com/dashboard/createKey.html
@@ -15,7 +15,7 @@ Authenticating using the external oAuth providers requires that we register our 
     * FourSquare - [FourSquare (show screenshot)] - https://foursquare.com/oauth/
     * MySpace - [MySpace (show screenshot)] - http://developer.myspace.com/Apps.mvc
     * Linkedin - [Linkedin (show screenshot)] - https://www.linkedin.com/secure/developer
-If you want to use our keys, that is also possible. [HowToRunApplicationWithLocalhostOnWindows Have a look How to use.]
+   # You can now [HowToRunApplicationWithLocalhostOnWindows run your application on a local development machine] using the API keys and secrets obtained above. We do not recommend it but if you must, you can even use our keys and secrets.
 
 == Step 2. Getting the library ==
 
@@ -111,7 +111,7 @@ Using the socialauth.jar consists of two main steps:
 		
 }}}
 
-That is all you have to do, really. We have the following tracks available on how to use SocialAuth! with different frameworks.
+That is all you have to do, really. We have the following tracks available on how to use !SocialAuth with different frameworks.
 
  * [GettingStartedWithSeam Developing a JSF or JBoss Seam application using socialauth]
  * [GettingStartedWithYourOwnFramework  Developing a Struts application using socialauth]
