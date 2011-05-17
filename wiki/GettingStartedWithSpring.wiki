@@ -79,7 +79,7 @@ socialauth-spring.jar contains two classes which support Spring application. !So
     <aop:scoped-proxy/>
 </bean>
     }}}
- # In root-context.xml file add a bean entry named "socialAuthWebController" and specify the class as "org.brickred.socialauth.controller.SocialAuthWebController". This required three argument to pass in constructor definition. First is application URL with context (provide your own), second is success page URL and third one is properties file.
+ # In root-context.xml file add a bean entry named "socialAuthWebController" and specify the class as "org.brickred.socialauth.controller.!SocialAuthWebController". This required three argument to pass in constructor definition. First is application URL with context (provide your own), second is success page URL and third one is properties file.
 {{{
 <bean id="socialAuthWebController" class="org.brickred.socialauth.spring.controller.SocialAuthWebController">
     <constructor-arg value="http://opensource.brickred.com/socialauth-spring-demo" />
@@ -94,7 +94,7 @@ socialauth-spring.jar contains two classes which support Spring application. !So
     <param-value>/WEB-INF/root-context.xml</param-value>
 </init-param>
 }}}
- # Call "socialAuthWebController" to initiate connection with provider using  "/socialauth{pattern}?id={providerId}" where  pattern depends on your configuration, for example ".do" and the providerId may be one of facebook, foursquare, google, hotmail, linkedin, myspace, openid, twitter OR yahoo.
+ # In your login page, you can ask the controller to initiate connection by having the user click on a URL of the form: "/socialauth{pattern}?id={providerId}" where  pattern depends on your configuration, for example ".do" and the providerId may be one of facebook, foursquare, google, hotmail, linkedin, myspace, openid, twitter OR yahoo.
  # On Success page you can get the provider object by using
 {{{
 AuthProvider provider = socialAuthTemplate.getProvider();
