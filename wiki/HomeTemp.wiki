@@ -37,7 +37,7 @@ http://socialauth.googlecode.com/svn/wiki/images/socialauth_flow_diagram_2.jpg
 
 
 ==Getting Started==
-We are sure you now want to get started with the code. We support Struts based, Spring based application as well as JBoss Seam based application. You can download the current version and dependencies or you can use maven dependency. For more information have a look at [GetStarted Get Started page ].
+We are sure you now want to get started with the code. We support Struts based, Spring based application as well as JBoss Seam based application. You can download the current version and dependencies or you can use maven dependency. For more information have a look at [GettingStarted Getting Started page].
 
 Please keep in mind that all features may not be implemented in all providers, for example, you can’t update your status on Hotmail and you can’t import contacts from Facebook yet. Some of the limitations are inherent, for example Twitter doesn’t give out the email address while giving other user details.
 
