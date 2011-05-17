@@ -11,7 +11,7 @@ Authenticating using the external oAuth providers requires that we register our 
 This step is very important and the library will NOT work without this.
 
  * Consumer key and secret - Get your consumer keys and secrets by registering with any provider given below. OpenID does not require this step
- * Create a properties like the sample [SampleProperties oauth_consumer.properties] using the consumer key and secrets obtained above. This file should be included in your classpath. 
+
 
 == Download the jar ==
   # Download the [http://socialauth.googlecode.com/files/socialauth-1.1-beta1.jar socialauth-1.1-beta1.jar] 
@@ -20,7 +20,9 @@ This step is very important and the library will NOT work without this.
 
 == Implementation ==
 
-Using the socialauth.jar consists of two main steps:
+Using the socialauth.jar consists of three main steps:
+
+  * Create a properties like the sample [SampleProperties oauth_consumer.properties] using the consumer key and secrets obtained above. This file should be included in your classpath. 
 
   * User chooses provider - Create a page where you ask the user to choose a provider. When the user clicks on a provider, you should create an instance of the !AuthProvider in your handling code and redirect to the URL obtained by calling the function getLoginRedirectURL(). Remember to store it into the session.
 
