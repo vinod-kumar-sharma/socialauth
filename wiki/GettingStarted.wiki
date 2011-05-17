@@ -111,7 +111,7 @@ Using the socialauth.jar consists of two main steps:
 		
 }}}
 
-That is all you have to do, really. We have the following tracks available on how to use SocialAuth with different frameworks.
+That is all you have to do, really. We have the following tracks available on how to use SocialAuth! with different frameworks.
 
  * [GettingStartedWithSeam Developing a JSF or JBoss Seam application using socialauth]
  * [GettingStartedWithYourOwnFramework  Developing a Struts application using socialauth]
