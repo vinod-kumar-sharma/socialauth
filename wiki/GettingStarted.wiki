@@ -107,7 +107,7 @@ Using the socialauth.jar consists of two main steps:
   System.out.println(p.getFirstName());
 
   // OR also obtain list of contacts
-  List<Profile> contactsList = provider.getContactList();
+  List<Contact> contactsList = provider.getContactList();
 		
 }}}
 
