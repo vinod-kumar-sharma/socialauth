@@ -26,7 +26,7 @@ Authenticating using the external oAuth providers requires that we register our 
 
 == Implementation ==
 
-Socialauth-spring.jar contains two classes which support Spring application. SocialAuthWebController is the main controller for managing socialauth-provider connection flow. It redirects to the actual provider for login and handles the callback. Once the user provides credentials and the provider redirects back to your application, one of the callback methods is called. Other class is SocialAuthTemplate which is the wrapping bean for the provider.
+socialauth-spring.jar contains two classes which support Spring application. !SocialAuthWebController is the main controller for managing socialauth-provider connection flow. It redirects to the actual provider for login and handles the callback. Once the user provides credentials and the provider redirects back to your application, one of the callback methods is called. Other class is !SocialAuthTemplate which is the wrapping bean for the provider.
 
  # Create properties.xml file which contains all the application key/secret for different providers.
 {{{
