@@ -5,20 +5,19 @@
 == Prerequisites ==
 Authenticating using the external oAuth providers requires that we register our application with the providers and obtain a key/secret from them that will be configured in our application. So following steps are needed to be set up before we can begin.
 
-  * Public domain - You will need a public domain for testing. You should have a public domain because most of the providers require a public domain to be specified when you register an application with them. You can do some testing on your development machine but it will be quite limited.
+  # Public domain - You will need a public domain for testing. You should have a public domain because most of the providers require a public domain to be specified when you register an application with them.
+  # Get the API Keys: You can get the API keys from the following URLs. 
+    * Google [Google (show screenshot)] - http://code.google.com/apis/accounts/docs/RegistrationForWebAppsAuto.html 
+    * Yahoo [Yahoo (show screenshot)] - https://developer.apps.yahoo.com/dashboard/createKey.html
+    * Twitter  - http://twitter.com/apps
+    * Facebook  - http://www.facebook.com/developers/apps.php
+    * Hotmail [Hotmail (show screenshot)] - http://msdn.microsoft.com/en-us/library/cc287659.aspx
+    * FourSquare - [FourSquare (show screenshot)] - https://foursquare.com/oauth/
+    * MySpace - [MySpace (show screenshot)] - http://developer.myspace.com/Apps.mvc
+    * Linkedin - [Linkedin (show screenshot)] - https://www.linkedin.com/secure/developer
+  # You can now [HowToRunApplicationWithLocalhostOnWindows run your application on a local development machine] using the API keys and secrets obtained above. We do not recommend it but if you must, you can even use our keys and secrets.
 
-== Obtain consumer keys and secrets ==
-This step is very important and the library will NOT work without this.
-
-  * Consumer key and secret - Get your consumer keys and secrets by registering with any provider given below. OpenID does not require this step.
-    # Google [Google (show screenshot)] - http://code.google.com/apis/accounts/docs/RegistrationForWebAppsAuto.html 
-    # Yahoo [Yahoo (show screenshot)] - https://developer.apps.yahoo.com/dashboard/createKey.html
-    # Twitter  - http://twitter.com/apps
-    # Facebook  - http://www.facebook.com/developers/apps.php
-    # Hotmail [Hotmail (show screenshot)] - http://msdn.microsoft.com/en-us/library/cc287659.aspx
-  * Create a properties like the sample [SampleProperties oauth_consumer.properties] using the consumer key and secrets obtained above. This file should be included in your classpath, for example WEB-INF/classes directory
-
-== Download the jar ==
+== Download the jars ==
   # Download the [http://socialauth.googlecode.com/files/socialauth-1.2-beta1.jar socialauth-1.2-beta1.jar]
   # Download the [http://socialauth.googlecode.com/files/socialauth-seam-1.2-beta1.jar socialauth-seam-1.2-beta1.jar] 
   # Download the [http://socialauth.googlecode.com/files/dependencies-1.2.zip dependencies-1.2.zip]
