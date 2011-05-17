@@ -4,7 +4,7 @@ The consumer keys and secrets obtained from providers require a public domain UR
 
 To do this:
 
-  # Get your consumer keys and secrets by registering with providers. Use your public domain URL while registering for example, http://example.com/myapp. For more info read [GettingStarted GettingStarted] prerequisites.
+  # Get your consumer keys and secrets by registering with providers. Use your public domain URL while registering for example, http://example.com/myapp. For more info read [GettingStarted prerequisites on getting started].
   # Open hosts file from "C:\WINDOWS\system32\drivers\etc" path.
   # Make entry in hosts file as below:-
 {{{
