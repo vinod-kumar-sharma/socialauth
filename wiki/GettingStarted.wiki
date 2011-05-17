@@ -15,7 +15,7 @@ Authenticating using the external oAuth providers requires that we register our 
     * FourSquare - [FourSquare (show screenshot)] - https://foursquare.com/oauth/
     * MySpace - [MySpace (show screenshot)] - http://developer.myspace.com/Apps.mvc
     * Linkedin - [Linkedin (show screenshot)] - https://www.linkedin.com/secure/developer
-   # You can now [HowToRunApplicationWithLocalhostOnWindows run your application on a local development machine] using the API keys and secrets obtained above. We do not recommend it but if you must, you can even use our keys and secrets.
+  # You can now [HowToRunApplicationWithLocalhostOnWindows run your application on a local development machine] using the API keys and secrets obtained above. We do not recommend it but if you must, you can even use our keys and secrets.
 
 == Step 2. Getting the library ==
 
