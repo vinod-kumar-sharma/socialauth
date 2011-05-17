@@ -29,7 +29,7 @@ Socialauth.jar library consists of just two fundamental classes which support JB
 
  # Add socialauth component definition in your seam component.xml file
 {{{
-<component name="socialauth" class="org.brickred.socialauth.SocialAuth"/>
+<component name="socialauth" class="org.brickred.socialauth.seam.SocialAuth"/>
 }}}
  # Add the view in your web.xml which will be displayed after successful authentication using SocialAuth
 {{{
@@ -41,7 +41,7 @@ Socialauth.jar library consists of just two fundamental classes which support JB
  # Register the phase listener in faces-config.xml
 {{{
 <lifecycle>
-        <phase-listener>org.brickred.socialauth.SocialAuthPhaseListener</phase-listener>
+        <phase-listener>org.brickred.socialauth.seam.SocialAuthPhaseListener</phase-listener>
 </lifecycle>
 }}}
  # Inject !SocialAuth Component in the component you will use for processing authentication
