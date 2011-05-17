@@ -74,22 +74,24 @@ Please make the following changes to seam project for aligning it to as per demo
 
 = Step 2: Setup seam configuration files =
 
- * components.xml : This file configures Seam and application own components. Generally, we prefer to configure components with annotations (i.e. @Name) but still we can declare it here as well.<br/> Just see the file below, it’s having a component declaration for *"socialauth"* which refers to social auth component class *{{{org.brickred.socialauth.SocialAuth}}}*. This component is part of social auth library and exposes services like login, logout, contact list etc to the demo application classes.
+ * components.xml : This file configures Seam and application own components. Generally, we prefer to configure components with annotations (i.e. @Name) but still we can declare it here as well.<br/> Just see the file below, it’s having a component declaration for *"socialauth"* which refers to social auth component class *{{{org.brickred.socialauth.seam.SocialAuth}}}*. This component is part of socialauth-seam library and exposes services like login, logout, contact list etc to the demo application classes.
 
 {{{
 
 <?xml version="1.0" encoding="UTF-8"?>
 <components xmlns="http://jboss.com/products/seam/components"
-	xmlns:core="http://jboss.com/products/seam/core"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://jboss.com/products/seam/core http://jboss.com/products/seam/core-2.0.xsd
-	http://jboss.com/products/seam/components http://jboss.com/products/seam/components-2.0.xsd">
-
-	<core:init jndi-pattern="#{ejbName}/local"/>
-
-	<component name="socialauth" class="org.brickred.socialauth.SocialAuth"/>
-
+            xmlns:core="http://jboss.com/products/seam/core"
+            xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+            xsi:schemaLocation=
+                "http://jboss.com/products/seam/core 
+                 http://jboss.com/products/seam/core-2.0.xsd 
+                 http://jboss.com/products/seam/components 
+                 http://jboss.com/products/seam/components-2.0.xsd">
+  <core:init jndi-pattern="#{ejbName}/local"/>
+	<component name="socialauth" class="org.brickred.socialauth.seam.SocialAuth"/>
+    
 </components>
+
 
 }}}
 
@@ -104,32 +106,35 @@ Please make the following changes to seam project for aligning it to as per demo
 {{{
 
 <?xml version="1.0" encoding="UTF-8"?>
-
 <faces-config version="1.2"
-	xmlns="http://java.sun.com/xml/ns/javaee"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
-        http://java.sun.com/xml/ns/javaee/web-facesconfig_1_2.xsd">
-<!-- Facelets support -->
-	<application>
-		<view-handler>com.sun.facelets.FaceletViewHandler</view-handler>
-	</application>
+              xmlns="http://java.sun.com/xml/ns/javaee"
+              xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+              xsi:schemaLocation="http://java.sun.com/xml/ns/javaee 
+                    http://java.sun.com/xml/ns/javaee/web-facesconfig_1_2.xsd">
+        
+    <!-- Facelets support -->
+    <application>
+        <view-handler>com.sun.facelets.FaceletViewHandler</view-handler>
+    </application>
 
-	<application>
-		<message-bundle>org.brickred.socialauthseam.bundle.MessageResources</message-bundle>
-		<locale-config>
-			<default-locale>en</default-locale>
-		</locale-config>
-	</application>
-
-	<lifecycle>
-		<phase-listener>org.brickred.socialauth.SocialAuthPhaseListener</phase-listener>
-	</lifecycle>
+    <application>
+    	<message-bundle>
+    		org.brickred.socialauthseam.bundle.MessageResources
+    	</message-bundle>
+    	<locale-config>
+    		<default-locale>en</default-locale>
+    	</locale-config>
+    </application>
+	
+    <lifecycle>
+        <phase-listener>org.brickred.socialauth.seam.SocialAuthPhaseListener</phase-listener>
+    </lifecycle>
 </faces-config>
+
 
 }}}
 
-    Please note that class org.brickred.socialauth.!SocialAuthPhaseListener is part of socialauth library. We just need to configure it here.
+    Please note that class org.brickred.socialauth.seam.!SocialAuthPhaseListener is part of socialauth-seam library. We just need to configure it here.
 
  * *pages.xml* : This file consists of navigation and security rules of a seam project. It privileges the user to declare exceptions which are called by seam framework on corresponding error occurrences.
        In context to this demo application, we have configured 'success' view id which renders on successful login and displays various information about the logged in user.
@@ -232,11 +237,11 @@ Please make sure that below jar files to be copied correctly from the demo proje
 || jboss-seam.jar || jsf-facelets.jar || log4j-1.2.15.jar ||
 || richfaces-api.jar || richfaces-impl.jar || richfaces-ui.jar ||
 || openid4java.jar || openxri-client.jar || openxri-syntax.jar ||
-|| htmlparser.jar || json-20080701.jar ||commons-httpclient.jar ||
-|| socialauth.jar || twitter4j-core-2.1.3-SNAPSHOT.jar || visural-common-0.3.2.jar ||
-||dyuproject-openid-oauth-1.1.7-jarjar.jar || guice-2.0.jar || _N/A_ ||
+|| htmlparser.jar || json-20080701.jar ||commons-httpclient.jar||
+socialauth-1.2-beat1.jar ||
+|| socialauth-seam-1.2-beat1.jar || _N/A_ ||
 
-Please note that *"socialauth.jar"* should be copied in WEB-INF\lib path. It is the social auth library which revealed the different open id providers to this demo application. This file is bundled with the demo application.
+Please note that *"socialauth.jar"*, *socialauth-seam.jar*, *dependencies.zip* should be copied in WEB-INF\lib path. It is the social auth library which revealed the different open id providers to this demo application. This file is bundled with the demo application.
 
 *External libraries:*
 
