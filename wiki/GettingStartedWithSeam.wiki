@@ -1,6 +1,6 @@
 #summary Getting Started with implementing SocialAuth in Seam Application
 
-= Getting Started =
+= Using SocialAuth with Seam 2.0 =
 
 == Prerequisites ==
 Authenticating using the external oAuth providers requires that we register our application with the providers and obtain a key/secret from them that will be configured in our application. So following steps are needed to be set up before we can begin.
