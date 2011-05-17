@@ -2,7 +2,7 @@
 
 = Getting Started =
 
-== Prerequisites ==
+== Step 1. Prerequisites ==
 Authenticating using the external oAuth providers requires that we register our application with the providers and obtain a key/secret from them that will be configured in our application. So following steps are needed to be set up before we can begin.
 
   # Public domain - You will need a public domain for testing. You should have a public domain because most of the providers require a public domain to be specified when you register an application with them. You can do some testing on your development machine but it will be quite limited.
@@ -17,7 +17,7 @@ Authenticating using the external oAuth providers requires that we register our 
     * Linkedin - [Linkedin (show screenshot)] - https://www.linkedin.com/secure/developer
 If you want to use our keys, that is also possible. [HowToRunApplicationWithLocalhostOnWindows Have a look How to use.]
 
-== Getting the library ==
+== Step 2. Getting the library ==
 
 You can either download our pre-built jars or use Maven to integrate socialauth in your project. If you prefer to download, following are the files that you would need to download:
 <table border=1 cellspacing=0 cellpadding=3>
@@ -73,9 +73,45 @@ If you are using Maven, you can configure the pom.xml as follows:
 </dependency>
 }}}
 
-== Implementation ==
+== Step 3. Implementation ==
 
-We have the following tracks available on how to use SocialAuth with different frameworks.
+Using the socialauth.jar consists of two main steps:
+
+  * User chooses provider - Create a page where you ask the user to choose a provider. When the user clicks on a provider, you should create an instance of the !AuthProvider in your handling code and redirect to the URL obtained by calling the function getLoginRedirectURL(). Remember to store it into the session.
+
+{{{
+  // id can have values "facebook", "twitter", "yahoo" etc. or the OpenID URL
+  provider = AuthProviderFactory.getInstance(id);
+
+  // URL of YOUR application which will be called after authentication
+  String returnToUrl = "http://opensource.brickred.com/socialauthdemo/socialAuthSuccessAction.do";
+
+  // Provider URL to which you should redirect for authentication
+  String url = provider.getLoginRedirectURL(returnToUrl);
+
+  // Store in session
+  session.setAttribute("SocialAuth", provider);
+}}}
+
+  * Provider redirects back - When you redirect the user to the provider URL, the provider would validate the user, either by asking for username / password or by existing session and will then redirect the user back to you application URL mentioned above, i.e. "http://opensource.brickred.com/socialauthdemo/socialAuthSuccessAction.do". Now you can obtain any profile information using the following code
+
+{{{
+
+  // get the provider from session
+  AuthProvider provider = (AuthProvider)session.getAttribute("SocialAuth");
+
+  // verify the authentication
+  Profile p = provider.verifyResponse(request);
+
+  // you can obtain profile information
+  System.out.println(p.getFirstName());
+
+  // OR also obtain list of contacts
+  List<Profile> contactsList = provider.getContactList();
+		
+}}}
+
+That is all you have to do, really. We have the following tracks available on how to use SocialAuth with different frameworks.
 
  * [GettingStartedWithSeam Developing a JSF or JBoss Seam application using socialauth]
  * [GettingStartedWithYourOwnFramework  Developing a Struts application using socialauth]
