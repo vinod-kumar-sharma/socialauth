@@ -61,7 +61,7 @@ socialauth.setViewUrl(viewUrl);
 //set provider id in socialauth component
 socialauth.setId("facebook");
 }}}
- # Create Success view page success.xhtml, it renders on successful login and displays various information about the logged in user.<br/><br/>   You can get profile object and contact list to display by using the socialauth bean as follows.
+ # Create Success view page success.xhtml, it renders on successful login and displays various information about the logged in user. You can get profile object and contact list to display by using the socialauth bean as follows.
 {{{
 //profile object
 socialauth.profile
