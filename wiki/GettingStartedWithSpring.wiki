@@ -104,3 +104,5 @@ AuthProvider provider = socialAuthTemplate.getProvider();
 provider.getContactList()
 provider.getUserProfile()
 }}}
+
+[SpringSample  Step by Step Spring MVC application using socialauth]
