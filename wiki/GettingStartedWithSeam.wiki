@@ -71,4 +71,6 @@ socialauth.profile
 socialauth.contactList
 }}}
 
+
+[SeamSample  Step by Step JSF or JBoss Seam 2.0 application using socialauth]
         
