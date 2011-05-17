@@ -26,13 +26,13 @@ If you want to use our keys, that is also possible. [HowToRunApplicationWithLoca
     <th>Application Type</th><th colspan=3>Jars Required</th>
   </tr>
   <tr>
-    <td>Generic / Struts Application</td><td>Socialauth.jar</td><td>Dependencies.zip</td><td></td>
+    <td>Generic / Struts Application</td><td>[http://socialauth.googlecode.com/files/socialauth-1.2-beta1.jar socialauth-1.2-beta1.jar]</td><td>[http://socialauth.googlecode.com/files/dependencies-1.2.zip dependencies-1.2.zip]</td><td></td>
   </tr>
   <tr>
-    <td>Spring Application</td><td>Socialauth.jar</td><td>Dependencies.zip</td><td>Socialauth-spring.jar</td>
+    <td>Spring Application</td><td>[http://socialauth.googlecode.com/files/socialauth-1.2-beta1.jar socialauth-1.2-beta1.jar]</td><td>[http://socialauth.googlecode.com/files/dependencies-1.2.zip dependencies-1.2.zip]</td><td>[http://socialauth.googlecode.com/files/socialauth-spring-1.2-beta1.jar socialauth-spring-1.2-beta1.jar]</td>
   </tr>
   <tr>
-    <td>Seam Application</td><td>Socialauth.jar</td><td>Dependencies.zip</td><td>Socialauth-seam.jar</td>
+    <td>Seam Application</td><td>[http://socialauth.googlecode.com/files/socialauth-1.2-beta1.jar socialauth-1.2-beta1.jar]</td><td>[http://socialauth.googlecode.com/files/dependencies-1.2.zip dependencies-1.2.zip]</td><td>[http://socialauth.googlecode.com/files/socialauth-seam-1.2-beta1.jar socialauth-seam-1.2-beta1.jar]</td>
   </tr>
 </table>
 
