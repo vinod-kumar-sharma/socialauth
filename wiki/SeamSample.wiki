@@ -241,7 +241,7 @@ Please make sure that below jar files to be copied correctly from the demo proje
 || richfaces-api.jar || richfaces-impl.jar || richfaces-ui.jar ||
 || openid4java.jar || openxri-client.jar || openxri-syntax.jar ||
 || htmlparser.jar || json-20080701.jar ||commons-httpclient.jar||
-||socialauth-1.2-beat1.jar || socialauth-seam-1.2-beat1.jar || dependencies-1.2.zip ||
+||socialauth-1.2-beta1.jar || socialauth-seam-1.2-beta1.jar || dependencies-1.2.zip ||
 
 Please note that *"socialauth.jar"*, *socialauth-seam.jar*, *dependencies.zip* should be copied in WEB-INF\lib path. It is the social auth library which revealed the different open id providers to this demo application. This file is bundled with the demo application.
 
