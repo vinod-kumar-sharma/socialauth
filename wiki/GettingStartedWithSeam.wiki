@@ -19,13 +19,14 @@ This step is very important and the library will NOT work without this.
   * Create a properties like the sample [SampleProperties oauth_consumer.properties] using the consumer key and secrets obtained above. This file should be included in your classpath, for example WEB-INF/classes directory
 
 == Download the jar ==
-  # Download the [http://socialauth.googlecode.com/files/socialauth-1.1-beta1.jar socialauth-1.1-beta1.jar] 
-  # Download the [http://socialauth.googlecode.com/files/dependencies-1.1.zip dependencies]
+  # Download the [http://socialauth.googlecode.com/files/socialauth-1.2-beta1.jar socialauth-1.2-beta1.jar]
+  # Download the [http://socialauth.googlecode.com/files/socialauth-seam-1.2-beta1.jar socialauth-seam-1.2-beta1.jar] 
+  # Download the [http://socialauth.googlecode.com/files/dependencies-1.2.zip dependencies-1.2.zip]
   # Include all the jars in your project
 
 == Implementation ==
 
-Socialauth.jar library consists of just two fundamental classes which support JBoss seam application. !SocialAuth bean is the seam component responsible for calling the corresponding requested provider like facebook, yahoo or google. !SocialAuthPhaseListener is the listener that processes the redirection from a provider.
+Socialauth-seam.jar library consists of just two fundamental classes which support JBoss seam application. !SocialAuth bean is the seam component responsible for calling the corresponding requested provider like facebook, yahoo or google. !SocialAuthPhaseListener is the listener that processes the redirection from a provider.
 
  # Add socialauth component definition in your seam component.xml file
 {{{
