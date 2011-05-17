@@ -2,10 +2,10 @@
 
 The consumer keys and secrets obtained from providers require a public domain URL of your application. Most of the providers will not allow you to give URLs like http://localhost/myapp. So how do you test your application on a local development machine?
 
-To do this, you should obtain the consumer keys and secrets by giving any public domain URL, for example, http://example.com/myapp. Now you can do the following steps to run the application on your local development machine:
+To do this:
 
-  # Get your consumer keys and secrets by registering with providers. For more info read [GettingStarted GettingStarted] prerequisites.
-  # Open hosts file from “C:\WINDOWS\system32\drivers\etc” path.
+  # Get your consumer keys and secrets by registering with providers. Use your public domain URL while registering for example, http://example.com/myapp. For more info read [GettingStarted GettingStarted] prerequisites.
+  # Open hosts file from "C:\WINDOWS\system32\drivers\etc" path.
   # Make entry in hosts file as below:-
 {{{
 # Copyright (c) 1993-1999 Microsoft Corp.
@@ -26,9 +26,10 @@ To do this, you should obtain the consumer keys and secrets by giving any public
 #      102.54.94.97     rhino.acme.com          # source server
 #       38.25.63.10     x.acme.com              # x client host
 
-127.0.0.1	opensource.brickred.com #Change this to your domain name
+127.0.0.1	example.com #Change this to your domain name
 #127.0.0.1       localhost
 }}}
-  # Change your Tomcat server name property from localhost to "opensource.brickred.com" or your domain name.
+  # Change your Tomcat server name property from localhost to "example.com".
   # Run your server on port 80.
   # Deploy your application and start your server. Now you can access your application by using "http://example.com/myapp". In the example above, we have pointed "opensource.brickred.com" to local machine so that we are able to use the consumer keys and secrets obtained for our sample application can be used on a development machine.
+  # If you want to use our keys that were generated for "opensource.brickred.com", you can simply use the oauth_consumer.properties bundled with our demo and use "opensource.brickred.com" instead of your domain in the steps above.
