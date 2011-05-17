@@ -1,7 +1,10 @@
 #summary How to run your application on localhost .
 
-If you want to test your application on localhost, following are the steps to make it possible:-
-  # Get your consumer keys and secrets by registering with providers. For more info read [GettingStarted GettingStarted]
+The consumer keys and secrets obtained from providers require a public domain URL of your application. Most of the providers will not allow you to give URLs like http://localhost/myapp. So how do you test your application on a local development machine?
+
+To do this, you should obtain the consumer keys and secrets by giving any public domain URL, for example, http://example.com/myapp. Now you can do the following steps to run the application on your local development machine:
+
+  # Get your consumer keys and secrets by registering with providers. For more info read [GettingStarted GettingStarted] prerequisites.
   # Open hosts file from “C:\WINDOWS\system32\drivers\etc” path.
   # Make entry in hosts file as below:-
 {{{
@@ -23,10 +26,9 @@ If you want to test your application on localhost, following are the steps to ma
 #      102.54.94.97     rhino.acme.com          # source server
 #       38.25.63.10     x.acme.com              # x client host
 
-127.0.0.1	opensource.brickred.com 
-#Here opensource.brickred.com can be your domain name.
+127.0.0.1	opensource.brickred.com #Change this to your domain name
 #127.0.0.1       localhost
 }}}
-  # Change your server name from localhost to “opensource.brickred.com” or your domain name.
+  # Change your Tomcat server name property from localhost to "opensource.brickred.com" or your domain name.
   # Run your server on port 80.
-  # Deploy your application and start your server. Now you can access your application by using "http://opensource.brickred.com/myapp"
+  # Deploy your application and start your server. Now you can access your application by using "http://example.com/myapp". In the example above, we have pointed "opensource.brickred.com" to local machine so that we are able to use the consumer keys and secrets obtained for our sample application can be used on a development machine.
