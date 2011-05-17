@@ -73,13 +73,13 @@ socialauth-spring.jar contains two classes which support Spring application. !So
 {{{
 <import resource="properties.xml" />
 }}}
- # Add a bean entry named “socialAuthTemplate”,with  scope set to session on root-context.xml file.
+ # Add a bean entry named socialAuthTemplate, with  scope set to session on root-context.xml file.
 {{{
 <bean id="socialAuthTemplate" class="org.brickred.socialauth.spring.bean.SocialAuthTemplate" scope="session">
     <aop:scoped-proxy/>
 </bean>
     }}}
- # In root-context.xml file add a bean entry named “socialAuthWebController” and specify the class as “org.brickred.socialauth.controller.SocialAuthWebController”. This required three argument to pass in constructor definition. First is application url with context, second is success page url and third one is properties file.
+ # In root-context.xml file add a bean entry named "socialAuthWebController" and specify the class as "org.brickred.socialauth.controller.SocialAuthWebController". This required three argument to pass in constructor definition. First is application URL with context (provide your own), second is success page URL and third one is properties file.
 {{{
 <bean id="socialAuthWebController" class="org.brickred.socialauth.spring.controller.SocialAuthWebController">
     <constructor-arg value="http://opensource.brickred.com/socialauth-spring-demo" />
