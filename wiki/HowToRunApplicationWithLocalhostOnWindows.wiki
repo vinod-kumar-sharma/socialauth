@@ -15,4 +15,4 @@ To do this:
   # Change your Tomcat server name property from localhost to "example.com".
   # Run your server on port 80.
   # Deploy your application and start your server. Now you can access your application by using "http://example.com/myapp". In the example above, we have pointed "opensource.brickred.com" to local machine so that we are able to use the consumer keys and secrets obtained for our sample application can be used on a development machine.
-  # If you want to use our keys that were generated for "opensource.brickred.com", you can simply use the oauth_consumer.properties bundled with our demo and use "opensource.brickred.com" instead of your domain in the steps above.
+*If you want to use our keys that were generated for "opensource.brickred.com", you can simply use the oauth_consumer.properties bundled with our demo and use "opensource.brickred.com" instead of your domain in the steps above.*
