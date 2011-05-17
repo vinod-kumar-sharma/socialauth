@@ -17,10 +17,9 @@ Authenticating using the external oAuth providers requires that we register our 
     * Linkedin - [Linkedin (show screenshot)] - https://www.linkedin.com/secure/developer
 If you want to use our keys, that is also possible. [HowToRunApplicationWithLocalhostOnWindows Have a look How to use.]
 
-== Implementation ==
+== Getting the library ==
 
-*You can either download our pre-built jars or use Maven to integrate socialauth in your project.*
-   If you prefer to download, following are the files that you would need to download:
+You can either download our pre-built jars or use Maven to integrate socialauth in your project. If you prefer to download, following are the files that you would need to download:
 <table border=1 cellspacing=0 cellpadding=3>
   <tr>
     <th>Application Type</th><th colspan=3>Jars Required</th>
@@ -36,9 +35,9 @@ If you want to use our keys, that is also possible. [HowToRunApplicationWithLoca
   </tr>
 </table>
 
-*Note:-* If you are not using openid provider, in that case you can remove commons-codec.jar,commons-httpclient-3.1.jar, openid4java.jar from dependencies folder.
+*Note:* If you are not using OpenID provider, in that case you can remove commons-codec.jar,commons-httpclient-3.1.jar, openid4java.jar from dependencies folder.
 
-you can use maven dependency. For maven dependencies use the following:-
+If you are using Maven, you can configure the pom.xml as follows:
  * Add the repository 
 {{{
 <repository>
@@ -74,9 +73,10 @@ you can use maven dependency. For maven dependencies use the following:-
 </dependency>
 }}}
 
+== Implementation ==
 
-<br/>
-*Choose your track:*
+We have the following tracks available on how to use SocialAuth with different frameworks.
+
  * [GettingStartedWithSeam Developing a JSF or JBoss Seam application using socialauth]
  * [GettingStartedWithYourOwnFramework  Developing a Struts application using socialauth]
  * [GettingStartedWithSpring Developing a Spring MVC application using socialauth]
