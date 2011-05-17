@@ -9,6 +9,22 @@ Demo application exploring socialauth library.
 
 This is the step by step guide to show how to develop a Spring application using socialauth library. This requires the jars for socialauth-core and socialauth-spring.
 
+= Prerequisites =
+Authenticating using the external oAuth providers requires that we register our application with the providers and obtain a key/secret from them that will be configured in our application. So following steps are needed to be set up before we can begin.
+
+  # Public domain - You will need a public domain for testing. You should have a public domain because most of the providers require a public domain to be specified when you register an application with them.
+  # Get the API Keys: You can get the API keys from the following URLs. 
+    * Google [Google (show screenshot)] - http://code.google.com/apis/accounts/docs/RegistrationForWebAppsAuto.html 
+    * Yahoo [Yahoo (show screenshot)] - https://developer.apps.yahoo.com/dashboard/createKey.html
+    * Twitter  - http://twitter.com/apps
+    * Facebook  - http://www.facebook.com/developers/apps.php
+    * Hotmail [Hotmail (show screenshot)] - http://msdn.microsoft.com/en-us/library/cc287659.aspx
+    * FourSquare - [FourSquare (show screenshot)] - https://foursquare.com/oauth/
+    * MySpace - [MySpace (show screenshot)] - http://developer.myspace.com/Apps.mvc
+    * Linkedin - [Linkedin (show screenshot)] - https://www.linkedin.com/secure/developer
+  # You can now develop the application using keys and secrets obtained above and deploy the application on your public domain. However, most people need to [HowToRunApplicationWithLocalhostOnWindows test the application on a local development machine] using the API keys and secrets obtained above.
+  # We do not recommend it at all, but if you do not want to obtain your own keys and secrets while testing, you can use the keys and secrets that we obtained by registering "opensource.brickred.com" for our demo.  [HowToRunApplicationWithLocalhostOnWindows Follow the same steps] as above but with domain as "opensource.brickred.com" and [SampleProperties keys from our sample].
+
 = Step 1. Create the structure =
 
 Create a dynamic web project and add spring dependencies as well as add socialauth-1-2beta1.jar and socialauth-spring-1.2beta1.jar, dependencies1.2.zip into the WEB-INF/lib directory. Now your project should look as follows 
