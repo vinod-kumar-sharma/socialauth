@@ -17,7 +17,7 @@ Authenticating using the external oAuth providers requires that we register our 
     * Linkedin - [Linkedin (show screenshot)] - https://www.linkedin.com/secure/developer
   # You can now [HowToRunApplicationWithLocalhostOnWindows run your application on a local development machine] using the API keys and secrets obtained above. We do not recommend it but if you must, you can even use our keys and secrets.
 
-== Download the jar ==
+== Download the jars ==
   # Download the [http://socialauth.googlecode.com/files/socialauth-1.2-beta1.jar socialauth-1.2-beta1.jar] 
   # Download the [http://socialauth.googlecode.com/files/socialauth-spring-1.2-beta1.jar socialauth-spring-1.2-beta1.jar] 
   # Download the [http://socialauth.googlecode.com/files/dependencies-1.2.zip dependencies-1.2.zip]
