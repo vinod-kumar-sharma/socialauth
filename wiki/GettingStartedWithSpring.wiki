@@ -45,8 +45,8 @@ Socialauth-spring.jar contains two classes which support Spring application. Soc
 	<util:properties id="socialAuthProperties">
 		<prop key="www.google.com.consumer_key">opensource.brickred.com</prop>
 		<prop key="www.google.com.consumer_secret">YC06FqhmCLWvtBg/O4W/aJfj</prop>
-		<prop key="api.login.yahoo.com.consumer_key">dj0yJmk9VTdaSUVTU3RrWlRzJmQ9WVdrOWNtSjZNMFpITm1VbWNHbzlNQS0tJn
-				M9Y29uc3VtZXJzZWNyZXQmeD1iMA--</prop>
+		<prop key="api.login.yahoo.com.consumer_key">dj0yJmk9VTdaSUVTU3RrWlRzJmQ9WVdrOWNtSjZNMFpITm1VbW
+          NHbzlNQS0tJnM9Y29uc3VtZXJzZWNyZXQmeD1iMA--</prop>
 		<prop key="api.login.yahoo.com.consumer_secret">1db3d0b897dac60e151aa9e2499fcb2a6b474546</prop>
 		<prop key="twitter.com.consumer_key">E3hm7J9IQbWLijpiQG7W8Q</prop>
 		<prop key="twitter.com.consumer_secret">SGKNuXyybt0iDdgsuzVbFHOaemV7V6pr0wKwbaT2MH0</prop>
