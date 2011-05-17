@@ -1,4 +1,4 @@
-#summary How to run your application on localhost .
+#summary How to run your application on local development machine.
 
 The consumer keys and secrets obtained from providers require a public domain URL of your application. Most of the providers will not allow you to give URLs like http://localhost/myapp. So how do you test your application on a local development machine?
 
