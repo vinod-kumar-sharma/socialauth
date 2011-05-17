@@ -26,14 +26,14 @@ So what we implemented is a wrapper that leverages these existing libraries, and
 
 
 ==How it works?==
-http://socialauth.googlecode.com/svn/wiki/images/socialauth_flow_diagram_1.jpg
-<br/>
-http://socialauth.googlecode.com/svn/wiki/images/socialauth_flow_diagram_2.jpg
-
- # You get the API keys from providers like Facebook, Google and Yahoo. For this, you need to have a public domain on which you plan to deploy the application. It is important to note that your application can only run on the domain which you provided while getting the keys. If you want to run it locally, [HowToRunApplicationWithLocalhostOnWindows please see the steps here].
+ # You get the API keys from providers like Facebook, Google and Yahoo. For this, you need to have a public domain on which you plan to deploy the application. It is important to note that your application can only run on the domain which you provided while getting the keys. If you want to run it locally, [HowToRunApplicationWithLocalhostOnWindows please see the steps here]. http://socialauth.googlecode.com/svn/wiki/images/socialauth_flow_diagram_1.jpg
  # You make a request for authentication by using !SocialAuth library. The library redirects the user to Facebook, Yahoo or other provider’s website where they enter the credentials.
  # The provider redirects the user back to your application with a token appended. Now you call the !SocialAuth library and pass it this request token.
  # Now you can call !SocialAuth library to get information about the user, and contacts from the provider.
+
+http://socialauth.googlecode.com/svn/wiki/images/socialauth_flow_diagram_2.jpg
+
+
 
 
 ==Getting Started==
