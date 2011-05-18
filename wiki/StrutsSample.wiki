@@ -4,6 +4,21 @@
 
 This is the step by step guide to show how to develop a Struts application using socialauth library. If you just want to see the application working, please see our demo
 
+== Prerequisites ==
+Authenticating using the external oAuth providers requires that we register our application with the providers and obtain a key/secret from them that will be configured in our application. So following steps are needed to be set up before we can begin.
+
+  # Public domain - You will need a public domain for testing. You should have a public domain because most of the providers require a public domain to be specified when you register an application with them.
+  # Get the API Keys: You can get the API keys from the following URLs. 
+    * Google [Google (show screenshot)] - http://code.google.com/apis/accounts/docs/RegistrationForWebAppsAuto.html 
+    * Yahoo [Yahoo (show screenshot)] - https://developer.apps.yahoo.com/dashboard/createKey.html
+    * Twitter  - http://twitter.com/apps
+    * Facebook  - http://www.facebook.com/developers/apps.php
+    * Hotmail [Hotmail (show screenshot)] - http://msdn.microsoft.com/en-us/library/cc287659.aspx
+    * FourSquare - [FourSquare (show screenshot)] - https://foursquare.com/oauth/
+    * MySpace - [MySpace (show screenshot)] - http://developer.myspace.com/Apps.mvc
+    * Linkedin - [Linkedin (show screenshot)] - https://www.linkedin.com/secure/developer
+  # You can now develop the application using keys and secrets obtained above and deploy the application on your public domain. However, most people need to [HowToRunApplicationWithLocalhostOnWindows test the application on a local development machine] using the API keys and secrets obtained above.
+  # We do not recommend it at all, but if you do not want to obtain your own keys and secrets while testing, you can use the keys and secrets that we obtained by registering "opensource.brickred.com" for our demo.  [HowToRunApplicationWithLocalhostOnWindows Follow the same steps] as above but with domain as "opensource.brickred.com" and [SampleProperties keys from our sample].
 
 = Important =
 
@@ -28,7 +43,10 @@ The web.xml file doesn't have any special entries other than struts, but reprodu
 
 {{{
 <?xml version="1.0" encoding="UTF-8"?>
-<web-app id="WebApp_ID" version="2.4" xmlns="http://java.sun.com/xml/ns/j2ee" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+<web-app id="WebApp_ID" version="2.4" 
+	xmlns="http://java.sun.com/xml/ns/j2ee" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
 	<display-name>socialauthdemo</display-name>
 	<welcome-file-list>
 		<welcome-file>index.jsp</welcome-file>
@@ -90,49 +108,57 @@ Now let us code the index page with the following code.  In this page, we just c
 
 {{{
 <html>
-	<head>
-		<title>SocialAuth Demo</title>
-		<script>
-			function validate(obj){
-				var val = obj.id.value;
-				if(trimString(val).length <= 0){
-					alert("Please enter OpenID URL");
-					return false;
-				}else{
-					return true;
-				}
-			}
-			function trimString(tempStr)
-			{
-			   return tempStr.replace(/^\s*|\s*$/g,"");
-			}
-		</script>
-	</head>
-	<body>
-		<table cellpadding="10" cellspacing="10" align="center">
-			<tr><td colspan="8"><h3 align="center">Welcome to Social Auth Demo</h3></td></tr>
-			<tr><td colspan="8"><p align="center">Please click on any icon.</p></td></tr>
-			<tr>
-				<td><a href="socialAuth.do?id=facebook"><img src="images/facebook_icon.png" alt="Facebook" title="Facebook" border="0"></img></a></td>
-				<td><a href="socialAuth.do?id=twitter"><img src="images/twitter_icon.png" alt="Twitter" title="Twitter" border="0"></img></a></td>
-				<td><a href="socialAuth.do?id=google"><img src="images/gmail-icon.jpg" alt="Gmail" title="Gmail" border="0"></img></a></td>
-				<td><a href="socialAuth.do?id=yahoo"><img src="images/yahoomail_icon.jpg" alt="YahooMail" title="YahooMail" border="0"></img></a></td>
-				<td><a href="socialAuth.do?id=hotmail"><img src="images/hotmail.jpeg" alt="HotMail" title="HotMail" border="0"></img></a></td>
-				<td><a href="socialAuth.do?id=linkedin"><img src="images/linkedin.gif" alt="Linked In" title="Linked In" border="0"></img></a></td>
-				<td><a href="socialAuth.do?id=foursquare"><img src="images/foursquare.jpeg" alt="FourSquare" title="FourSquare" border="0"></img></a></td>
-				<td><a href="socialAuth.do?id=myspace"><img src="images/myspace.jpeg" alt="MySpace" title="MySpace" border="0"></img></a></td>
-			</tr>
-			<tr>
-				<td colspan="8" align="center">
-					<form action="socialAuth.do" onsubmit="return validate(this);">
-						or enter OpenID url: <input type="text" value="" name="id"/>
-						<input type="submit" value="Submit"/> 
-					</form>
-				</td>
-			</tr>
-			
-		</table>
-	</body>
+    <head>
+        <title>SocialAuth Demo</title>
+        <script>
+            function validate(obj){
+                var val = obj.id.value;
+                if(trimString(val).length <= 0){
+                    alert("Please enter OpenID URL");
+                    return false;
+                }else{
+                    return true;
+                }
+            }
+            function trimString(tempStr)
+            {
+               return tempStr.replace(/^\s*|\s*$/g,"");
+            }
+        </script>
+    </head>
+    <body>
+        <table cellpadding="10" cellspacing="10" align="center">
+            <tr><td colspan="8"><h3 align="center">Welcome to Social Auth Demo</h3></td></tr>
+            <tr><td colspan="8"><p align="center">Please click on any icon.</p></td></tr>
+            <tr>
+                <td><a href="socialAuth.do?id=facebook"><img src="images/facebook_icon.png" alt="Facebook" 
+                title="Facebook" border="0"></img></a></td>
+                <td><a href="socialAuth.do?id=twitter"><img src="images/twitter_icon.png" alt="Twitter" 
+                title="Twitter" border="0"></img></a></td>
+                <td><a href="socialAuth.do?id=google"><img src="images/gmail-icon.jpg" alt="Gmail" 
+                title="Gmail" border="0"></img></a></td>
+                <td><a href="socialAuth.do?id=yahoo"><img src="images/yahoomail_icon.jpg" alt="YahooMail" 
+                title="YahooMail" border="0"></img></a></td>
+                <td><a href="socialAuth.do?id=hotmail"><img src="images/hotmail.jpeg" alt="HotMail" 
+                title="HotMail" border="0"></img></a></td>
+                <td><a href="socialAuth.do?id=linkedin"><img src="images/linkedin.gif" alt="Linked In" 
+                title="Linked In" border="0"></img></a></td>
+                <td><a href="socialAuth.do?id=foursquare"><img src="images/foursquare.jpeg" alt="FourSquare" 
+                title="FourSquare" border="0"></img></a></td>
+                <td><a href="socialAuth.do?id=myspace"><img src="images/myspace.jpeg" alt="MySpace" 
+                title="MySpace" border="0"></img></a></td>
+            </tr>
+            <tr>
+                <td colspan="8" align="center">
+                    <form action="socialAuth.do" onsubmit="return validate(this);">
+                        or enter OpenID url: <input type="text" value="" name="id"/>
+                        <input type="submit" value="Submit"/> 
+                    </form>
+                </td>
+            </tr>
+            
+        </table>
+    </body>
 </html>
 
 }}}
@@ -379,7 +405,8 @@ We use a simple display page to show the results. First, we simply iterate over 
 	<tr class="sectiontableentry2">
 		<td>Update status:</td>
 		<td>
-			<input type="button" value="Click to Update Status" onclick="updateStatus();" id="btnUpdateStatus"/>		
+			<input type="button" value="Click to Update Status" onclick="updateStatus();" 
+            id="btnUpdateStatus"/>		
 		</td>
 	</tr>
 </table>
@@ -391,10 +418,15 @@ We use a simple display page to show the results. First, we simply iterate over 
 		<th>Profile URL</th>
 	</tr>
 	<c:forEach var="contact" items="${contacts}" varStatus="index">
-		<tr class='<c:if test="${index.count % 2 == 0}">sectiontableentry2</c:if><c:if test="${index.count % 2 != 0}">sectiontableentry1</c:if>'>
+		<tr class='<c:if test="${index.count % 2 == 0}">sectiontableentry2</c:if>
+        <c:if test="${index.count % 2 != 0}">sectiontableentry1</c:if>'>
 			<td><c:out value="${contact.firstName}"/> <c:out value="${contact.lastName}"/></td>
 			<td><c:out value="${contact.email}"/></td>
-			<td><a href='<c:out value="${contact.profileUrl}"/>' target="_new"><c:out value="${contact.profileUrl}"/></a></td>
+			<td>
+                <a href='<c:out value="${contact.profileUrl}"/>' target="_new">
+                    <c:out value="${contact.profileUrl}"/>
+                </a>
+            </td>
 		</tr>
 	</c:forEach>
 </table>
@@ -407,29 +439,35 @@ We use a simple display page to show the results. First, we simply iterate over 
 Now we join our authentication action and success action to the JSP pages.
 
 {{{
-<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.2//EN" "http://jakarta.apache.org/struts/dtds/struts-config_1_2.dtd">
+<!DOCTYPE struts-config PUBLIC "-//Apache Software Foundation//DTD Struts Configuration 1.2//EN"
+"http://jakarta.apache.org/struts/dtds/struts-config_1_2.dtd">
 <struts-config>
 
-	<form-beans>
-	    	<form-bean name="authForm" type="com.auth.form.AuthForm" />
-	</form-beans>
+    <form-beans>
+            <form-bean name="authForm" type="com.auth.form.AuthForm" />
+    </form-beans>
     
     <action-mappings>
     
-		<action path="/socialAuth" type="com.auth.actions.SocialAuthenticationAction" name="authForm" scope="session">
-			<forward name="failure" path="/jsp/error.jsp" />
-		</action>
-		
-		<action path="/socialAuthSuccessAction" type="com.auth.actions.SocialAuthSuccessAction" name="authForm" scope="session">
-			<forward name="success" path="/jsp/authSuccess.jsp" />
-			<forward name="failure" path="/jsp/error.jsp" />
-		</action>
-		
-   	</action-mappings>
+        <action path="/socialAuth" type="com.auth.actions.SocialAuthenticationAction" 
+            name="authForm" scope="session">
+                <forward name="failure" path="/jsp/error.jsp" />
+        </action>
+        
+        <action path="/socialAuthSuccessAction" type="com.auth.actions.SocialAuthSuccessAction" 
+            name="authForm" scope="session">
+                <forward name="success" path="/jsp/authSuccess.jsp" />
+                <forward name="failure" path="/jsp/error.jsp" />
+        </action>
+        
+       </action-mappings>
 
 </struts-config>
 
 }}}
+
+== Step 8. oauth_consumer.properties file == 
+Created a [SampleProperties oauth_consumer.properties] file using the keys obtained by registering your applications and put this file in your class path.
 
 = Conclusion =
 
