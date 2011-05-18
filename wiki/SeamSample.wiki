@@ -23,6 +23,18 @@ Prior to dig into the actual code, following are few prerequisites which are req
  # apache-ant-1.8.0 or latter ([http://ant.apache.org/bindownload.cgi download])<br/>Installation is just to download and unzip it in local drive.
  # Download the demo project from<br/>http://code.google.com/p/socialauthsourcebrowse#svn%2Ftrunk%2FSocialAuthSeam
  # Download JBoss 5.1 ([http://www.jboss.org/jbossas/downloads/ download])<br/>Installation is just to download and unzip it in local drive.
+# Public domain - You will need a public domain for testing. You should have a public domain because most of the providers require a public domain to be specified when you register an application with them.
+  # Get the API Keys: You can get the API keys from the following URLs. 
+    * Google [Google (show screenshot)] - http://code.google.com/apis/accounts/docs/RegistrationForWebAppsAuto.html 
+    * Yahoo [Yahoo (show screenshot)] - https://developer.apps.yahoo.com/dashboard/createKey.html
+    * Twitter  - http://twitter.com/apps
+    * Facebook  - http://www.facebook.com/developers/apps.php
+    * Hotmail [Hotmail (show screenshot)] - http://msdn.microsoft.com/en-us/library/cc287659.aspx
+    * FourSquare - [FourSquare (show screenshot)] - https://foursquare.com/oauth/
+    * MySpace - [MySpace (show screenshot)] - http://developer.myspace.com/Apps.mvc
+    * Linkedin - [Linkedin (show screenshot)] - https://www.linkedin.com/secure/developer
+  # You can now develop the application using keys and secrets obtained above and deploy the application on your public domain. However, most people need to [HowToRunApplicationWithLocalhostOnWindows test the application on a local development machine] using the API keys and secrets obtained above.
+  # We do not recommend it at all, but if you do not want to obtain your own keys and secrets while testing, you can use the keys and secrets that we obtained by registering "opensource.brickred.com" for our demo.  [HowToRunApplicationWithLocalhostOnWindows Follow the same steps] as above but with domain as "opensource.brickred.com" and [SampleProperties keys from our sample].
 
 
 
@@ -217,17 +229,7 @@ Please make the following changes to seam project for aligning it to as per demo
 = Step 3: Obtain consumer keys and secrets and Setup application configuration file =
 
  This step is very important and the library will NOT work without this.
-
-  * Consumer key and secret - Get your consumer keys and secrets by registering with any provider given below. OpenID does not require this step.
-    # Google [Google (show screenshot)] - http://code.google.com/apis/accounts/docs/RegistrationForWebAppsAuto.html 
-    # Yahoo [Yahoo (show screenshot)] - https://developer.apps.yahoo.com/dashboard/createKey.html
-    # Twitter  - http://twitter.com/apps
-    # Facebook  - http://www.facebook.com/developers/apps.php
-    # Hotmail [Hotmail (show screenshot)] - http://msdn.microsoft.com/en-us/library/cc287659.aspx
-    # FourSquare - [FourSquare (show screenshot)] - https://foursquare.com/oauth/
-    # MySpace - [MySpace (show screenshot)] - http://developer.myspace.com/Apps.mvc
-    # Linkedin - [Linkedin (show screenshot)] - https://www.linkedin.com/secure/developer
-  * Create a properties like the sample [SampleProperties oauth_consumer.properties] using the consumer key and secrets obtained above. This file should be included in your classpath, for example WEB-INF/classes directory
+Create a properties like the sample [SampleProperties oauth_consumer.properties] using the consumer key and secrets obtained above. This file should be included in your classpath, for example WEB-INF/classes directory
 
 
 
