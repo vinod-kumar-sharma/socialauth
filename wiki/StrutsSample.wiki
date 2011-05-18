@@ -20,15 +20,6 @@ Authenticating using the external oAuth providers requires that we register our 
   # You can now develop the application using keys and secrets obtained above and deploy the application on your public domain. However, most people need to [HowToRunApplicationWithLocalhostOnWindows test the application on a local development machine] using the API keys and secrets obtained above.
   # We do not recommend it at all, but if you do not want to obtain your own keys and secrets while testing, you can use the keys and secrets that we obtained by registering "opensource.brickred.com" for our demo.  [HowToRunApplicationWithLocalhostOnWindows Follow the same steps] as above but with domain as "opensource.brickred.com" and [SampleProperties keys from our sample].
 
-= Important =
-
-As mentioned in the [GettingStarted Getting Started] guide, please make sure that you have
-  * Access to a public domain to test the application
-  * Registered your application with the providers you want to integrate
-  * Created a oauth_consumer.properties file using the keys obtained by registering your applications
-
-If not please go back to the [GettingStarted Getting Started] page and register your application using the quick links provided.
-
 = Development =
 
 With the prerequisites out of the way, we are ready to begin development. Since Eclipse is our choice of the development environment, we have shown examples using Eclipse, but you can create your own structure manually as well.
