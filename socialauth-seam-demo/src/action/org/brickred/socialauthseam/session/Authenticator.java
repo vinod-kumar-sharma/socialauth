@@ -24,6 +24,7 @@
  */
 package org.brickred.socialauthseam.session;
 
+import javax.faces.context.ExternalContext;
 import javax.faces.event.ActionEvent;
 
 import org.brickred.socialauth.seam.SocialAuth;
@@ -64,7 +65,11 @@ public class Authenticator {
 		String btnClicked = ae.getComponent().getId();
 		log.info("*************login method called ************"
 				+ socialauth.getId());
-		socialauth.setViewUrl("/success.xhtml");
+		ExternalContext context = javax.faces.context.FacesContext
+				.getCurrentInstance().getExternalContext();
+		String viewUrl = context.getInitParameter("successUrl");
+
+		socialauth.setViewUrl(viewUrl);
 
 		if (btnClicked.indexOf("facebook") != -1) {
 			socialauth.setId("facebook");
