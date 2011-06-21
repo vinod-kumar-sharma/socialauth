@@ -161,21 +161,22 @@ Create a simple form bean that will be used to store the provider into session.
 package com.auth.form;
 
 import org.apache.struts.action.ActionForm;
-import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.SocialAuthManager;
 public class AuthForm extends ActionForm {	
 	String id;	
-	AuthProvider provider;	
+	SocialAuthManager socialAuthManager;
 	public String getId() {
 		return id;
 	}	
 	public void setId(final String id) {
 		this.id = id;
 	}
-	public AuthProvider getProvider() {
-		return provider;
+	public SocialAuthManager getSocialAuthManager() {
+		return socialAuthManager;
 	}
-	public void setProvider(final AuthProvider provider) {
-		this.provider = provider;
+
+	public void setSocialAuthManager(final SocialAuthManager socialAuthManager) {
+		this.socialAuthManager = socialAuthManager;
 	}
 }
 
@@ -189,9 +190,9 @@ Please notice that any provider will also need a URL from the application to whi
 {{{
 package com.auth.actions;
 
+import java.io.InputStream;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.struts.action.Action;
@@ -199,10 +200,11 @@ import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.util.RequestUtils;
-import org.brickred.socialauth.AuthProvider;
-import org.brickred.socialauth.AuthProviderFactory;
+import org.brickred.socialauth.SocialAuthConfig;
+import org.brickred.socialauth.SocialAuthManager;
 
 import com.auth.form.AuthForm;
+
 
 public class SocialAuthenticationAction extends Action {
 
@@ -214,11 +216,26 @@ public class SocialAuthenticationAction extends Action {
 			final HttpServletResponse response) throws Exception {
 
 		AuthForm authForm = (AuthForm) form;
+
 		String id = authForm.getId();
-		AuthProvider provider = AuthProviderFactory.getInstance(id);
-		String returnToUrl = RequestUtils.absoluteURL(request,"/socialAuthSuccessAction.do").toString();
-		authForm.setProvider(provider);
-		String url = provider.getLoginRedirectURL(returnToUrl);
+		SocialAuthManager authProvider;
+		if (authForm.getSocialAuthManager() != null) {
+			authProvider = authForm.getSocialAuthManager();
+		} else {
+			InputStream in = SocialAuthenticationAction.class.getClassLoader()
+					.getResourceAsStream("oauth_consumer.properties");
+			SocialAuthConfig conf = SocialAuthConfig.getDefault();
+			conf.load(in);
+			authProvider = new SocialAuthManager();
+			authProvider.setSocialAuthConfig(conf);
+			authForm.setSocialAuthManager(authProvider);
+		}
+
+		String returnToUrl = RequestUtils.absoluteURL(request,
+				"/socialAuthSuccessAction.do")
+				.toString();
+		String url = authProvider.getAuthenticationUrl(id, returnToUrl);
+
 		LOG.info("Redirecting to: " + url);
 		if (url != null) {
 			ActionForward fwd = new ActionForward("openAuthUrl", url, true);
@@ -236,12 +253,19 @@ Now we create a success action whose path was given in above action. This action
 
 {{{
 package com.auth.actions;
-import java.util.ArrayList;
-import java.util.List;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
+import javax.servlet.http.HttpSession;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -250,37 +274,53 @@ import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Profile;
-
+import org.brickred.socialauth.SocialAuthManager;
 import com.auth.form.AuthForm;
 
 public class SocialAuthSuccessAction extends Action {
 
 	final Log LOG = LogFactory.getLog(SocialAuthSuccessAction.class);
-	
+
 	@Override
 	public ActionForward execute(final ActionMapping mapping,
 			final ActionForm form, final HttpServletRequest request,
 			final HttpServletResponse response) throws Exception {
 
-
 		AuthForm authForm = (AuthForm) form;
-		AuthProvider provider = authForm.getProvider();
-		if (provider != null) {
-			Profile profile = provider.verifyResponse(request);
-			List<Profile> contactsList = new ArrayList<Profile>();
-			contactsList = provider.getContactList();
+		SocialAuthManager authProvider = null;
+		if (authForm.getSocialAuthManager() != null) {
+			authProvider = authForm.getSocialAuthManager();
+		}
+		if (authProvider != null) {
+			List<Contact> contactsList = new ArrayList<Contact>();
+			Profile profile = null;
+			try {
+				Map<String, String> paramsMap = new HashMap<String, String>();
+				for (Map.Entry<String, String[]> entry : request.getParameterMap().entrySet()) {
+					String key = entry.getKey();
+					String values[] = entry.getValue();
+					paramsMap.put(key, values[0].toString()); // Only 1 value is
+				}
+				AuthProvider provider = authProvider.connect(paramsMap);
 
-			if (contactsList != null && contactsList.size() > 0) {
-				for (Profile p : contactsList) {
-					if (StringUtils.isEmpty(p.getFirstName())
-							&& StringUtils.isEmpty(p.getLastName())) {
-						p.setFirstName(p.getDisplayName());
+				profile = provider.getUserProfile();
+				contactsList = provider.getContactList();
+				if (contactsList != null && contactsList.size() > 0) {
+					for (Contact p : contactsList) {
+						if (StringUtils.isEmpty(p.getFirstName())
+								&& StringUtils.isEmpty(p.getLastName())) {
+							p.setFirstName(p.getDisplayName());
+						}
 					}
 				}
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 			request.setAttribute("profile", profile);
 			request.setAttribute("contacts", contactsList);
+
 			return mapping.findForward("success");
 		}
 		// if provider null
