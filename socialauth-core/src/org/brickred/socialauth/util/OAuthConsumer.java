@@ -86,7 +86,7 @@ public class OAuthConsumer implements Serializable, Constants {
 	 */
 	public String generateSignature(final String signatureType,
 			final String method, final String url,
-			final Map<String, String> args, final Token token) throws Exception {
+			final Map<String, String> args, final AccessGrant token) throws Exception {
 		LOG.debug("Generating OAUTH Signature");
 		LOG.debug("Given Signature Type : " + signatureType);
 		LOG.debug("Given Method Type : " + method);
@@ -101,7 +101,7 @@ public class OAuthConsumer implements Serializable, Constants {
 	}
 
 	private String getHMACSHA1(final String method, final String url,
-			final Map<String, String> args, final Token token) throws Exception {
+			final Map<String, String> args, final AccessGrant token) throws Exception {
 
 		if (config.get_consumerSecret().length() == 0) {
 			throw new SignatureException("Please check consumer secret");
@@ -157,12 +157,12 @@ public class OAuthConsumer implements Serializable, Constants {
 	 * @return The request token
 	 * @throws Exception
 	 */
-	public Token getRequestToken(final String reqTokenURL,
+	public AccessGrant getRequestToken(final String reqTokenURL,
 			final String callbackURL) throws Exception {
 		LOG.debug("Preparing to get Request Token");
 		LOG.debug("Given Request Token URL : " + reqTokenURL);
 		LOG.debug("Given CallBack URL : " + callbackURL);
-		Token token = null;
+		AccessGrant token = null;
 		Map<String, String> params = new HashMap<String, String>();
 		params.put(OAUTH_CALLBACK, callbackURL);
 		putOauthParams(params);
@@ -179,7 +179,7 @@ public class OAuthConsumer implements Serializable, Constants {
 				config.get_transportName(), null, null);
 
 		if (response.getStatus() == 200) {
-			token = new Token();
+			token = new AccessGrant();
 			parse(response.getInputStream(), token);
 		} else {
 			LOG.debug("Error while fetching Request Token");
@@ -201,8 +201,8 @@ public class OAuthConsumer implements Serializable, Constants {
 	 * @return The Access Token
 	 * @throws Exception
 	 */
-	public Token getAccessToken(final String accessTokenURL,
-			final Token reqToken) throws Exception {
+	public AccessGrant getAccessToken(final String accessTokenURL,
+			final AccessGrant reqToken) throws Exception {
 		LOG.debug("Preparing to get Access Token");
 		LOG.debug("Given Access Token URL : " + accessTokenURL);
 		LOG.debug("Given Request Token : " + reqToken.toString());
@@ -212,7 +212,7 @@ public class OAuthConsumer implements Serializable, Constants {
 					"Key in Request Token is null or blank");
 		}
 		Map<String, String> params = new HashMap<String, String>();
-		Token accessToken = null;
+		AccessGrant accessToken = null;
 		if (reqToken.getAttribute(OAUTH_VERIFIER) != null) {
 			params.put(OAUTH_VERIFIER, reqToken.getAttribute(OAUTH_VERIFIER)
 					.toString());
@@ -243,7 +243,7 @@ public class OAuthConsumer implements Serializable, Constants {
 		}
 
 		if (response.getStatus() == 200) {
-			accessToken = new Token();
+			accessToken = new AccessGrant();
 			parse(response.getInputStream(), accessToken);
 		} else {
 			throw new SocialAuthException(
@@ -273,7 +273,7 @@ public class OAuthConsumer implements Serializable, Constants {
 	 * @throws Exception
 	 */
 	public Response httpGet(final String reqURL,
-			final Map<String, String> headerParams, final Token token)
+			final Map<String, String> headerParams, final AccessGrant token)
 			throws Exception {
 		return send(reqURL, null, headerParams, null,
 				MethodType.GET.toString(), token, true);
@@ -298,7 +298,7 @@ public class OAuthConsumer implements Serializable, Constants {
 	public Response httpPost(final String reqURL,
 			final Map<String, String> params,
 			final Map<String, String> headerParams, final String body,
-			final Token token) throws Exception {
+			final AccessGrant token) throws Exception {
 		return send(reqURL, params, headerParams, body,
 				MethodType.POST.toString(), token, true);
 	}
@@ -322,7 +322,7 @@ public class OAuthConsumer implements Serializable, Constants {
 	public Response httpPut(final String reqURL,
 			final Map<String, String> params,
 			final Map<String, String> headerParams, final String body,
-			final Token token) throws Exception {
+			final AccessGrant token) throws Exception {
 		return send(reqURL, params, headerParams, body,
 				MethodType.PUT.toString(), token, true);
 	}
@@ -348,7 +348,7 @@ public class OAuthConsumer implements Serializable, Constants {
 	public Response httpPut(final String reqURL,
 			final Map<String, String> params,
 			final Map<String, String> headerParams, final String body,
-			final Token token, final boolean isHeaderRequired) throws Exception {
+			final AccessGrant token, final boolean isHeaderRequired) throws Exception {
 		return send(reqURL, params, headerParams, body,
 				MethodType.PUT.toString(), token, isHeaderRequired);
 	}
@@ -356,7 +356,7 @@ public class OAuthConsumer implements Serializable, Constants {
 	private Response send(final String reqURL,
 			final Map<String, String> paramsMap,
 			final Map<String, String> headerParams, final String body,
-			final String methodName, final Token token,
+			final String methodName, final AccessGrant token,
 			final boolean isHeaderRequired) throws Exception {
 		Map<String, String> params;
 		if (paramsMap != null) {
@@ -403,7 +403,7 @@ public class OAuthConsumer implements Serializable, Constants {
 		return HttpUtil.doHttpRequest(url, methodName, body, headerMap);
 	}
 
-	private void parse(final InputStream in, final Token token)
+	private void parse(final InputStream in, final AccessGrant token)
 			throws Exception {
 		StringBuffer sb = new StringBuffer();
 		try {
@@ -464,7 +464,7 @@ public class OAuthConsumer implements Serializable, Constants {
 	 * @return
 	 * @throws Exception
 	 */
-	public StringBuilder buildAuthUrl(final String authUrl, final Token token,
+	public StringBuilder buildAuthUrl(final String authUrl, final AccessGrant token,
 			final String callbackUrl) throws Exception {
 		char separator = authUrl.indexOf('?') == -1 ? '?' : '&';
 		return new StringBuilder()

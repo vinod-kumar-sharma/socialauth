@@ -26,11 +26,12 @@
 package org.brickred.socialauth.provider;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -46,11 +47,14 @@ import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.exception.UserDeniedPermissionException;
+import org.brickred.socialauth.util.AccessGrant;
+import org.brickred.socialauth.util.BirthDate;
 import org.brickred.socialauth.util.Constants;
 import org.brickred.socialauth.util.HttpUtil;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.Response;
+import org.brickred.socialauth.util.SocialAuthUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -73,33 +77,41 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	private static final String PROFILE_URL = "http://apis.live.net/V4.1/cid-%1$s/Profiles/1-%2$s";
 	private static final String CONTACTS_URL = "http://apis.live.net/V4.1/cid-%1$s/Contacts/AllContacts?$type=portable";
 	private static final String UPDATE_STATUS_URL = "http://apis.live.net/V4.1/cid-%1$s/MyActivities";
-	private static final String PROPERTY_DOMAIN = "consent.live.com";
 	private final Log LOG = LogFactory.getLog(HotmailImpl.class);
 
 	private String accessToken;
 	private String uid;
-	private String redirectUri;
+	private String successUrl;
 	private Permission scope;
-	private Properties properties;
 	private boolean isVerify;
 	private OAuthConfig config;
 	private Profile userProfile;
+	private AccessGrant accessGrant;
 
-	public HotmailImpl(final Properties props) throws Exception {
-		try {
-			this.properties = props;
-			config = OAuthConfig.load(this.properties, PROPERTY_DOMAIN);
-		} catch (IllegalStateException e) {
-			throw new SocialAuthConfigurationException(e);
-		}
-		if (config.get_consumerSecret().length() == 0) {
-			throw new SocialAuthConfigurationException(
-					"consent.live.com.consumer_secret value is null");
-		}
-		if (config.get_consumerKey().length() == 0) {
-			throw new SocialAuthConfigurationException(
-					"consent.live.com.consumer_key value is null");
-		}
+	/**
+	 * Stores configuration for the provider
+	 * 
+	 * @param providerConfig
+	 *            It contains the configuration of application like consumer key
+	 *            and consumer secret
+	 * @throws Exception
+	 */
+	public HotmailImpl(final OAuthConfig providerConfig) throws Exception {
+		config = providerConfig;
+	}
+
+	/**
+	 * Stores access grant for the provider
+	 * 
+	 * @param accessGrant
+	 *            It contains the access token and other information
+	 * @throws Exception
+	 */
+	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
+		this.accessGrant = accessGrant;
+		accessToken = accessGrant.getKey();
+		isVerify = true;
+		uid = accessGrant.getAttribute("uid").toString();
 	}
 
 	/**
@@ -111,13 +123,18 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	 */
 
 	@Override
-	public String getLoginRedirectURL(final String redirectUri)
+	public String getLoginRedirectURL(final String successUrl)
 			throws Exception {
 		LOG.info("Determining URL for redirection");
 		setProviderState(true);
-		this.redirectUri = redirectUri;
+		try {
+			this.successUrl = URLEncoder.encode(successUrl,
+					Constants.ENCODING);
+		} catch (UnsupportedEncodingException e) {
+			this.successUrl = successUrl;
+		}
 		String consentUrl = String.format(CONSENT_URL,
-				config.get_consumerKey(), redirectUri);
+				config.get_consumerKey(), this.successUrl);
 		if (!Permission.AUHTHENTICATE_ONLY.equals(scope)) {
 			consentUrl += "&wrap_scope=WL_Contacts.View,WL_Activities.Update";
 		}
@@ -138,24 +155,47 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public Profile verifyResponse(final HttpServletRequest request)
 			throws Exception {
+		Map<String, String> params = SocialAuthUtil
+				.getRequestParametersMap(request);
+		return doVerifyResponse(params);
+
+	}
+
+	/**
+	 * Verifies the user when the external provider redirects back to our
+	 * application.
+	 * 
+	 * 
+	 * @param requestParams
+	 *            request parameters, received from the provider
+	 * @return Profile object containing the profile information
+	 * @throws Exception
+	 */
+	@Override
+	public Profile verifyResponse(final Map<String, String> requestParams)
+			throws Exception {
+		return doVerifyResponse(requestParams);
+	}
+
+	private Profile doVerifyResponse(final Map<String, String> requestParams)
+			throws Exception {
 		LOG.info("Retrieving Access Token in verify response function");
 
-		if (request.getParameter("wrap_error_reason") != null
-				&& "user_denied".equals(request
-						.getParameter("wrap_error_reason"))) {
+		if (requestParams.get("wrap_error_reason") != null
+				&& "user_denied".equals(requestParams.get("wrap_error_reason"))) {
 			throw new UserDeniedPermissionException();
 		}
 		if (!isProviderState()) {
 			throw new ProviderStateException();
 		}
-		String code = request.getParameter("wrap_verification_code");
+		String code = requestParams.get("wrap_verification_code");
 		if (code == null || code.length() == 0) {
 			throw new SocialAuthException("Verification code is null");
 		}
 		StringBuilder strb = new StringBuilder();
 		strb.append("wrap_client_id=").append(config.get_consumerKey());
 		strb.append("&wrap_client_secret=").append(config.get_consumerSecret());
-		strb.append("&wrap_callback=").append(redirectUri);
+		strb.append("&wrap_callback=").append(successUrl);
 		strb.append("&wrap_verification_code=").append(code);
 		strb.append("&idtype=CID");
 		LOG.debug("Parameters for access token : " + strb.toString());
@@ -205,16 +245,24 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 					if (kv[0].equals("uid")) {
 						uid = kv[1];
 					}
-					LOG.debug("Access Token : " + accessToken);
-					LOG.debug("Expires : " + expires);
 				}
 			}
+			LOG.debug("Access Token : " + accessToken);
+			LOG.debug("Expires : " + expires);
 			if (accessToken != null && expires != null) {
 				isVerify = true;
 				LOG.debug("Obtaining user profile");
-				userProfile = getProfile();
-				return userProfile;
-
+				accessGrant = new AccessGrant();
+				accessGrant.setKey(accessToken);
+				accessGrant.setAttribute(Constants.EXPIRES, expires);
+				if (scope != null) {
+					accessGrant.setPermission(scope);
+				} else {
+					accessGrant.setPermission(Permission.DEFAULT);
+				}
+				accessGrant.setProviderId(getProviderId());
+				accessGrant.setAttribute("uid", uid);
+				return getProfile();
 			} else {
 				throw new SocialAuthException(
 						"Access token and expires not found from "
@@ -225,7 +273,6 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 		} finally {
 			serviceResponse.close();
 		}
-
 	}
 
 	/**
@@ -314,6 +361,9 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 					if (nameObj.has("givenName")) {
 						p.setFirstName(nameObj.getString("givenName"));
 					}
+				}
+				if (obj.has("id")) {
+					p.setId(obj.getString("id"));
 				}
 				plist.add(p);
 			}
@@ -430,6 +480,12 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 				p.setProfileImageURL(resp.getString("ThumbnailImageLink"));
 			}
 
+			if (resp.has("BirthMonth")) {
+				BirthDate bd = new BirthDate();
+				bd.setMonth(resp.getInt("BirthMonth"));
+				p.setDob(bd);
+			}
+
 			if (resp.has("Emails")) {
 				JSONArray earr = resp.getJSONArray("Emails");
 				for (int i = 0; i < earr.length(); i++) {
@@ -445,6 +501,8 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 				}
 			}
 			serviceResponse.close();
+			p.setProviderId(getProviderId());
+			userProfile = p;
 			return p;
 		} catch (Exception e) {
 			throw new SocialAuthException(
@@ -491,6 +549,10 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 			final Map<String, String> params,
 			final Map<String, String> headerParams, final String body)
 			throws Exception {
+		if (!isVerify) {
+			throw new SocialAuthException(
+					"Please call verifyResponse function first to get Access Token");
+		}
 		Map<String, String> headerParam = new HashMap<String, String>();
 		headerParam.put("Content-Type", "application/json");
 		headerParam.put("Accept", "application/json");
@@ -523,8 +585,21 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	 * 
 	 * @return Profile object containing the profile information.
 	 */
-	public Profile getUserProfile() {
+	@Override
+	public Profile getUserProfile() throws Exception {
+		if (userProfile == null && accessToken != null) {
+			getProfile();
+		}
 		return userProfile;
 	}
 
+	@Override
+	public AccessGrant getAccessGrant() {
+		return accessGrant;
+	}
+
+	@Override
+	public String getProviderId() {
+		return config.getId();
+	}
 }

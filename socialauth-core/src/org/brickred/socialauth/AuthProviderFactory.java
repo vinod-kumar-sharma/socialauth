@@ -32,7 +32,6 @@ import java.lang.reflect.Constructor;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Properties;
 
@@ -40,6 +39,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.util.OAuthConfig;
 
 /**
  * This is a factory which creates an instance of the requested provider based
@@ -54,6 +54,7 @@ public class AuthProviderFactory {
 
 	private static String propFileName = "oauth_consumer.properties";
 	private static Map<String, Class> providerMap;
+	private static Map<String, String> domainMap;
 	private static final Log LOG = LogFactory.getLog(AuthProviderFactory.class);
 
 	static {
@@ -77,6 +78,15 @@ public class AuthProviderFactory {
 		providerMap.put("yahoo",
 				org.brickred.socialauth.provider.YahooImpl.class);
 
+		domainMap = new HashMap<String, String>();
+		domainMap.put("google", "www.google.com");
+		domainMap.put("yahoo", "api.login.yahoo.com");
+		domainMap.put("twitter", "twitter.com");
+		domainMap.put("facebook", "graph.facebook.com");
+		domainMap.put("hotmail", "consent.live.com");
+		domainMap.put("linkedin", "api.linkedin.com");
+		domainMap.put("foursquare", "foursquare.com");
+		domainMap.put("myspace", "api.myspace.com");
 	}
 
 	/**
@@ -167,6 +177,14 @@ public class AuthProviderFactory {
 	 */
 	public static AuthProvider getInstance(final String id,
 			final Properties properties) throws Exception {
+		for (Object key : properties.keySet()) {
+			String str = key.toString();
+			if (str.startsWith("socialauth.")) {
+				String val = str.substring("socialauth.".length());
+				registerProvider(val,
+						Class.forName(properties.get(str).toString()));
+			}
+		}
 		return loadProvider(id, properties);
 	}
 
@@ -184,8 +202,8 @@ public class AuthProviderFactory {
 		try {
 			InputStream in = loader.getResourceAsStream(fileName);
 			props.load(in);
-			for (Iterator iter = props.keySet().iterator(); iter.hasNext();) {
-				String str = (String) iter.next();
+			for (Object key : props.keySet()) {
+				String str = key.toString();
 				if (str.startsWith("socialauth.")) {
 					String val = str.substring("socialauth.".length());
 					registerProvider(val,
@@ -209,22 +227,46 @@ public class AuthProviderFactory {
 		Class<?> obj = providerMap.get(id);
 		props.setProperty("id", id);
 		AuthProvider provider;
+		OAuthConfig conf;
+
 		if (obj == null) {
 			try {
 				new URL(id); // just validating, don't need the value
 				obj = providerMap.get("openid");
+				conf = new OAuthConfig(null, null);
+				conf.setId(id);
 			} catch (MalformedURLException me) {
 				throw new SocialAuthException(id
 						+ " is not a provider or valid OpenId URL");
 			}
+		} else {
+			String key;
+			if (domainMap.containsKey(id)) {
+				key = domainMap.get(id);
+			} else {
+				key = id;
+			}
+			String consumerKey = props.getProperty(key + ".consumer_key");
+			if (consumerKey == null) {
+				throw new IllegalStateException(key
+						+ ".consumer_key not found.");
+			}
+
+			String consumerSecret = props.getProperty(key + ".consumer_secret");
+			if (consumerSecret == null) {
+				throw new IllegalStateException(key
+						+ ".consumer_secret not found.");
+			}
+			conf = new OAuthConfig(consumerKey, consumerSecret);
+			conf.setId(id);
 		}
 
 		try {
-			Constructor<?> cons = obj.getConstructor(Properties.class);
-			provider = (AuthProvider) cons.newInstance(props);
+			Constructor<?> cons = obj.getConstructor(OAuthConfig.class);
+			provider = (AuthProvider) cons.newInstance(conf);
 		} catch (NoSuchMethodException me) {
 			LOG.warn(obj.getName() + " does not implement a constructor "
-					+ obj.getName() + "(Poperties props)");
+					+ obj.getName() + "(OAuthConfig providerConfig)");
 			provider = (AuthProvider) obj.newInstance();
 		} catch (Exception e) {
 			throw new SocialAuthConfigurationException(e);

@@ -29,6 +29,7 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.brickred.socialauth.util.AccessGrant;
 import org.brickred.socialauth.util.Response;
 
 /**
@@ -70,7 +71,7 @@ public interface AuthProvider {
 	 * 
 	 * @throws Exception
 	 */
-	public String getLoginRedirectURL(String redirectUri) throws Exception;
+	public String getLoginRedirectURL(String successUrl) throws Exception;
 
 	/**
 	 * Verifies the user when the external provider redirects back to our
@@ -81,8 +82,20 @@ public interface AuthProvider {
 	 *            Request object the request is received from the provider
 	 * @throws Exception
 	 */
-
+	@Deprecated
 	public Profile verifyResponse(HttpServletRequest request) throws Exception;
+
+	/**
+	 * Verifies the user when the external provider redirects back to our
+	 * application.
+	 * 
+	 * @param requestParams
+	 *            Request parameters received from the provider
+	 * @return AuthProvider object
+	 * @throws Exception
+	 */
+	public Profile verifyResponse(Map<String, String> requestParams)
+			throws Exception;
 
 	/**
 	 * Updates the status on the chosen provider if available. This may not be
@@ -106,8 +119,9 @@ public interface AuthProvider {
 	 * Retrieves the user profile.
 	 * 
 	 * @return Profile object containing the profile information.
+	 * @throws Exception
 	 */
-	public Profile getUserProfile();
+	public Profile getUserProfile() throws Exception;
 
 	/**
 	 * Logout
@@ -145,4 +159,27 @@ public interface AuthProvider {
 			final Map<String, String> params,
 			final Map<String, String> headerParams, final String body)
 			throws Exception;
+
+	/**
+	 * Retrieves the AccessGrant object.
+	 * 
+	 * @return AccessGrant object.
+	 */
+	public AccessGrant getAccessGrant();
+
+	/**
+	 * Retrieves the provider id
+	 * 
+	 * @return provider id.
+	 */
+	public String getProviderId();
+
+	/**
+	 * Stores access grant for the provider *
+	 * 
+	 * @param accessGrant
+	 *            It contains the access token and other information
+	 * @throws Exception
+	 */
+	public void setAccessGrant(AccessGrant accessGrant) throws Exception;
 }

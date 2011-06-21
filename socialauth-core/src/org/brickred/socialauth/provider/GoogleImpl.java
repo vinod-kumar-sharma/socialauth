@@ -29,9 +29,9 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -47,13 +47,14 @@ import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.exception.UserDeniedPermissionException;
+import org.brickred.socialauth.util.AccessGrant;
 import org.brickred.socialauth.util.HttpUtil;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.OAuthConsumer;
 import org.brickred.socialauth.util.OpenIdConsumer;
 import org.brickred.socialauth.util.Response;
-import org.brickred.socialauth.util.Token;
+import org.brickred.socialauth.util.SocialAuthUtil;
 import org.brickred.socialauth.util.XMLParseUtil;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -72,38 +73,45 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	private static final String OAUTH_SCOPE = "http://www.google.com/m8/feeds/";
 	private static final String CONTACTS_FEED_URL = "http://www.google.com/m8/feeds/contacts/default/full/?max-results=1000";
 	private static final String CONTACT_NAMESPACE = "http://schemas.google.com/g/2005";
-	private static final String PROPERTY_DOMAIN = "www.google.com";
 
 	private final Log LOG = LogFactory.getLog(GoogleImpl.class);
 
 	private Permission scope;
-	private Properties properties;
 	private boolean isVerify;
-	private Token requestToken;
-	private Token accessToken;
+	private AccessGrant requestToken;
+	private AccessGrant accessToken;
 	private OAuthConsumer oauth;
 	private OAuthConfig config;
 	private Profile userProfile;
 
-	public GoogleImpl(final Properties props) throws Exception {
-
-		try {
-			this.properties = props;
-			config = OAuthConfig.load(this.properties, PROPERTY_DOMAIN);
-		} catch (IllegalStateException e) {
-			throw new SocialAuthConfigurationException(e);
-		}
-		if (config.get_consumerSecret().length() == 0) {
-			throw new SocialAuthConfigurationException(
-					"www.google.com.consumer_secret value is null");
-		}
-		if (config.get_consumerKey().length() == 0) {
-			throw new SocialAuthConfigurationException(
-					"www.google.com.consumer_key value is null");
-		}
+	/**
+	 * Stores configuration for the provider
+	 * 
+	 * @param providerConfig
+	 *            It contains the configuration of application like consumer key
+	 *            and consumer secret
+	 * @throws Exception
+	 */
+	public GoogleImpl(final OAuthConfig providerConfig) throws Exception {
+		config = providerConfig;
 		oauth = new OAuthConsumer(config);
 		requestToken = null;
 		accessToken = null;
+	}
+
+	/**
+	 * Stores access grant for the provider *
+	 * 
+	 * @param accessGrant
+	 *            It contains the access token and other information
+	 * @throws Exception
+	 */
+	@Override
+	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
+		this.accessToken = accessGrant;
+		oauth = new OAuthConsumer(config);
+		requestToken = null;
+		isVerify = true;
 	}
 
 	/**
@@ -114,7 +122,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	 * @throws Exception
 	 */
 	@Override
-	public String getLoginRedirectURL(final String returnTo) throws Exception {
+	public String getLoginRedirectURL(final String successUrl) throws Exception {
 		LOG.info("Determining URL for redirection");
 		String associationURL = OpenIdConsumer
 				.getAssociationURL(REQUEST_TOKEN_URL);
@@ -128,7 +136,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 			String line = null;
 			while ((line = reader.readLine()) != null) {
 				sb.append(line).append("\n");
-				if (line.substring(0, 13) == "assoc_handle:") {
+				if ("assoc_handle:".equals(line.substring(0, 13))) {
 					assocHandle = line.substring(13);
 					break;
 				}
@@ -138,7 +146,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 			throw new SocialAuthException("Failed to read response from  ");
 		}
 
-		String realm = returnTo.substring(0, returnTo.indexOf("/", 9));
+		String realm = successUrl.substring(0, successUrl.indexOf("/", 9));
 		String consumerURL = realm.replace("http://", "");
 
 		setProviderState(true);
@@ -147,7 +155,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 			gscope = OAUTH_SCOPE;
 		}
 		String url = OpenIdConsumer.getRequestTokenURL(REQUEST_TOKEN_URL,
-				returnTo, realm, assocHandle, consumerURL, gscope);
+				successUrl, realm, assocHandle, consumerURL, gscope);
 		LOG.info("Redirection to following URL should happen : " + url);
 		return url;
 
@@ -165,10 +173,32 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public Profile verifyResponse(final HttpServletRequest request)
 			throws Exception {
+		Map<String, String> params = SocialAuthUtil
+				.getRequestParametersMap(request);
+		return doVerifyResponse(params);
+	}
+
+	/**
+	 * Verifies the user when the external provider redirects back to our
+	 * application.
+	 * 
+	 * @return Profile object containing the profile information
+	 * @param requestParams
+	 *            Request Parameters, received from the provider
+	 * @throws Exception
+	 */
+	@Override
+	public Profile verifyResponse(final Map<String, String> requestParams)
+			throws Exception {
+		return doVerifyResponse(requestParams);
+	}
+
+	private Profile doVerifyResponse(final Map<String, String> requestParams)
+			throws Exception {
 		LOG.info("Verifying the authentication response from provider");
 		LOG.debug("Verifying the authentication response from provider");
-		if (request.getParameter("openid.mode") != null
-				&& "cancel".equals(request.getParameter("openid.mode"))) {
+		if (requestParams.get("openid.mode") != null
+				&& "cancel".equals(requestParams.get("openid.mode"))) {
 			throw new UserDeniedPermissionException();
 		}
 		if (!isProviderState()) {
@@ -178,13 +208,13 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 			LOG.debug("Running OpenID discovery");
 			String reqTokenStr = "";
 			if (Permission.AUHTHENTICATE_ONLY.equals(this.scope)) {
-				return getProfile(request);
+				accessToken = new AccessGrant();
 			} else {
-				if (request.getParameter(OpenIdConsumer.OPENID_REQUEST_TOKEN) != null) {
-					reqTokenStr = HttpUtil.decodeURIComponent(request
-							.getParameter(OpenIdConsumer.OPENID_REQUEST_TOKEN));
+				if (requestParams.get(OpenIdConsumer.OPENID_REQUEST_TOKEN) != null) {
+					reqTokenStr = HttpUtil.decodeURIComponent(requestParams
+							.get(OpenIdConsumer.OPENID_REQUEST_TOKEN));
 				}
-				requestToken = new Token();
+				requestToken = new AccessGrant();
 				requestToken.setKey(reqTokenStr);
 				LOG.debug("Call to fetch Access Token");
 				accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL,
@@ -196,15 +226,28 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 				}
 				isVerify = true;
 				LOG.debug("Obtaining profile from OpenID response");
-				return getProfile(request);
 			}
+			for (Map.Entry<String, String> entry : requestParams.entrySet()) {
+				String key = entry.getKey();
+				String value = entry.getValue();
+				accessToken.setAttribute(key, value);
+			}
+			if (scope != null) {
+				accessToken.setPermission(scope);
+			} else {
+				accessToken.setPermission(Permission.DEFAULT);
+			}
+			accessToken.setProviderId(getProviderId());
+			return getProfile(requestParams);
 		} catch (Exception e) {
 			throw new SocialAuthException(e);
 		}
 	}
 
-	private Profile getProfile(final HttpServletRequest req) {
-		userProfile = OpenIdConsumer.getUserInfo(req);
+	private Profile getProfile(final Map<String, String> requestParams) {
+		userProfile = OpenIdConsumer.getUserInfo(requestParams);
+		userProfile.setProviderId(getProviderId());
+		LOG.debug("User Info : " + userProfile.toString());
 		return userProfile;
 	}
 
@@ -292,6 +335,8 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 						}
 					}
 				}
+				String id = XMLParseUtil.getElementData(contact, "id");
+
 				if (address != null && address.length() > 0) {
 					Contact p = new Contact();
 					p.setFirstName(fname);
@@ -299,6 +344,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 					p.setEmail(address);
 					p.setDisplayName(dispName);
 					p.setOtherEmails(emailArr);
+					p.setId(id);
 					plist.add(p);
 				}
 			}
@@ -352,9 +398,6 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 			final Map<String, String> params,
 			final Map<String, String> headerParams, final String body)
 			throws Exception {
-		if (!isProviderState()) {
-			throw new ProviderStateException();
-		}
 		if (!isVerify) {
 			throw new SocialAuthException(
 					"Please call verifyResponse function first to get Access Token");
@@ -379,7 +422,30 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	 * 
 	 * @return Profile object containing the profile information.
 	 */
+	@Override
 	public Profile getUserProfile() {
+		if (userProfile == null && accessToken != null) {
+			Map<String, String> map = new HashMap<String, String>();
+			for (Map.Entry<String, Object> entry : accessToken.getAttributes()
+					.entrySet()) {
+				String key = entry.getKey();
+				String value = entry.getValue().toString();
+				map.put(key, value);
+			}
+			if (!map.isEmpty()) {
+				getProfile(map);
+			}
+		}
 		return userProfile;
+	}
+
+	@Override
+	public AccessGrant getAccessGrant() {
+		return accessToken;
+	}
+
+	@Override
+	public String getProviderId() {
+		return config.getId();
 	}
 }

@@ -29,7 +29,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -42,15 +41,15 @@ import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
-import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.exception.UserDeniedPermissionException;
+import org.brickred.socialauth.util.AccessGrant;
 import org.brickred.socialauth.util.Constants;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.OAuthConsumer;
 import org.brickred.socialauth.util.Response;
-import org.brickred.socialauth.util.Token;
+import org.brickred.socialauth.util.SocialAuthUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -62,7 +61,6 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 		Serializable {
 
 	private static final long serialVersionUID = -4074039782095430942L;
-	private static final String PROPERTY_DOMAIN = "api.myspace.com";
 	private static final String REQUEST_TOKEN_URL = "http://api.myspace.com/request_token";
 	private static final String AUTHORIZATION_URL = "http://api.myspace.com/authorize?myspaceid.permissions=VIEWER_FULL_PROFILE_INFO|ViewFullProfileInfo|UpdateMoodStatus";
 	private static final String ACCESS_TOKEN_URL = "http://api.myspace.com/access_token";
@@ -72,30 +70,37 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 	private final Log LOG = LogFactory.getLog(MySpaceImpl.class);
 
 	private Permission scope;
-	private Properties properties;
 	private boolean isVerify;
-	private Token requestToken;
-	private Token accessToken;
+	private AccessGrant requestToken;
+	private AccessGrant accessToken;
 	private OAuthConsumer oauth;
 	private OAuthConfig config;
 	private Profile userProfile;
 
-	public MySpaceImpl(final Properties props) throws Exception {
-		try {
-			this.properties = props;
-			config = OAuthConfig.load(this.properties, PROPERTY_DOMAIN);
-		} catch (IllegalStateException e) {
-			throw new SocialAuthConfigurationException(e);
-		}
-		if (config.get_consumerSecret().length() == 0) {
-			throw new SocialAuthConfigurationException(
-					"api.myspace.com.consumer_secret value is null");
-		}
-		if (config.get_consumerKey().length() == 0) {
-			throw new SocialAuthConfigurationException(
-					"api.myspace.com.consumer_key value is null");
-		}
+	/**
+	 * Stores configuration for the provider
+	 * 
+	 * @param providerConfig
+	 *            It contains the configuration of application like consumer key
+	 *            and consumer secret
+	 * @throws Exception
+	 */
+	public MySpaceImpl(final OAuthConfig providerConfig) throws Exception {
+		config = providerConfig;
 		oauth = new OAuthConsumer(config);
+	}
+
+	/**
+	 * Stores access grant for the provider
+	 * 
+	 * @param accessGrant
+	 *            It contains the access token and other information
+	 * @throws Exception
+	 */
+	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
+		oauth = new OAuthConsumer(config);
+		accessToken = accessGrant;
+		isVerify = true;
 	}
 
 	/**
@@ -107,13 +112,13 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 	 */
 
 	@Override
-	public String getLoginRedirectURL(final String returnTo) throws Exception {
+	public String getLoginRedirectURL(final String successUrl) throws Exception {
 		LOG.info("Determining URL for redirection");
 		setProviderState(true);
 		LOG.debug("Call to fetch Request Token");
-		requestToken = oauth.getRequestToken(REQUEST_TOKEN_URL, returnTo);
+		requestToken = oauth.getRequestToken(REQUEST_TOKEN_URL, successUrl);
 		StringBuilder urlBuffer = oauth.buildAuthUrl(AUTHORIZATION_URL,
-				requestToken, returnTo);
+				requestToken, successUrl);
 		LOG.info("Redirection to following URL should happen : "
 				+ urlBuffer.toString());
 		return urlBuffer.toString();
@@ -132,9 +137,33 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public Profile verifyResponse(final HttpServletRequest request)
 			throws Exception {
+		Map<String, String> params = SocialAuthUtil
+				.getRequestParametersMap(request);
+		return doVerifyResponse(params);
+	}
+
+	/**
+	 * Verifies the user when the external provider redirects back to our
+	 * application.
+	 * 
+	 * 
+	 * @param requestParams
+	 *            request parameters, received from the provider
+	 * @return Profile object containing the profile information
+	 * @throws Exception
+	 */
+
+	@Override
+	public Profile verifyResponse(final Map<String, String> requestParams)
+			throws Exception {
+		return doVerifyResponse(requestParams);
+	}
+
+	private Profile doVerifyResponse(final Map<String, String> requestParams)
+			throws Exception {
 		LOG.info("Verifying the authentication response from provider");
-		if (request.getParameter("oauth_problem") != null
-				&& "user_refused".equals(request.getParameter("oauth_problem"))) {
+		if (requestParams.get("oauth_problem") != null
+				&& "user_refused".equals(requestParams.get("oauth_problem"))) {
 			throw new UserDeniedPermissionException();
 		}
 		if (!isProviderState()) {
@@ -144,17 +173,21 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 		if (requestToken == null) {
 			throw new SocialAuthException("Request token is null");
 		}
-		String verifier = request.getParameter(Constants.OAUTH_VERIFIER);
+		String verifier = requestParams.get(Constants.OAUTH_VERIFIER);
 		if (verifier != null) {
 			requestToken.setAttribute(Constants.OAUTH_VERIFIER, verifier);
 		}
 
 		LOG.debug("Call to fetch Access Token");
 		accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL, requestToken);
-
+		if (scope != null) {
+			accessToken.setPermission(scope);
+		} else {
+			accessToken.setPermission(Permission.DEFAULT);
+		}
+		accessToken.setProviderId(getProviderId());
 		isVerify = true;
-		userProfile = getProfile();
-		return userProfile;
+		return getProfile();
 	}
 
 	/**
@@ -217,6 +250,9 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 
 				if (pObj.has("profileUrl")) {
 					contact.setProfileUrl(pObj.getString("profileUrl"));
+				}
+				if (pObj.has("id")) {
+					contact.setId(pObj.getString("id"));
 				}
 				plist.add(contact);
 			}
@@ -334,13 +370,11 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 		if (pObj.has("lang")) {
 			profile.setLanguage(pObj.getString("lang"));
 		}
-		if (pObj.has("birthdate")) {
-			profile.setDob(pObj.getString("birthdate"));
-		}
 		if (pObj.has("thumbnailUrl")) {
 			profile.setProfileImageURL(pObj.getString("thumbnailUrl"));
 		}
-
+		profile.setProviderId(getProviderId());
+		userProfile = profile;
 		return profile;
 	}
 
@@ -367,9 +401,6 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 			final Map<String, String> params,
 			final Map<String, String> headerParams, final String body)
 			throws Exception {
-		if (!isProviderState()) {
-			throw new ProviderStateException();
-		}
 		if (!isVerify) {
 			throw new SocialAuthException(
 					"Please call verifyResponse function first to get Access Token");
@@ -408,7 +439,21 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 	 * 
 	 * @return Profile object containing the profile information.
 	 */
-	public Profile getUserProfile() {
+	@Override
+	public Profile getUserProfile() throws Exception {
+		if (userProfile == null && accessToken != null) {
+			getProfile();
+		}
 		return userProfile;
+	}
+
+	@Override
+	public AccessGrant getAccessGrant() {
+		return accessToken;
+	}
+
+	@Override
+	public String getProviderId() {
+		return config.getId();
 	}
 }
