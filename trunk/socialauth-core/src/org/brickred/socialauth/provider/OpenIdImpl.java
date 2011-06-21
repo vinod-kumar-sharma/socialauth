@@ -41,6 +41,8 @@ import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.util.AccessGrant;
+import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.Response;
 import org.openid4java.OpenIDException;
 import org.openid4java.consumer.ConsumerException;
@@ -67,12 +69,28 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 
 	private ConsumerManager manager;
 	private DiscoveryInformation discovered;
-	private Properties props;
+	private String id;
+	private AccessGrant accessGrant;
+	private String successUrl;
 
 	public OpenIdImpl(final Properties props) throws ConsumerException {
 		manager = new ConsumerManager();
-		this.props = props;
 		discovered = null;
+		this.id = props.getProperty("id");
+	}
+
+	public OpenIdImpl(final OAuthConfig config) throws ConsumerException {
+		manager = new ConsumerManager();
+		this.id = config.getId();
+		discovered = null;
+	}
+
+	@Override
+	public void setAccessGrant(final AccessGrant accessGrant)
+			throws ConsumerException {
+		manager = new ConsumerManager();
+		discovered = null;
+		this.accessGrant = accessGrant;
 	}
 
 	/**
@@ -83,10 +101,11 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 	 * @throws Exception
 	 */
 	@Override
-	public String getLoginRedirectURL(final String redirectUri)
+	public String getLoginRedirectURL(final String successUrl)
 			throws IOException {
 		setProviderState(true);
-		String url = authRequest(props.getProperty("id"), redirectUri);
+		String url = authRequest(id, successUrl);
+		this.successUrl = successUrl;
 		LOG.info("Redirection to following URL should happen : " + url);
 		return url;
 	}
@@ -227,6 +246,92 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 	}
 
 	/**
+	 * Verifies the user when the external provider redirects back to our
+	 * application.
+	 * 
+	 * 
+	 * @param requestParams
+	 *            request parameters, received from the provider
+	 * @return Profile object containing the profile information
+	 * @throws Exception
+	 */
+
+	@Override
+	public Profile verifyResponse(final Map<String, String> requestParams)
+			throws Exception {
+		if (!isProviderState()) {
+			throw new ProviderStateException();
+		}
+		try {
+			// extract the parameters from the authentication response
+			// (which comes in as a HTTP request from the OpenID provider)
+			ParameterList response = new ParameterList(requestParams);
+
+			// extract the receiving URL from the HTTP request
+			StringBuffer receivingURL = new StringBuffer();
+			receivingURL.append(successUrl);
+			StringBuffer sb = new StringBuffer();
+			for (Map.Entry<String, String> entry : requestParams.entrySet()) {
+				String key = entry.getKey();
+				String value = entry.getValue();
+				if (sb.length() > 0) {
+					sb.append("&");
+				}
+				sb.append(key).append("=").append(value);
+			}
+			receivingURL.append("?").append(sb.toString());
+
+			// verify the response; ConsumerManager needs to be the same
+			// (static) instance used to place the authentication request
+			VerificationResult verification = manager.verify(
+					receivingURL.toString(), response, discovered);
+
+			// examine the verification result and extract the verified
+			// identifier
+			Identifier verified = verification.getVerifiedId();
+			if (verified != null) {
+				LOG.debug("Verified Id : " + verified.getIdentifier());
+				Profile p = new Profile();
+				p.setValidatedId(verified.getIdentifier());
+				AuthSuccess authSuccess = (AuthSuccess) verification
+						.getAuthResponse();
+
+				if (authSuccess.hasExtension(AxMessage.OPENID_NS_AX)) {
+					FetchResponse fetchResp = (FetchResponse) authSuccess
+							.getExtension(AxMessage.OPENID_NS_AX);
+
+					p.setEmail(fetchResp.getAttributeValue("email"));
+					p.setFirstName(fetchResp.getAttributeValue("firstname"));
+					p.setLastName(fetchResp.getAttributeValue("lastname"));
+					p.setFullName(fetchResp.getAttributeValue("fullname"));
+
+					// also use the ax namespace for compatibility
+					if (p.getEmail() == null) {
+						p.setEmail(fetchResp.getAttributeValue("emailax"));
+					}
+					if (p.getFirstName() == null) {
+						p.setFirstName(fetchResp
+								.getAttributeValue("firstnameax"));
+					}
+					if (p.getLastName() == null) {
+						p.setLastName(fetchResp.getAttributeValue("lastnameax"));
+					}
+					if (p.getFullName() == null) {
+						p.setFullName(fetchResp.getAttributeValue("fullnameax"));
+					}
+
+				}
+
+				return p;
+			}
+		} catch (OpenIDException e) {
+			throw e;
+		}
+
+		return null;
+	}
+
+	/**
 	 * Updating status is not available for generic Open ID providers.
 	 */
 	@Override
@@ -292,7 +397,18 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider {
 	 * 
 	 * @return Profile object containing the profile information.
 	 */
+	@Override
 	public Profile getUserProfile() {
 		return null;
+	}
+
+	@Override
+	public AccessGrant getAccessGrant() {
+		return accessGrant;
+	}
+
+	@Override
+	public String getProviderId() {
+		return id;
 	}
 }

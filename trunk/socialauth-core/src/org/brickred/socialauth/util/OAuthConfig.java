@@ -41,6 +41,8 @@ public class OAuthConfig implements Serializable {
 	private final String _consumerSecret;
 	private final String _signatureMethod;
 	private final String _transportName;
+	private String id;
+	private Class<?> providerImplClass;
 
 	/**
 	 * It loads the configuration information from given properties for the
@@ -102,6 +104,13 @@ public class OAuthConfig implements Serializable {
 		}
 	}
 
+	public OAuthConfig(final String consumerKey, final String consumerSecret) {
+		_consumerKey = consumerKey;
+		_consumerSecret = consumerSecret;
+		_transportName = MethodType.GET.toString();
+		_signatureMethod = Constants.HMACSHA1_SIGNATURE;
+	}
+
 	/**
 	 * Retrieves the consumer key
 	 * 
@@ -136,6 +145,59 @@ public class OAuthConfig implements Serializable {
 	 */
 	public String get_transportName() {
 		return _transportName;
+	}
+
+	/**
+	 * Retrieves the provider id
+	 * 
+	 * @return the provider id
+	 */
+	public String getId() {
+		return id;
+	}
+
+	/**
+	 * Updates the provider id
+	 * 
+	 * @param id
+	 *            the provider id
+	 */
+	public void setId(final String id) {
+		this.id = id;
+	}
+
+	/**
+	 * Retrieves the provider implementation class
+	 * 
+	 * @return the provider implementation class
+	 */
+	public Class<?> getProviderImplClass() {
+		return providerImplClass;
+	}
+
+	/**
+	 * Updates the provider implementation class
+	 * 
+	 * @param providerImplClass
+	 *            the provider implementation class
+	 */
+	public void setProviderImplClass(final Class<?> providerImplClass) {
+		this.providerImplClass = providerImplClass;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder result = new StringBuilder();
+		String NEW_LINE = System.getProperty("line.separator");
+		result.append(this.getClass().getName() + " Object {" + NEW_LINE);
+		result.append(" consumerKey: " + _consumerKey + NEW_LINE);
+		result.append(" consumerSecret: " + _consumerSecret + NEW_LINE);
+		result.append(" signatureMethod: " + _signatureMethod + NEW_LINE);
+		result.append(" transportName: " + _transportName + NEW_LINE);
+		result.append(" id: " + id + NEW_LINE);
+		result.append(" providerImplClass: " + providerImplClass + NEW_LINE);
+		result.append("}");
+		return result.toString();
 	}
 
 }

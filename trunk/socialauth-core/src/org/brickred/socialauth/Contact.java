@@ -38,6 +38,11 @@ public class Contact {
 	String profileUrl;
 
 	/**
+	 * Id of person
+	 */
+	String id;
+
+	/**
 	 * Retrieves the first name
 	 * 
 	 * @return String the first name
@@ -152,6 +157,25 @@ public class Contact {
 	}
 
 	/**
+	 * Retrieves the contact person id
+	 * 
+	 * @return String contact person id
+	 */
+	public String getId() {
+		return id;
+	}
+
+	/**
+	 * Updates the contact person id
+	 * 
+	 * @param id
+	 *            contact person id
+	 */
+	public void setId(final String id) {
+		this.id = id;
+	}
+
+	/**
 	 * Retrieves the profile info as a string
 	 * 
 	 * @return String
@@ -165,11 +189,12 @@ public class Contact {
 		result.append(" firstName: " + firstName + NEW_LINE);
 		result.append(" lastName: " + lastName + NEW_LINE);
 		result.append(" displayName: " + displayName + NEW_LINE);
+		result.append(" id: " + id + NEW_LINE);
 		result.append("profileUrl: " + profileUrl + NEW_LINE);
-		result.append(" otherEmails: " );
+		result.append(" otherEmails: ");
 		if (otherEmails != null) {
 			StringBuilder estr = new StringBuilder();
-			for(String str:otherEmails){
+			for (String str : otherEmails) {
 				if (estr.length() > 0) {
 					estr.append(" , ");
 				}

@@ -27,8 +27,6 @@ package org.brickred.socialauth.util;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.Profile;
@@ -139,15 +137,14 @@ public class OpenIdConsumer {
 	 *            request object
 	 * @return User Profile
 	 */
-	public static Profile getUserInfo(final HttpServletRequest req) {
+	public static Profile getUserInfo(final Map<String, String> requestParams) {
 		Profile p = new Profile();
-		p.setEmail(req.getParameter("openid.ext1.value.email"));
-		p.setFirstName(req.getParameter("openid.ext1.value.firstname"));
-		p.setLastName(req.getParameter("openid.ext1.value.lastname"));
-		p.setCountry(req.getParameter("openid.ext1.value.country"));
-		p.setLanguage(req.getParameter("openid.ext1.value.language"));
-		p.setValidatedId(req.getParameter("openid.identity"));
-		LOG.debug("User Info : " + p.toString());
+		p.setEmail(requestParams.get("openid.ext1.value.email"));
+		p.setFirstName(requestParams.get("openid.ext1.value.firstname"));
+		p.setLastName(requestParams.get("openid.ext1.value.lastname"));
+		p.setCountry(requestParams.get("openid.ext1.value.country"));
+		p.setLanguage(requestParams.get("openid.ext1.value.language"));
+		p.setValidatedId(requestParams.get("openid.identity"));
 		return p;
 	}
 }

@@ -30,7 +30,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -43,22 +42,22 @@ import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
-import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.util.AccessGrant;
+import org.brickred.socialauth.util.BirthDate;
 import org.brickred.socialauth.util.Constants;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.OAuthConsumer;
 import org.brickred.socialauth.util.Response;
-import org.brickred.socialauth.util.Token;
+import org.brickred.socialauth.util.SocialAuthUtil;
 import org.brickred.socialauth.util.XMLParseUtil;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 
 /**
- * Implementation of Hotmail provider. This implementation is based on the
- * sample provided by Microsoft. Currently no elements in profile are available
- * and this implements only getContactList() properly
+ * Implementation of Linkedin provider. This uses the oAuth API provided by
+ * Linkedin
  * 
  * 
  * @author tarunn@brickred.com
@@ -76,34 +75,40 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 	private static final String UPDATE_STATUS_URL = "http://api.linkedin.com/v1/people/~/shares";
 	private static final String PROFILE_URL = "http://api.linkedin.com/v1/people/~:(id,first-name,last-name,languages,date-of-birth,picture-url,location:(name))";
 	private static final String STATUS_BODY = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><share><comment>%1$s</comment><visibility><code>anyone</code></visibility></share>";
-	private static final String PROPERTY_DOMAIN = "api.linkedin.com";
 	private final Log LOG = LogFactory.getLog(LinkedInImpl.class);
 
 	private Permission scope;
-	private Properties properties;
 	private boolean isVerify;
-	private Token requestToken;
-	private Token accessToken;
+	private AccessGrant requestToken;
+	private AccessGrant accessToken;
 	private OAuthConsumer oauth;
 	private OAuthConfig config;
 	private Profile userProfile;
 
-	public LinkedInImpl(final Properties props) throws Exception {
-		try {
-			this.properties = props;
-			config = OAuthConfig.load(this.properties, PROPERTY_DOMAIN);
-		} catch (IllegalStateException e) {
-			throw new SocialAuthConfigurationException(e);
-		}
-		if (config.get_consumerSecret().length() == 0) {
-			throw new SocialAuthConfigurationException(
-					"api.linkedin.com.consumer_secret value is null");
-		}
-		if (config.get_consumerKey().length() == 0) {
-			throw new SocialAuthConfigurationException(
-					"api.linkedin.com.consumer_key value is null");
-		}
+	/**
+	 * Stores configuration for the provider
+	 * 
+	 * @param providerConfig
+	 *            It contains the configuration of application like consumer key
+	 *            and consumer secret
+	 * @throws Exception
+	 */
+	public LinkedInImpl(final OAuthConfig providerConfig) throws Exception {
+		config = providerConfig;
 		oauth = new OAuthConsumer(config);
+	}
+
+	/**
+	 * Stores access grant for the provider
+	 * 
+	 * @param accessGrant
+	 *            It contains the access token and other information
+	 * @throws Exception
+	 */
+	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
+		oauth = new OAuthConsumer(config);
+		this.accessToken = accessGrant;
+		isVerify = true;
 	}
 
 	/**
@@ -115,13 +120,13 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 	 */
 
 	@Override
-	public String getLoginRedirectURL(final String returnTo) throws Exception {
+	public String getLoginRedirectURL(final String successUrl) throws Exception {
 		LOG.info("Determining URL for redirection");
 		setProviderState(true);
 		LOG.debug("Call to fetch Request Token");
-		requestToken = oauth.getRequestToken(REQUEST_TOKEN_URL, returnTo);
+		requestToken = oauth.getRequestToken(REQUEST_TOKEN_URL, successUrl);
 		StringBuilder urlBuffer = oauth.buildAuthUrl(AUTHORIZATION_URL,
-				requestToken, returnTo);
+				requestToken, successUrl);
 		LOG.info("Redirection to following URL should happen : "
 				+ urlBuffer.toString());
 		return urlBuffer.toString();
@@ -140,6 +145,30 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public Profile verifyResponse(final HttpServletRequest request)
 			throws Exception {
+		Map<String, String> params = SocialAuthUtil
+				.getRequestParametersMap(request);
+		return doVerifyResponse(params);
+	}
+
+	/**
+	 * Verifies the user when the external provider redirects back to our
+	 * application.
+	 * 
+	 * 
+	 * @param requestParams
+	 *            request parameters, received from the provider
+	 * @return Profile object containing the profile information
+	 * @throws Exception
+	 */
+
+	@Override
+	public Profile verifyResponse(final Map<String, String> requestParams)
+			throws Exception {
+		return doVerifyResponse(requestParams);
+	}
+
+	private Profile doVerifyResponse(final Map<String, String> requestParams)
+			throws Exception {
 		LOG.info("Verifying the authentication response from provider");
 		if (!isProviderState()) {
 			throw new ProviderStateException();
@@ -148,17 +177,21 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 		if (requestToken == null) {
 			throw new SocialAuthException("Request token is null");
 		}
-		String verifier = request.getParameter(Constants.OAUTH_VERIFIER);
+		String verifier = requestParams.get(Constants.OAUTH_VERIFIER);
 		if (verifier != null) {
 			requestToken.setAttribute(Constants.OAUTH_VERIFIER, verifier);
 		}
 
 		LOG.debug("Call to fetch Access Token");
 		accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL, requestToken);
-
+		if (scope != null) {
+			accessToken.setPermission(scope);
+		} else {
+			accessToken.setPermission(Permission.DEFAULT);
+		}
+		accessToken.setProviderId(getProviderId());
 		isVerify = true;
-		userProfile = getProfile();
-		return userProfile;
+		return getProfile();
 	}
 
 	/**
@@ -216,6 +249,7 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 						if (profileUrl != null) {
 							cont.setProfileUrl(profileUrl);
 						}
+						cont.setId(id);
 						contactList.add(cont);
 					}
 				}
@@ -302,18 +336,17 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 					String y = XMLParseUtil.getElementData(dobel, "year");
 					String m = XMLParseUtil.getElementData(dobel, "month");
 					String d = XMLParseUtil.getElementData(dobel, "day");
-					if (m == null) {
-						m = "";
+					BirthDate bd = new BirthDate();
+					if (m != null) {
+						bd.setMonth(Integer.parseInt(m));
 					}
 					if (d != null) {
-						m += "-" + d;
+						bd.setDay(Integer.parseInt(d));
 					}
 					if (y != null) {
-						m += "-" + y;
+						bd.setYear(Integer.parseInt(y));
 					}
-					if (m.length() > 0) {
-						profile.setDob(m);
-					}
+					profile.setDob(bd);
 				}
 			}
 			String picUrl = XMLParseUtil.getElementData(root, "picture-url");
@@ -332,7 +365,9 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 			profile.setFirstName(fname);
 			profile.setLastName(lname);
 			profile.setValidatedId(id);
+			profile.setProviderId(getProviderId());
 			LOG.debug("User Profile :" + profile.toString());
+			userProfile = profile;
 		}
 		return profile;
 	}
@@ -372,9 +407,6 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 			final Map<String, String> params,
 			final Map<String, String> headerParams, final String body)
 			throws Exception {
-		if (!isProviderState()) {
-			throw new ProviderStateException();
-		}
 		if (!isVerify) {
 			throw new SocialAuthException(
 					"Please call verifyResponse function first to get Access Token");
@@ -413,8 +445,21 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 	 * 
 	 * @return Profile object containing the profile information.
 	 */
-	public Profile getUserProfile() {
+	@Override
+	public Profile getUserProfile() throws Exception {
+		if (userProfile == null && accessToken != null) {
+			getProfile();
+		}
 		return userProfile;
 	}
 
+	@Override
+	public AccessGrant getAccessGrant() {
+		return accessToken;
+	}
+
+	@Override
+	public String getProviderId() {
+		return config.getId();
+	}
 }

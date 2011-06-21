@@ -48,6 +48,7 @@ import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
+import org.brickred.socialauth.util.AccessGrant;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.Response;
 
@@ -79,6 +80,10 @@ public class AolImpl implements AuthProvider {
 	public AolImpl(final Properties props) {
 		config = OAuthConfig.load(props, "api.screenname.aol.com");
 		dev_id = config.get_consumerKey();
+	}
+
+	@Override
+	public void setAccessGrant(final AccessGrant accessGrant) {
 	}
 
 	/**
@@ -239,7 +244,24 @@ public class AolImpl implements AuthProvider {
 	 * 
 	 * @return Profile object containing the profile information.
 	 */
+	@Override
 	public Profile getUserProfile() {
 		return null;
+	}
+
+	@Override
+	public AccessGrant getAccessGrant() {
+		return null;
+	}
+
+	@Override
+	public Profile verifyResponse(final Map<String, String> requestParams)
+			throws Exception {
+		return null;
+	}
+
+	@Override
+	public String getProviderId() {
+		return config.getId();
 	}
 }

@@ -26,10 +26,11 @@
 package org.brickred.socialauth.provider;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -44,11 +45,13 @@ import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.exception.UserDeniedPermissionException;
+import org.brickred.socialauth.util.AccessGrant;
 import org.brickred.socialauth.util.Constants;
 import org.brickred.socialauth.util.HttpUtil;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.Response;
+import org.brickred.socialauth.util.SocialAuthUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -68,32 +71,40 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 	private static final String REQUEST_TOKEN_URL = "https://foursquare.com/oauth2/authenticate?client_id=%1$s&response_type=code&redirect_uri=%2$s";
 	private static final String ACCESS_TOKEN_URL = "https://foursquare.com/oauth2/access_token";
 	private static final String VIEW_PROFILE_URL = "http://foursquare.com/user/";
-	private static final String PROPERTY_DOMAIN = "foursquare.com";
 	private final Log LOG = LogFactory.getLog(FourSquareImpl.class);
 
 	private Permission scope;
-	private Properties properties;
 	private boolean isVerify;
-	private String redirectUri;
+	private String successUrl;
 	private String accessToken;
 	private OAuthConfig config;
 	private Profile userProfile;
+	private AccessGrant accessGrant;
 
-	public FourSquareImpl(final Properties props) throws Exception {
-		try {
-			this.properties = props;
-			config = OAuthConfig.load(this.properties, PROPERTY_DOMAIN);
-		} catch (IllegalStateException e) {
-			throw new SocialAuthConfigurationException(e);
-		}
-		if (config.get_consumerSecret().length() == 0) {
-			throw new SocialAuthConfigurationException(
-					"foursquare.com.consumer_secret value is null");
-		}
-		if (config.get_consumerKey().length() == 0) {
-			throw new SocialAuthConfigurationException(
-					"foursquare.com.consumer_key value is null");
-		}
+	/**
+	 * Stores configuration for the provider
+	 * 
+	 * @param providerConfig
+	 *            It contains the configuration of application like consumer key
+	 *            and consumer secret
+	 * @throws Exception
+	 */
+	public FourSquareImpl(final OAuthConfig providerConfig) throws Exception {
+		config = providerConfig;
+	}
+
+	/**
+	 * Stores access grant for the provider
+	 * 
+	 * @param accessGrant
+	 *            It contains the access token and other information
+	 * @throws Exception
+	 */
+	@Override
+	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
+		this.accessGrant = accessGrant;
+		accessToken = accessGrant.getKey();
+		isVerify = true;
 	}
 
 	/**
@@ -105,13 +116,18 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 	 */
 
 	@Override
-	public String getLoginRedirectURL(final String redirectUri)
+	public String getLoginRedirectURL(final String successUrl)
 			throws Exception {
 		LOG.info("Determining URL for redirection");
 		setProviderState(true);
-		this.redirectUri = redirectUri;
+		try {
+			this.successUrl = URLEncoder.encode(successUrl,
+					Constants.ENCODING);
+		} catch (UnsupportedEncodingException e) {
+			this.successUrl = successUrl;
+		}
 		String reqTokenUrl = String.format(REQUEST_TOKEN_URL,
-				config.get_consumerKey(), redirectUri);
+				config.get_consumerKey(), this.successUrl);
 		LOG.info("Redirection to following URL should happen : " + reqTokenUrl);
 		return reqTokenUrl;
 
@@ -130,9 +146,31 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public Profile verifyResponse(final HttpServletRequest request)
 			throws Exception {
+		Map<String, String> params = SocialAuthUtil
+				.getRequestParametersMap(request);
+		return doVerifyResponse(params);
+	}
+
+	/**
+	 * Verifies the user when the external provider redirects back to our
+	 * application.
+	 * 
+	 * @return Profile object containing the profile information
+	 * @param requestParams
+	 *            Request Parameters, received from the provider
+	 * @throws Exception
+	 */
+	@Override
+	public Profile verifyResponse(final Map<String, String> requestParams)
+			throws Exception {
+		return doVerifyResponse(requestParams);
+	}
+
+	private Profile doVerifyResponse(final Map<String, String> requestParams)
+			throws Exception {
 		LOG.info("Verifying the authentication response from provider");
-		if (request.getParameter("error") != null
-				&& "access_denied".equals(request.getParameter("error"))) {
+		if (requestParams.get("error") != null
+				&& "access_denied".equals(requestParams.get("error"))) {
 			throw new UserDeniedPermissionException();
 		}
 
@@ -140,7 +178,7 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 			throw new ProviderStateException();
 		}
 
-		String code = request.getParameter("code");
+		String code = requestParams.get("code");
 		if (code == null || code.length() == 0) {
 			throw new SocialAuthException("Verification code is null");
 		}
@@ -149,7 +187,7 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 		strb.append("client_secret=").append(config.get_consumerSecret())
 				.append("&");
 		strb.append("grant_type=authorization_code&");
-		strb.append("redirect_uri=").append(redirectUri).append("&");
+		strb.append("redirect_uri=").append(successUrl).append("&");
 		strb.append("code=").append(code);
 		Response serviceResponse = HttpUtil.doHttpRequest(ACCESS_TOKEN_URL,
 				MethodType.POST.toString(), strb.toString(), null);
@@ -177,10 +215,16 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 			}
 			if (accessToken != null) {
 				isVerify = true;
+				accessGrant = new AccessGrant();
+				accessGrant.setKey(accessToken);
+				if (scope != null) {
+					accessGrant.setPermission(scope);
+				} else {
+					accessGrant.setPermission(Permission.DEFAULT);
+				}
+				accessGrant.setProviderId(getProviderId());
 				LOG.debug("Obtaining user profile");
-				userProfile = getProfile();
-				return userProfile;
-
+				return getProfile();
 			} else {
 				throw new SocialAuthException(
 						"Access token and expires not found from "
@@ -249,7 +293,8 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 				profile.setEmail(cobj.getString("email"));
 			}
 		}
-
+		profile.setProviderId(getProviderId());
+		userProfile = profile;
 		return profile;
 	}
 
@@ -320,6 +365,7 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 			}
 			if (obj.has("id")) {
 				c.setProfileUrl(VIEW_PROFILE_URL + obj.getString("id"));
+				c.setId(obj.getString("id"));
 			}
 			plist.add(c);
 		}
@@ -385,9 +431,6 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 			final Map<String, String> headerParams, final String body)
 			throws Exception {
 		Response response = null;
-		if (!isProviderState()) {
-			throw new ProviderStateException();
-		}
 		if (!isVerify) {
 			throw new SocialAuthException(
 					"Please call verifyResponse function first to get Access Token");
@@ -422,7 +465,22 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 	 * 
 	 * @return Profile object containing the profile information.
 	 */
-	public Profile getUserProfile() {
+	@Override
+	public Profile getUserProfile() throws Exception {
+		if (userProfile == null && accessToken != null) {
+			getProfile();
+		}
 		return userProfile;
 	}
+
+	@Override
+	public AccessGrant getAccessGrant() {
+		return accessGrant;
+	}
+
+	@Override
+	public String getProviderId() {
+		return config.getId();
+	}
+
 }

@@ -27,6 +27,8 @@ package org.brickred.socialauth;
 
 import java.io.Serializable;
 
+import org.brickred.socialauth.util.BirthDate;
+
 /**
  * Data bean for profile information.
  * 
@@ -40,62 +42,67 @@ public class Profile implements Serializable {
 	/**
 	 * Email
 	 */
-	String email;
+	private String email;
 
 	/**
 	 * First Name
 	 */
-	String firstName;
+	private String firstName;
 
 	/**
 	 * Last Name
 	 */
-	String lastName;
+	private String lastName;
 
 	/**
 	 * Country
 	 */
-	String country;
+	private String country;
 
 	/**
 	 * Language
 	 */
-	String language;
+	private String language;
 
 	/**
 	 * Full Name
 	 */
-	String fullName;
+	private String fullName;
 
 	/**
 	 * Display Name
 	 */
-	String displayName;
+	private String displayName;
 
 	/**
 	 * Date of Birth
 	 */
-	String dob;
+	private BirthDate dob;
 
 	/**
 	 * Gender
 	 */
-	String gender;
+	private String gender;
 
 	/**
 	 * Location
 	 */
-	String location;
+	private String location;
 
 	/**
 	 * Validated Id
 	 */
-	String validatedId;
+	private String validatedId;
 
 	/**
 	 * profile image URL
 	 */
-	String profileImageURL;
+	private String profileImageURL;
+
+	/**
+	 * provider id with this profile associates
+	 */
+	private String providerId;
 
 	/**
 	 * Retrieves the first name
@@ -252,10 +259,9 @@ public class Profile implements Serializable {
 	/**
 	 * Retrieves the date of birth
 	 * 
-	 * @return String the date of birth different providers may use different
-	 *         formats
+	 * @return the date of birth different providers may use different formats
 	 */
-	public String getDob() {
+	public BirthDate getDob() {
 		return dob;
 	}
 
@@ -265,7 +271,7 @@ public class Profile implements Serializable {
 	 * @param dob
 	 *            the date of birth of user
 	 */
-	public void setDob(final String dob) {
+	public void setDob(final BirthDate dob) {
 		this.dob = dob;
 	}
 
@@ -327,6 +333,25 @@ public class Profile implements Serializable {
 	}
 
 	/**
+	 * Retrieves the provider id with this profile associates
+	 * 
+	 * @return the provider id
+	 */
+	public String getProviderId() {
+		return providerId;
+	}
+
+	/**
+	 * Updates the provider id
+	 * 
+	 * @param providerId
+	 *            the provider id
+	 */
+	public void setProviderId(final String providerId) {
+		this.providerId = providerId;
+	}
+
+	/**
 	 * Retrieves the profile info as a string
 	 * 
 	 * @return String
@@ -348,6 +373,7 @@ public class Profile implements Serializable {
 		result.append(" location: " + location + NEW_LINE);
 		result.append(" validatedId: " + validatedId + NEW_LINE);
 		result.append(" profileImageURL: " + profileImageURL + NEW_LINE);
+		result.append(" providerId: " + providerId + NEW_LINE);
 		result.append("}");
 
 		return result.toString();
