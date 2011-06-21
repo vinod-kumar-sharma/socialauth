@@ -155,7 +155,7 @@ Now let us code the index page with the following code.  In this page, we just c
 }}}
 
 == Step 3. Creating the form bean ==
-Create a simple form bean that will be used to store the provider into session.
+Create a simple form bean that will be used to store the socialauth manager into session.
 
 {{{
 package com.auth.form;
@@ -183,7 +183,7 @@ public class AuthForm extends ActionForm {
 }}}
 
 == Step 4. Writing the authentication action ==
-Now we develop the action that is called by the link we created in the step above. This action creates a instance of the requested provider from !AuthProviderFactory and calls the getLoginRedirectURL() method to find the URL to redirect to. It also saves the id and instance of requested provider in form bean which has session scope. Finally the action redirects to the URL obtained from the getLoginRedirectURL() and the user sees the login page of facebook, gmail or yahoo.
+Now we develop the action that is called by the link we created in the step above. This action creates a instance of !SocialAuthConfig which loads the configuration for providers. Then it creates a instance of the !SocialAuthManager and calls the getAuthenticationUrl() method to find the URL to redirect to. It also saves the instance of socialauth manager in form bean which has session scope. Finally the action redirects to the URL obtained from the getAuthenticationUrl() and the user sees the login page of facebook, gmail or yahoo.
 
 Please notice that any provider will also need a URL from the application to which it will forward after successful authentication. In the sample below this URL is socialAuthSuccessAction.do which corresponds to another action that we will develop in the next step.
 
@@ -218,23 +218,23 @@ public class SocialAuthenticationAction extends Action {
 		AuthForm authForm = (AuthForm) form;
 
 		String id = authForm.getId();
-		SocialAuthManager authProvider;
+		SocialAuthManager manager;
 		if (authForm.getSocialAuthManager() != null) {
-			authProvider = authForm.getSocialAuthManager();
+			manager = authForm.getSocialAuthManager();
 		} else {
 			InputStream in = SocialAuthenticationAction.class.getClassLoader()
 					.getResourceAsStream("oauth_consumer.properties");
 			SocialAuthConfig conf = SocialAuthConfig.getDefault();
 			conf.load(in);
-			authProvider = new SocialAuthManager();
-			authProvider.setSocialAuthConfig(conf);
-			authForm.setSocialAuthManager(authProvider);
+			manager = new SocialAuthManager();
+			manager.setSocialAuthConfig(conf);
+			authForm.setSocialAuthManager(manager);
 		}
 
 		String returnToUrl = RequestUtils.absoluteURL(request,
 				"/socialAuthSuccessAction.do")
 				.toString();
-		String url = authProvider.getAuthenticationUrl(id, returnToUrl);
+		String url = manager.getAuthenticationUrl(id, returnToUrl);
 
 		LOG.info("Redirecting to: " + url);
 		if (url != null) {
@@ -249,7 +249,7 @@ public class SocialAuthenticationAction extends Action {
 
 == Step 5. Creating the success action ==
 
-Now we create a success action whose path was given in above action. This action verifies the user when the external provider forwards the user back to our application. It gets the instance of the requested provider from session and calls verifyResponse() method and returns profile information. After verification we call the getContactList() method to get the contacts.
+Now we create a success action whose path was given in above action. This action verifies the user when the external provider forwards the user back to our application. It gets the instance of the !SocialAuthManager from session and calls connect() method and returns !AuthProvider object. We can call various method of returned provider object to get the profile or contacts.
 
 {{{
 package com.auth.actions;
@@ -289,11 +289,11 @@ public class SocialAuthSuccessAction extends Action {
 			final HttpServletResponse response) throws Exception {
 
 		AuthForm authForm = (AuthForm) form;
-		SocialAuthManager authProvider = null;
+		SocialAuthManager manager = null;
 		if (authForm.getSocialAuthManager() != null) {
-			authProvider = authForm.getSocialAuthManager();
+			manager = authForm.getSocialAuthManager();
 		}
-		if (authProvider != null) {
+		if (manager != null) {
 			List<Contact> contactsList = new ArrayList<Contact>();
 			Profile profile = null;
 			try {
@@ -303,7 +303,7 @@ public class SocialAuthSuccessAction extends Action {
 					String values[] = entry.getValue();
 					paramsMap.put(key, values[0].toString()); // Only 1 value is
 				}
-				AuthProvider provider = authProvider.connect(paramsMap);
+				AuthProvider provider = manager.connect(paramsMap);
 
 				profile = provider.getUserProfile();
 				contactsList = provider.getContactList();
@@ -327,6 +327,7 @@ public class SocialAuthSuccessAction extends Action {
 		return mapping.findForward("failure");
 	}
 }
+
 
 }}}
 
