@@ -101,6 +101,30 @@ public class BirthDate implements Serializable {
 	 */
 	@Override
 	public String toString() {
-		return month + "/" + day + "/" + year;
+		StringBuffer sb = new StringBuffer();
+		if (month > 0) {
+			if (month < 10) {
+				sb.append("0");
+			}
+			sb.append(month);
+		} else {
+			sb.append("00");
+		}
+		sb.append("/");
+		if (day > 0) {
+			if (day < 10) {
+				sb.append("0");
+			}
+			sb.append(day);
+		} else {
+			sb.append("00");
+		}
+		sb.append("/");
+		if (year > 0) {
+			sb.append(year);
+		} else {
+			sb.append("0000");
+		}
+		return sb.toString();
 	}
 }
