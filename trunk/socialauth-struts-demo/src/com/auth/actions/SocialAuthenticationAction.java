@@ -24,6 +24,8 @@
  */
 package com.auth.actions;
 
+import java.io.InputStream;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -34,8 +36,8 @@ import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.apache.struts.util.RequestUtils;
-import org.brickred.socialauth.AuthProvider;
-import org.brickred.socialauth.AuthProviderFactory;
+import org.brickred.socialauth.SocialAuthConfig;
+import org.brickred.socialauth.SocialAuthManager;
 
 import com.auth.form.AuthForm;
 
@@ -66,7 +68,7 @@ public class SocialAuthenticationAction extends Action {
 	 * @param request
 	 *            the http servlet request
 	 * @param response
-	 *            the http servlet response
+	 *            tc the http servlet response
 	 * @return ActionForward where the action should flow
 	 * @throws Exception
 	 *             if an error occurs
@@ -78,13 +80,24 @@ public class SocialAuthenticationAction extends Action {
 			final HttpServletResponse response) throws Exception {
 
 		AuthForm authForm = (AuthForm) form;
+
 		String id = authForm.getId();
-		AuthProvider provider = AuthProviderFactory.getInstance(id);
+		SocialAuthManager authProvider;
+		if (authForm.getSocialAuthManager() != null) {
+			authProvider = authForm.getSocialAuthManager();
+		} else {
+			InputStream in = SocialAuthenticationAction.class.getClassLoader()
+					.getResourceAsStream("oauth_consumer.properties");
+			SocialAuthConfig conf = SocialAuthConfig.getDefault();
+			conf.load(in);
+			authProvider = new SocialAuthManager();
+			authProvider.setSocialAuthConfig(conf);
+			authForm.setSocialAuthManager(authProvider);
+		}
+
 		String returnToUrl = RequestUtils.absoluteURL(request,
 				"/socialAuthSuccessAction.do").toString();
-		System.out.println("Return URL..." + returnToUrl);
-		authForm.setProvider(provider);
-		String url = provider.getLoginRedirectURL(returnToUrl);
+		String url = authProvider.getAuthenticationUrl(id, returnToUrl);
 		LOG.info("Redirecting to: " + url);
 		if (url != null) {
 			ActionForward fwd = new ActionForward("openAuthUrl", url, true);

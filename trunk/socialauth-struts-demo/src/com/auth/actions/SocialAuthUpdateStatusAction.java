@@ -24,7 +24,6 @@
  */
 package com.auth.actions;
 
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -35,6 +34,7 @@ import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
 import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.SocialAuthManager;
 import org.brickred.socialauth.exception.SocialAuthException;
 
 import com.auth.form.AuthForm;
@@ -49,6 +49,7 @@ import com.auth.form.AuthForm;
 public class SocialAuthUpdateStatusAction extends Action {
 
 	final Log LOG = LogFactory.getLog(SocialAuthUpdateStatusAction.class);
+
 	/**
 	 * Displays the user profile and contacts for the given provider.
 	 * 
@@ -75,7 +76,11 @@ public class SocialAuthUpdateStatusAction extends Action {
 			return mapping.findForward("failure");
 		}
 		AuthForm authForm = (AuthForm) form;
-		AuthProvider provider = authForm.getProvider();
+		SocialAuthManager manager = authForm.getSocialAuthManager();
+		AuthProvider provider = null;
+		if (manager != null) {
+			provider = manager.getCurrentAuthProvider();
+		}
 		if (provider != null) {
 			try {
 				provider.updateStatus(statusMsg);
@@ -85,7 +90,6 @@ public class SocialAuthUpdateStatusAction extends Action {
 				request.setAttribute("Message", e.getMessage());
 				e.printStackTrace();
 			}
-
 		}
 		// if provider null
 		return mapping.findForward("failure");

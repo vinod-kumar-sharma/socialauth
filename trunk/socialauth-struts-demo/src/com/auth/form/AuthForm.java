@@ -25,10 +25,10 @@
 package com.auth.form;
 
 import org.apache.struts.action.ActionForm;
-import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.SocialAuthManager;
 
 /**
- * Form bean for storing the requested provider in session.
+ * Form bean for storing the socialauth manager in session.
  * 
  * @author tarunn@brickred.com
  * 
@@ -40,9 +40,9 @@ public class AuthForm extends ActionForm {
 	String id;
 
 	/**
-	 * The Auth Provider
+	 * The SocialAuth Manager
 	 */
-	AuthProvider provider;
+	SocialAuthManager socialAuthManager;
 
 	/**
 	 * Retrieves the id
@@ -65,21 +65,20 @@ public class AuthForm extends ActionForm {
 	}
 
 	/**
-	 * Retrieves the auth provider
+	 * Retrieves the socialauth manager
 	 * 
-	 * @return AuthProvider the auth provider
+	 * @return the SocialAuth Manager
 	 */
-	public AuthProvider getProvider() {
-		return provider;
+	public SocialAuthManager getSocialAuthManager() {
+		return socialAuthManager;
 	}
 
 	/**
-	 * Updates the provider
+	 * Updates the socialauth manager
 	 * 
-	 * @param provider
-	 *            the auth provider for given id
+	 * @param socialAuthManager
 	 */
-	public void setProvider(final AuthProvider provider) {
-		this.provider = provider;
+	public void setSocialAuthManager(final SocialAuthManager socialAuthManager) {
+		this.socialAuthManager = socialAuthManager;
 	}
 }
