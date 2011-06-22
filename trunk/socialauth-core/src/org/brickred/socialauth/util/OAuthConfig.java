@@ -25,7 +25,6 @@
 package org.brickred.socialauth.util;
 
 import java.io.Serializable;
-import java.util.Properties;
 
 /**
  * It contains the configuration of application like consumer key and consumer
@@ -43,39 +42,6 @@ public class OAuthConfig implements Serializable {
 	private final String _transportName;
 	private String id;
 	private Class<?> providerImplClass;
-
-	/**
-	 * It loads the configuration information from given properties for the
-	 * given domain
-	 * 
-	 * @param props
-	 *            Properties which contains the information of application
-	 *            property file.
-	 * @param domain
-	 *            Domain for which configuration needs to be loaded.
-	 * @return
-	 */
-	public static OAuthConfig load(final Properties props, final String domain) {
-		String consumerKey = props.getProperty(domain + ".consumer_key");
-		if (consumerKey == null) {
-			throw new IllegalStateException(domain + ".consumer_key not found.");
-		}
-
-		String consumerSecret = props.getProperty(domain + ".consumer_secret");
-		if (consumerSecret == null) {
-			throw new IllegalStateException(domain
-					+ ".consumer_secret not found.");
-		}
-
-		// optional
-		String signatureMethod = props
-				.getProperty(domain + ".signature_method");
-
-		String transportName = props.getProperty(domain + ".transport_name");
-
-		return new OAuthConfig(consumerKey, consumerSecret, signatureMethod,
-				transportName);
-	}
 
 	/**
 	 * 
