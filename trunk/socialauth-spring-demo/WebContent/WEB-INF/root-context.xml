@@ -17,6 +17,13 @@
 	<bean class="org.springframework.web.servlet.mvc.annotation.AnnotationMethodHandlerAdapter"/>
 
 	<import resource="properties.xml" />
+	<bean id="socialAuthConfig" class="org.brickred.socialauth.SocialAuthConfig">
+		<property name="applicationProperties"><ref bean="socialAuthProperties"/></property>
+	</bean>
+	
+	<bean id="socialAuthManager" class="org.brickred.socialauth.SocialAuthManager">
+		<property name="socialAuthConfig"><ref bean="socialAuthConfig"/></property>
+	</bean>
 	
 	<bean id="socialAuthTemplate" class="org.brickred.socialauth.spring.bean.SocialAuthTemplate" scope="session">
 		<aop:scoped-proxy/>
@@ -25,7 +32,7 @@
 	<bean id="socialAuthWebController" class="org.brickred.socialauth.spring.controller.SocialAuthWebController">
 		<constructor-arg value="http://opensource.brickred.com/socialauth-spring-demo" />
 		<constructor-arg value="authSuccess.do" />
-		<constructor-arg ref="socialAuthProperties" />
+		<constructor-arg value="jsp/accessDenied.jsp" />
 	</bean>
 	
 </beans>
