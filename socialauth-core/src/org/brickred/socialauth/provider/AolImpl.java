@@ -37,7 +37,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
@@ -77,8 +76,8 @@ public class AolImpl implements AuthProvider {
 	 * @param props
 	 *            Properties for consumer key
 	 */
-	public AolImpl(final Properties props) {
-		config = OAuthConfig.load(props, "api.screenname.aol.com");
+	public AolImpl(final OAuthConfig providerConfig) {
+		config = providerConfig;
 		dev_id = config.get_consumerKey();
 	}
 
