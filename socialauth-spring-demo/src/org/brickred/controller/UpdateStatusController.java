@@ -28,6 +28,7 @@ package org.brickred.controller;
 import javax.servlet.http.HttpServletRequest;
 
 import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.SocialAuthManager;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.spring.bean.SocialAuthTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,10 +43,11 @@ public class UpdateStatusController {
 	private SocialAuthTemplate socialAuthTemplate;
 
 	@RequestMapping(value = "/updateStatus", method = RequestMethod.POST)
-	public ModelAndView getRedirectURL(HttpServletRequest request)
+	public ModelAndView getRedirectURL(final HttpServletRequest request)
 			throws Exception {
 		ModelAndView mv = new ModelAndView();
-		AuthProvider provider = socialAuthTemplate.getProvider();
+		SocialAuthManager manager = socialAuthTemplate.getSocialAuthManager();
+		AuthProvider provider = manager.getCurrentAuthProvider();
 		String statusMsg = request.getParameter("statusMessage");
 		try {
 			provider.updateStatus(statusMsg);
