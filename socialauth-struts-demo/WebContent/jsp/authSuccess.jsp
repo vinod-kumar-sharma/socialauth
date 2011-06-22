@@ -78,11 +78,13 @@
 	</tr>
 	<tr class="sectiontableentry2">
 		<td>DOB:</td>
-		<td><c:out value="${profile.dob}"/></td>
+		<td>
+			<c:out value="${profile.dob}"/>
+		</td>
 	</tr>
 	<tr class="sectiontableentry1">
 		<td>Gender:</td>
-		<td><c:out value="${profile.gender}"/></td>
+		<td><c:out value="${profile.getGender()}"/></td>
 	</tr>
 	<tr class="sectiontableentry2">
 		<td>Location:</td>

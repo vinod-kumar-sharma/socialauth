@@ -24,8 +24,12 @@
  */
 package com.auth.actions;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -40,6 +44,8 @@ import org.apache.struts.action.ActionMapping;
 import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Profile;
+import org.brickred.socialauth.SocialAuthManager;
+import org.brickred.socialauth.util.SocialAuthUtil;
 
 import com.auth.form.AuthForm;
 
@@ -79,12 +85,19 @@ public class SocialAuthSuccessAction extends Action {
 			final HttpServletResponse response) throws Exception {
 
 		AuthForm authForm = (AuthForm) form;
-		AuthProvider provider = authForm.getProvider();
-		if (provider != null) {
+		SocialAuthManager manager = null;
+		if (authForm.getSocialAuthManager() != null) {
+			manager = authForm.getSocialAuthManager();
+		}
+		if (manager != null) {
 			List<Contact> contactsList = new ArrayList<Contact>();
 			Profile profile = null;
 			try {
-				profile = provider.verifyResponse(request);
+				Map<String, String> paramsMap = SocialAuthUtil
+						.getRequestParametersMap(request);
+				AuthProvider provider = manager.connect(paramsMap);
+
+				profile = provider.getUserProfile();
 				contactsList = provider.getContactList();
 				if (contactsList != null && contactsList.size() > 0) {
 					for (Contact p : contactsList) {
@@ -94,11 +107,21 @@ public class SocialAuthSuccessAction extends Action {
 						}
 					}
 				}
+				String filePath = getServlet().getServletContext().getRealPath(
+						File.separatorChar + provider.getProviderId()
+								+ "_accessGrant.ser");
+				System.out.println(filePath);
+				FileOutputStream fs = new FileOutputStream(new File(filePath));
+				ObjectOutputStream os = new ObjectOutputStream(fs);
+				os.writeObject(provider.getAccessGrant());
+				System.out.println(provider.getAccessGrant());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			System.out.println(profile);
 			request.setAttribute("profile", profile);
 			request.setAttribute("contacts", contactsList);
+
 			return mapping.findForward("success");
 		}
 		// if provider null
