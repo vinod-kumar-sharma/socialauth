@@ -27,7 +27,7 @@ Authenticating using the external oAuth providers requires that we register our 
 
 = Step 1. Create the structure =
 
-Create a dynamic web project and add spring dependencies as well as add socialauth-1-2beta1.jar and socialauth-spring-1.2beta1.jar, dependencies1.2.zip into the WEB-INF/lib directory. Now your project should look as follows 
+Create a dynamic web project and add spring dependencies as well as add socialauth-2.0-beta2.jar and socialauth-spring-2.0-beta1.jar, dependencies-2.0.zip into the WEB-INF/lib directory. Now your project should look as follows 
 
 http://socialauth.googlecode.com/svn/wiki/images/spring_structure.JPG
 
