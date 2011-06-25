@@ -109,6 +109,7 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 	 *            It contains the access token and other information
 	 * @throws Exception
 	 */
+	@Override
 	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
 		this.accessGrant = accessGrant;
 		accessToken = accessGrant.getKey();
@@ -126,8 +127,7 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 		LOG.info("Determining URL for redirection");
 		setProviderState(true);
 		try {
-			this.successUrl = URLEncoder.encode(successUrl,
-					Constants.ENCODING);
+			this.successUrl = URLEncoder.encode(successUrl, Constants.ENCODING);
 		} catch (UnsupportedEncodingException e) {
 			this.successUrl = successUrl;
 		}
@@ -135,7 +135,7 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 				this.successUrl);
 		StringBuffer result = new StringBuffer();
 		boolean isFirstSet = false;
-		if (Permission.AUHTHENTICATE_ONLY.equals(scope)) {
+		if (Permission.AUTHENTICATE_ONLY.equals(scope)) {
 			result.append(AuthPerms[0]);
 			for (int i = 1; i < AuthPerms.length; i++) {
 				if (isFirstSet) {
