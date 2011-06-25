@@ -51,7 +51,7 @@ public class SocialAuthPhaseListener implements PhaseListener {
 	 * component, this listener assumes that it has been redirected here by the
 	 * external provider and verifies if the user is authenticated
 	 */
-	public void beforePhase(PhaseEvent event) {
+	public void beforePhase(final PhaseEvent event) {
 
 		FacesContext ctx = FacesContext.getCurrentInstance();
 		ExternalContext ec = ctx.getExternalContext();
@@ -71,7 +71,7 @@ public class SocialAuthPhaseListener implements PhaseListener {
 		SocialAuth social = (SocialAuth) Component
 				.getInstance(SocialAuth.class);
 		try {
-			social.verify();
+			social.connect();
 		} catch (Exception e) {
 			log.warn(e);
 		}
@@ -83,7 +83,7 @@ public class SocialAuthPhaseListener implements PhaseListener {
 	 * No implementation is required because we have already redirected to the
 	 * view provided in the SocialAuth component
 	 */
-	public void afterPhase(PhaseEvent event) {
+	public void afterPhase(final PhaseEvent event) {
 	}
 
 	public PhaseId getPhaseId() {
