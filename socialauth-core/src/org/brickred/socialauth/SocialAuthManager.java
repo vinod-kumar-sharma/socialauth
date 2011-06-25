@@ -110,6 +110,35 @@ public class SocialAuthManager implements Serializable {
 			throws Exception {
 		LOG.debug("Getting Authentication URL for provider " + id
 				+ ", with success url : " + successUrl);
+		return getAuthURL(id, successUrl, null);
+	}
+
+	/**
+	 * This is the most important action. It provides the URL which will be used
+	 * for authentication with the provider
+	 * 
+	 * @param id
+	 *            the provider id
+	 * @param successUrl
+	 *            success page URL on which provider will redirect after
+	 *            authentication
+	 * @param permission
+	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
+	 *            Permission.ALL, Permission.DEFAULT
+	 * @return the URL string which will be used for authentication with
+	 *         provider
+	 * @throws Exception
+	 */
+	public String getAuthenticationUrl(final String id,
+			final String successUrl, final Permission permission)
+			throws Exception {
+		LOG.debug("Getting Authentication URL for provider " + id
+				+ ", with success url : " + successUrl);
+		return getAuthURL(id, successUrl, permission);
+	}
+
+	private String getAuthURL(final String id, final String successUrl,
+			final Permission permission) throws Exception {
 		String url;
 		providerId = id;
 		if (socialAuthConfig == null) {
@@ -121,6 +150,9 @@ public class SocialAuthManager implements Serializable {
 			authProvider = providersMap.get(id);
 		} else {
 			authProvider = getProviderInstance(id);
+			if (permission != null) {
+				authProvider.setPermission(permission);
+			}
 			url = authProvider.getLoginRedirectURL(successUrl);
 		}
 		return url;
