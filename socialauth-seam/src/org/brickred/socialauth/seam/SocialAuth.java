@@ -34,9 +34,11 @@ import javax.faces.context.FacesContext;
 import javax.servlet.http.HttpServletRequest;
 
 import org.brickred.socialauth.AuthProvider;
-import org.brickred.socialauth.AuthProviderFactory;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Profile;
+import org.brickred.socialauth.SocialAuthConfig;
+import org.brickred.socialauth.SocialAuthManager;
+import org.brickred.socialauth.util.SocialAuthUtil;
 import org.jboss.seam.ScopeType;
 import org.jboss.seam.annotations.Create;
 import org.jboss.seam.annotations.Install;
@@ -70,10 +72,12 @@ public class SocialAuth implements Serializable {
 			.getLogProvider(SocialAuth.class);
 
 	private String id;
-	private Profile profile;
 	private AuthProvider provider;
 	private String status;
 	private String viewUrl;
+
+	private SocialAuthManager manager;
+	private SocialAuthConfig config;
 
 	@Create
 	/**
@@ -81,8 +85,16 @@ public class SocialAuth implements Serializable {
 	 */
 	public void init() {
 		id = null;
-		profile = null;
 		provider = null;
+		config = new SocialAuthConfig();
+		try {
+			config.load();
+			manager = new SocialAuthManager();
+			manager.setSocialAuthConfig(config);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
 	}
 
 	public String getId() {
@@ -149,11 +161,8 @@ public class SocialAuth implements Serializable {
 	 * @throws Exception
 	 */
 	public void login() throws Exception {
-
-		provider = AuthProviderFactory.getInstance(id);
 		String returnToUrl = returnToUrl();
-
-		String url = provider.getLoginRedirectURL(returnToUrl);
+		String url = manager.getAuthenticationUrl(id, returnToUrl);
 		log.info("Redirecting to:" + url);
 
 		if (url != null) {
@@ -170,13 +179,14 @@ public class SocialAuth implements Serializable {
 	 * 
 	 * @throws Exception
 	 */
-	public void verify() throws Exception {
-		log.info("Verifying authentication information from:" + id);
+	public void connect() throws Exception {
+		log.info("Connecting Provider:" + id);
 		ExternalContext context = javax.faces.context.FacesContext
 				.getCurrentInstance().getExternalContext();
 		HttpServletRequest request = (HttpServletRequest) context.getRequest();
 
-		profile = provider.verifyResponse(request);
+		provider = manager.connect(SocialAuthUtil
+				.getRequestParametersMap(request));
 	}
 
 	/**
@@ -191,8 +201,8 @@ public class SocialAuth implements Serializable {
 	 * 
 	 * @return Profile of the user
 	 */
-	public Profile getProfile() {
-		return profile;
+	public Profile getProfile() throws Exception {
+		return provider.getUserProfile();
 	}
 
 	/**
@@ -239,7 +249,25 @@ public class SocialAuth implements Serializable {
 	 * 
 	 * @return Profile object containing the profile information.
 	 */
-	public Profile getUserProfile() {
+	public Profile getUserProfile() throws Exception {
 		return provider.getUserProfile();
+	}
+
+	/**
+	 * Returns the array list of connected providers ids.
+	 * 
+	 * @return the array list of connected providers ids
+	 */
+	public List<String> getConnectedProvidersIds() {
+		return manager.getConnectedProvidersIds();
+	}
+
+	/**
+	 * Returns the instance of socialauth manager.
+	 * 
+	 * @return the instance of socialauth manager.
+	 */
+	public SocialAuthManager getSocialAuthManager() {
+		return manager;
 	}
 }
