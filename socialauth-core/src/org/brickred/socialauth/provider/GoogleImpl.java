@@ -151,7 +151,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 
 		setProviderState(true);
 		String gscope = null;
-		if (!Permission.AUHTHENTICATE_ONLY.equals(this.scope)) {
+		if (!Permission.AUTHENTICATE_ONLY.equals(this.scope)) {
 			gscope = OAUTH_SCOPE;
 		}
 		String url = OpenIdConsumer.getRequestTokenURL(REQUEST_TOKEN_URL,
@@ -207,7 +207,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 		try {
 			LOG.debug("Running OpenID discovery");
 			String reqTokenStr = "";
-			if (Permission.AUHTHENTICATE_ONLY.equals(this.scope)) {
+			if (Permission.AUTHENTICATE_ONLY.equals(this.scope)) {
 				accessToken = new AccessGrant();
 			} else {
 				if (requestParams.get(OpenIdConsumer.OPENID_REQUEST_TOKEN) != null) {

@@ -107,6 +107,7 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	 *            It contains the access token and other information
 	 * @throws Exception
 	 */
+	@Override
 	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
 		this.accessGrant = accessGrant;
 		accessToken = accessGrant.getKey();
@@ -123,19 +124,17 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	 */
 
 	@Override
-	public String getLoginRedirectURL(final String successUrl)
-			throws Exception {
+	public String getLoginRedirectURL(final String successUrl) throws Exception {
 		LOG.info("Determining URL for redirection");
 		setProviderState(true);
 		try {
-			this.successUrl = URLEncoder.encode(successUrl,
-					Constants.ENCODING);
+			this.successUrl = URLEncoder.encode(successUrl, Constants.ENCODING);
 		} catch (UnsupportedEncodingException e) {
 			this.successUrl = successUrl;
 		}
 		String consentUrl = String.format(CONSENT_URL,
 				config.get_consumerKey(), this.successUrl);
-		if (!Permission.AUHTHENTICATE_ONLY.equals(scope)) {
+		if (!Permission.AUTHENTICATE_ONLY.equals(scope)) {
 			consentUrl += "&wrap_scope=WL_Contacts.View,WL_Activities.Update";
 		}
 		LOG.info("Redirection to following URL should happen : " + consentUrl);
