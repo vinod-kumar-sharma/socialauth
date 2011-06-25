@@ -61,7 +61,7 @@ public class Authenticator {
 	 * @param ActionEvent
 	 */
 
-	public void updateId(ActionEvent ae) {
+	public void updateId(final ActionEvent ae) {
 		String btnClicked = ae.getComponent().getId();
 		log.info("*************login method called ************"
 				+ socialauth.getId());
@@ -114,7 +114,7 @@ public class Authenticator {
 		return openID;
 	}
 
-	public void setOpenID(String openID) {
+	public void setOpenID(final String openID) {
 		this.openID = openID;
 	}
 
