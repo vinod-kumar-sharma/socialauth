@@ -28,6 +28,7 @@ package org.brickred.socialauth;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
@@ -50,7 +51,9 @@ import org.brickred.socialauth.util.OAuthConfig;
  * @author tarunn@brickred.com
  * 
  */
-public class SocialAuthConfig {
+public class SocialAuthConfig implements Serializable {
+
+	private static final long serialVersionUID = 1298666003842985895L;
 	private static final String OAUTH_CONSUMER_PROPS = "oauth_consumer.properties";
 	private Map<String, Class<?>> providersImplMap;
 	private Map<String, OAuthConfig> providersConfig;

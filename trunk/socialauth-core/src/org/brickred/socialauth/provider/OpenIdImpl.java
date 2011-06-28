@@ -26,6 +26,7 @@
 package org.brickred.socialauth.provider;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -62,9 +63,10 @@ import org.openid4java.message.ax.FetchResponse;
  * implemented as part of profile. Other functionality like updating status and
  * importing contacts is not available for generic Open ID providers
  */
-public class OpenIdImpl extends AbstractProvider implements AuthProvider {
+public class OpenIdImpl extends AbstractProvider implements AuthProvider,
+		Serializable {
 
-	private static final long serialVersionUID = -6349104612642490031L;
+	private static final long serialVersionUID = 7694191649303094756L;
 	private final Log LOG = LogFactory.getLog(OpenIdImpl.class);
 
 	private ConsumerManager manager;

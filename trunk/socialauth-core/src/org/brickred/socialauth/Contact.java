@@ -1,12 +1,16 @@
 package org.brickred.socialauth;
 
+import java.io.Serializable;
+
 /**
  * Data bean for contact information.
  * 
  * @author tarunn@brickred.com
  * 
  */
-public class Contact {
+public class Contact implements Serializable {
+	private static final long serialVersionUID = 7983770896851139223L;
+
 	/**
 	 * Email
 	 */
