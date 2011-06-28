@@ -28,6 +28,7 @@ package org.brickred.socialauth.provider;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -59,7 +60,9 @@ import org.brickred.socialauth.util.Response;
  * @author abhinavm@brickred.com
  * 
  */
-public class AolImpl implements AuthProvider {
+public class AolImpl implements AuthProvider, Serializable {
+
+	private static final long serialVersionUID = -7393140704663678118L;
 
 	private static Pattern nameValSplitter = Pattern.compile("[=&]",
 			Pattern.CASE_INSENSITIVE);
