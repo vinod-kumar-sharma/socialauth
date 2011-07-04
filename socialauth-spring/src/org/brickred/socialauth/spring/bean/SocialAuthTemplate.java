@@ -23,33 +23,23 @@
  */
 package org.brickred.socialauth.spring.bean;
 
-import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.SocialAuthManager;
 
 /**
- * Wrapping bean for the provider.
+ * Wrapping bean for the SocialAuthManager.
  * 
  * @author tarunn@brickred.com
  * 
  */
 public class SocialAuthTemplate {
-	private AuthProvider provider;
+	private SocialAuthManager socialAuthManager;
 
-	/**
-	 * Retrieves the auth provider reference to make any provider specific call.
-	 * 
-	 * @return AuthProvider
-	 */
-	public AuthProvider getProvider() {
-		return provider;
+	public SocialAuthManager getSocialAuthManager() {
+		return socialAuthManager;
 	}
 
-	/**
-	 * Sets the auth provider reference
-	 * 
-	 * @param provider
-	 */
-	public void setProvider(AuthProvider provider) {
-		this.provider = provider;
+	public void setSocialAuthManager(final SocialAuthManager socialAuthManager) {
+		this.socialAuthManager = socialAuthManager;
 	}
 
 }
