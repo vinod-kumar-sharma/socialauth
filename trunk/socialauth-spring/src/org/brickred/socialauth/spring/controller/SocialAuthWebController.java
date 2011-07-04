@@ -23,14 +23,15 @@
  */
 package org.brickred.socialauth.spring.controller;
 
-import java.util.Properties;
-
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.AuthProvider;
-import org.brickred.socialauth.AuthProviderFactory;
+import org.brickred.socialauth.SocialAuthManager;
 import org.brickred.socialauth.spring.bean.SocialAuthTemplate;
+import org.brickred.socialauth.util.SocialAuthUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -57,9 +58,12 @@ public class SocialAuthWebController {
 
 	private String baseCallbackUrl;
 	private String successPageURL;
-	private Properties properites;
+	private String accessDeniedPageURL;
 	@Autowired
 	private SocialAuthTemplate socialAuthTemplate;
+	@Autowired
+	private SocialAuthManager socialAuthManager;
+	private final Log LOG = LogFactory.getLog(getClass());
 
 	/**
 	 * Constructs a SocialAuthWebController.
@@ -71,22 +75,16 @@ public class SocialAuthWebController {
 	 * @param successPageURL
 	 *            the URL of success page or controller, where you want to
 	 *            access sign in user details like profile, contacts etc.
-	 * @param socialAuthProperties
-	 *            properties containing key/secret for different providers and
-	 *            information of custom provider. e.g
-	 *            www.google.com.consumer_key = opensource.brickred.com <br/>
-	 *            and for custom provider key/value pair will be <br/>
-	 *            socialauth.myprovider =
-	 *            org.brickred.socialauth.provider.MyProviderImpl <br/>
-	 *            where myprovider will be {providerId} and value will be the
-	 *            fully class name.
+	 * @param accessDeniedPageURL
+	 *            the URL of page where you want to redirect when user denied
+	 *            the permission.
 	 */
 	@Inject
-	public SocialAuthWebController(String applicationUrl,
-			String successPageURL, Properties socialAuthProperties) {
+	public SocialAuthWebController(final String applicationUrl,
+			final String successPageURL, final String accessDeniedPageURL) {
 		this.baseCallbackUrl = applicationUrl;
 		this.successPageURL = successPageURL;
-		this.properites = socialAuthProperties;
+		this.accessDeniedPageURL = accessDeniedPageURL;
 	}
 
 	/**
@@ -94,49 +92,102 @@ public class SocialAuthWebController {
 	 * to an appropriate URL which will be used for authentication with the
 	 * requested provider.
 	 */
+	@SuppressWarnings("unused")
 	@RequestMapping(params = "id")
-	public String connect(@RequestParam("id") String providerId,
-			HttpServletRequest request) throws Exception {
-		AuthProvider provider = AuthProviderFactory.getInstance(providerId,
-				properites);
-		String url = provider.getLoginRedirectURL(baseCallbackUrl
-				+ request.getServletPath());
-		socialAuthTemplate.setProvider(provider);
+	private String connect(@RequestParam("id") final String providerId,
+			final HttpServletRequest request) throws Exception {
+		LOG.debug("Getting Authentication URL for :" + providerId);
+		String callbackURL = baseCallbackUrl + request.getServletPath();
+		String url = socialAuthManager.getAuthenticationUrl(providerId,
+				callbackURL);
+		if (callbackURL.equals(url)) {
+			url = successPageURL;
+		}
+		socialAuthTemplate.setSocialAuthManager(socialAuthManager);
 		return "redirect:" + url;
 	}
 
+	@SuppressWarnings("unused")
 	@RequestMapping(params = "oauth_token")
-	public String oauthCallback(HttpServletRequest request) {
+	private String oauthCallback(final HttpServletRequest request) {
 		callback(request);
 		return "redirect:/" + successPageURL;
 	}
 
+	@SuppressWarnings("unused")
 	@RequestMapping(params = "code")
-	public String oauth2Callback(HttpServletRequest request) {
+	private String oauth2Callback(final HttpServletRequest request) {
 		callback(request);
 		return "redirect:/" + successPageURL;
 	}
 
+	@SuppressWarnings("unused")
 	@RequestMapping(params = "wrap_verification_code")
-	public String hotmailCallback(HttpServletRequest request) {
+	private String hotmailCallback(final HttpServletRequest request) {
 		callback(request);
 		return "redirect:/" + successPageURL;
 	}
 
+	@SuppressWarnings("unused")
 	@RequestMapping(params = "openid.claimed_id")
-	public String openidCallback(HttpServletRequest request) {
+	private String openidCallback(final HttpServletRequest request) {
 		callback(request);
 		return "redirect:/" + successPageURL;
 	}
 
-	private void callback(HttpServletRequest request) {
-		AuthProvider provider = socialAuthTemplate.getProvider();
-		if (provider != null) {
+	private void callback(final HttpServletRequest request) {
+		SocialAuthManager m = socialAuthTemplate.getSocialAuthManager();
+		if (m != null) {
 			try {
-				provider.verifyResponse(request);
+				AuthProvider provider = m.connect(SocialAuthUtil
+						.getRequestParametersMap(request));
+				LOG.debug("Connected Provider : " + provider.getProviderId());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+		LOG.debug("Unable to connect provider because SocialAuthManager object is null.");
+	}
+
+	@SuppressWarnings("unused")
+	@RequestMapping(params = "error_reason")
+	private String fbCancel(@RequestParam("error_reason") final String error) {
+		LOG.debug("Facebook send an error : " + error);
+		if ("user_denied".equals(error)) {
+			return "redirect:/" + accessDeniedPageURL;
+		}
+		return "redirect:/";
+	}
+
+	@SuppressWarnings("unused")
+	@RequestMapping(params = "openid.mode")
+	private String googleCancel(@RequestParam("openid.mode") final String error) {
+		LOG.debug("Google send an error : " + error);
+		if ("cancel".equals(error)) {
+			return "redirect:/" + accessDeniedPageURL;
+		}
+		return "redirect:/";
+	}
+
+	@SuppressWarnings("unused")
+	@RequestMapping(params = "wrap_error_reason")
+	private String hotmailCancel(
+			@RequestParam("wrap_error_reason") final String error) {
+		LOG.debug("Hotmail send an error : " + error);
+		if ("user_denied".equals(error)) {
+			return "redirect:/" + accessDeniedPageURL;
+		}
+		return "redirect:/";
+	}
+
+	@SuppressWarnings("unused")
+	@RequestMapping(params = "oauth_problem")
+	private String myspaceCancel(
+			@RequestParam("oauth_problem") final String error) {
+		LOG.debug("MySpace send an error : " + error);
+		if ("user_refused".equals(error)) {
+			return "redirect:/" + accessDeniedPageURL;
+		}
+		return "redirect:/";
 	}
 }
