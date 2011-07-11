@@ -20,7 +20,7 @@ Authenticating using the external oAuth providers requires that we register our 
 
 == Download the jars ==
   # Download the [http://socialauth.googlecode.com/files/socialauth-2.0-beta3.jar socialauth-2.0-beta3.jar] 
-  # Download the [http://socialauth.googlecode.com/files/socialauth-spring-2.0-beta1.jar socialauth-spring-2.0-beta1.jar] 
+  # Download the [http://socialauth.googlecode.com/files/socialauth-spring-2.0-beta2.jar socialauth-spring-2.0-beta2.jar] 
   # Download the [http://socialauth.googlecode.com/files/dependencies-2.0.zip dependencies-2.0.zip]
   # Include all the jars in your project
 
