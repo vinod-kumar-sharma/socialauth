@@ -62,7 +62,7 @@ public class SocialAuthConfig implements Serializable {
 	private boolean configSetup;
 	private static final Log LOG = LogFactory.getLog(AuthProviderFactory.class);
 	private static SocialAuthConfig DEFAULT = new SocialAuthConfig();
-	private static boolean isConfigLoaded;
+	private boolean isConfigLoaded;
 
 	/**
 	 * Returns the instance of SocialAuthConfig
