@@ -23,6 +23,8 @@
  */
 package org.brickred.socialauth.spring.controller;
 
+import java.util.HashMap;
+
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
@@ -102,6 +104,7 @@ public class SocialAuthWebController {
 				callbackURL);
 		if (callbackURL.equals(url)) {
 			url = successPageURL;
+			socialAuthManager.connect(new HashMap<String, String>());
 		}
 		socialAuthTemplate.setSocialAuthManager(socialAuthManager);
 		return "redirect:" + url;
@@ -145,8 +148,9 @@ public class SocialAuthWebController {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+		} else {
+			LOG.debug("Unable to connect provider because SocialAuthManager object is null.");
 		}
-		LOG.debug("Unable to connect provider because SocialAuthManager object is null.");
 	}
 
 	@SuppressWarnings("unused")
