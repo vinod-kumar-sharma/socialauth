@@ -21,8 +21,9 @@
 		<property name="applicationProperties"><ref bean="socialAuthProperties"/></property>
 	</bean>
 	
-	<bean id="socialAuthManager" class="org.brickred.socialauth.SocialAuthManager">
+	<bean id="socialAuthManager" class="org.brickred.socialauth.SocialAuthManager" scope="session">
 		<property name="socialAuthConfig"><ref bean="socialAuthConfig"/></property>
+		<aop:scoped-proxy/>
 	</bean>
 	
 	<bean id="socialAuthTemplate" class="org.brickred.socialauth.spring.bean.SocialAuthTemplate" scope="session">
