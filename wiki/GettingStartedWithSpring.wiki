@@ -82,8 +82,9 @@ socialauth-spring.jar contains two classes which support Spring application. !So
 }}}
    * Add a bean entry named "socialAuthManager" and specify the class as "org.brickred.socialauth.!SocialAuthManager" and set property socialAuthConfig.
 {{{
-<bean id="socialAuthManager" class="org.brickred.socialauth.SocialAuthManager">
+<bean id="socialAuthManager" class="org.brickred.socialauth.SocialAuthManager" scope="session">
     <property name="socialAuthConfig"><ref bean="socialAuthConfig"/></property>
+     <aop:scoped-proxy/>
 </bean>
 }}}  
    * Add a bean entry named socialAuthTemplate, with  scope set to session on root-context.xml file.
