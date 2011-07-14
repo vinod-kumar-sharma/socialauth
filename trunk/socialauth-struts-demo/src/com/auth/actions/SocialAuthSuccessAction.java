@@ -24,9 +24,6 @@
  */
 package com.auth.actions;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -107,18 +104,9 @@ public class SocialAuthSuccessAction extends Action {
 						}
 					}
 				}
-				String filePath = getServlet().getServletContext().getRealPath(
-						File.separatorChar + provider.getProviderId()
-								+ "_accessGrant.ser");
-				System.out.println(filePath);
-				FileOutputStream fs = new FileOutputStream(new File(filePath));
-				ObjectOutputStream os = new ObjectOutputStream(fs);
-				os.writeObject(provider.getAccessGrant());
-				System.out.println(provider.getAccessGrant());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
-			System.out.println(profile);
 			request.setAttribute("profile", profile);
 			request.setAttribute("contacts", contactsList);
 

@@ -82,22 +82,26 @@ public class SocialAuthenticationAction extends Action {
 		AuthForm authForm = (AuthForm) form;
 
 		String id = authForm.getId();
-		SocialAuthManager authProvider;
+		SocialAuthManager manager;
 		if (authForm.getSocialAuthManager() != null) {
-			authProvider = authForm.getSocialAuthManager();
+			manager = authForm.getSocialAuthManager();
+			if ("signout".equals(request.getParameter("mode"))) {
+				manager.disconnectProvider(id);
+				return mapping.findForward("home");
+			}
 		} else {
 			InputStream in = SocialAuthenticationAction.class.getClassLoader()
 					.getResourceAsStream("oauth_consumer.properties");
 			SocialAuthConfig conf = SocialAuthConfig.getDefault();
 			conf.load(in);
-			authProvider = new SocialAuthManager();
-			authProvider.setSocialAuthConfig(conf);
-			authForm.setSocialAuthManager(authProvider);
+			manager = new SocialAuthManager();
+			manager.setSocialAuthConfig(conf);
+			authForm.setSocialAuthManager(manager);
 		}
 
 		String returnToUrl = RequestUtils.absoluteURL(request,
 				"/socialAuthSuccessAction.do").toString();
-		String url = authProvider.getAuthenticationUrl(id, returnToUrl);
+		String url = manager.getAuthenticationUrl(id, returnToUrl);
 		LOG.info("Redirecting to: " + url);
 		if (url != null) {
 			ActionForward fwd = new ActionForward("openAuthUrl", url, true);
