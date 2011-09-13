@@ -1,0 +1,40 @@
+<project name="SASF" default="create-jar">
+  <property name="baseDir" value="." />
+
+  <property name="sourceDir" value="${baseDir}/src" />
+  <property name="webDir" value="${basedir}/WebContent" />
+  <property name="libDir" value="${webDir}/WEB-INF/lib" />
+
+	
+  <property name="buildDir" value="${webDir}/WEB-INF/classes" />
+  <property name="distDir" value="${baseDir}/dist" />
+  
+  <path id="libraries">
+	 <fileset dir="${libDir}">
+	  <include name="**/*.jar" />
+	 </fileset>
+  </path>
+
+  <target name="clean">
+	 <delete dir="${buildDir}" failonerror="true" />
+	 <delete dir="${distDir}" failonerror="true" />
+  </target>
+
+  <target name="init">
+    <mkdir dir="${buildDir}" />
+  	<mkdir dir="${distDir}" />
+  </target>
+
+ <!--====================COMPILE CLASSES================================-->
+  <target name="compile" depends="clean,init">
+  	<javac destdir="${buildDir}" classpathref="libraries" debug="true" encoding="ISO-8859-1" failonerror="true" >
+  	  <src location="${sourceDir}" />
+  	</javac>
+  </target>
+
+  <!--====================CREATE JAR================================-->
+  <target name="create-jar" depends="compile">
+  	<jar destfile="${distDir}/socialauth-filter.jar" basedir="${buildDir}"/>
+  </target>
+
+ </project>
