@@ -67,5 +67,3 @@ SASFHelper helper = SASFStaticHelper.getHelper(request);
 Profile profile = helper.getUserProfile();
 List<Contact> contactsList= helper.getContactList();
 }}}
-
-[SpringSample  Step by Step Spring MVC application using socialauth]
