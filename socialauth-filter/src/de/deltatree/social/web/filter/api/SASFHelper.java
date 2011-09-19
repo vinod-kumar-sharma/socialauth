@@ -1,6 +1,10 @@
 package de.deltatree.social.web.filter.api;
 
+import java.util.List;
+
 import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.Contact;
+import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.SocialAuthManager;
 
 import de.deltatree.social.web.filter.api.security.SASFSocialAuthManager;
@@ -24,6 +28,10 @@ public interface SASFHelper {
 	public void setProvider(AuthProvider provider);
 
 	public AuthProvider getProvider();
+	
+	public Profile getProfile();
+	
+	public List<Contact> getContactList();
 
 	public void setAuthManager(SocialAuthManager socialAuthManager);
 

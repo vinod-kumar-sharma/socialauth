@@ -1,12 +1,9 @@
 package de.deltatree.social.web.filter.impl.props;
 
 import java.io.BufferedInputStream;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
-import java.util.regex.Pattern;
 
 public class SASFProperties {
 

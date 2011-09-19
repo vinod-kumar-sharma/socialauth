@@ -2,10 +2,14 @@ package de.deltatree.social.web.filter.impl;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.Contact;
+import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.SocialAuthManager;
 
 import de.deltatree.social.web.filter.api.SASFHelper;
@@ -146,5 +150,37 @@ public class DefaultSASFHelper implements SASFHelper {
 
 	public SASFProperties getProps() {
 		return props;
+	}
+
+	@Override
+	public Profile getProfile() {
+		Profile profile = null;
+		SocialAuthManager manager = getAuthManager();
+		if (manager != null) {
+			try {
+				AuthProvider provider = manager.getCurrentAuthProvider();
+				profile = provider.getUserProfile();
+
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return profile;
+	}
+
+	@Override
+	public List<Contact> getContactList() {
+		List<Contact> contactsList = null;
+		SocialAuthManager manager = getAuthManager();
+		if (manager != null) {
+			contactsList = new ArrayList<Contact>();
+			try {
+				AuthProvider provider = manager.getCurrentAuthProvider();
+				contactsList = provider.getContactList();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return contactsList;
 	}
 }
