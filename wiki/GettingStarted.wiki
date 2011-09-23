@@ -34,6 +34,9 @@ You can either download our pre-built jars or use Maven to integrate socialauth 
   <tr>
     <td>Seam Application</td><td>[http://socialauth.googlecode.com/files/socialauth-2.0-beta2.jar socialauth-2.0-beta2.jar]</td><td>[http://socialauth.googlecode.com/files/dependencies-1.2.zip dependencies-1.2.zip]</td><td>[http://socialauth.googlecode.com/files/socialauth-seam-2.0-beta1.jar socialauth-seam-2.0-beta1.jar]</td>
   </tr>
+   <tr>
+    <td>Using Filter</td><td>[http://socialauth.googlecode.com/files/socialauth-2.0-beta2.jar socialauth-2.0-beta2.jar]</td><td>[http://socialauth.googlecode.com/files/dependencies-2.0.zip dependencies-2.0.zip]</td><td>[http://socialauth.googlecode.com/files/socialauth-filter-2.0-beta1.jar socialauth-filter-2.0-beta1.jar]</td>
+  </tr>
 </table>
 
 *Note:* If you are not using OpenID provider, in that case you can remove commons-codec.jar,commons-httpclient-3.1.jar, openid4java.jar from dependencies folder.
@@ -73,6 +76,15 @@ If you are using Maven, you can configure the pom.xml as follows:
     <version>2.0-beta1</version>
 </dependency>
 }}}
+ * Add Dependency for filter library if required
+{{{
+<dependency>
+  <groupId>org.brickred</groupId>
+  <artifactId>socialauth-filter</artifactId>
+  <version>2.0-beta1</version>
+</dependency>
+}}}
+
 
 == Step 3. Implementation ==
 
