@@ -69,6 +69,6 @@ List<Contact> contactsList= helper.getContactList();
 }}}
 
 {{{
-Download the demo project from
+ # Download the demo project from
 http://code.google.com/p/socialauth/source/browse/#svn%2Ftrunk%2Fsocialauth-struts-filter-demo
 }}}
