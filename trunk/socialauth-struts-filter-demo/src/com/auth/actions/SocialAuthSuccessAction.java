@@ -78,7 +78,6 @@ public class SocialAuthSuccessAction extends Action {
 			final HttpServletResponse response) throws Exception {
 
 		SASFHelper helper = SASFStaticHelper.getHelper(request);
-		// SocialAuthManager manager = helper.getAuthManager();
 		try {
 			Profile profile = helper.getProfile();
 
