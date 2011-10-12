@@ -24,7 +24,6 @@
  */
 package com.auth.actions;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,10 +36,8 @@ import org.apache.struts.action.Action;
 import org.apache.struts.action.ActionForm;
 import org.apache.struts.action.ActionForward;
 import org.apache.struts.action.ActionMapping;
-import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Profile;
-import org.brickred.socialauth.SocialAuthManager;
 
 import de.deltatree.social.web.filter.api.SASFHelper;
 import de.deltatree.social.web.filter.api.SASFStaticHelper;
@@ -81,33 +78,28 @@ public class SocialAuthSuccessAction extends Action {
 			final HttpServletResponse response) throws Exception {
 
 		SASFHelper helper = SASFStaticHelper.getHelper(request);
-		SocialAuthManager manager = helper.getAuthManager();
+		// SocialAuthManager manager = helper.getAuthManager();
+		try {
+			Profile profile = helper.getProfile();
 
-		if (manager != null) {
-			List<Contact> contactsList = new ArrayList<Contact>();
-			Profile profile = null;
-			try {
-				AuthProvider provider = manager.getCurrentAuthProvider();
+			List<Contact> contactsList = helper.getContactList();
 
-				profile = provider.getUserProfile();
-				contactsList = provider.getContactList();
-				if (contactsList != null && contactsList.size() > 0) {
-					for (Contact p : contactsList) {
-						if (StringUtils.isEmpty(p.getFirstName())
-								&& StringUtils.isEmpty(p.getLastName())) {
-							p.setFirstName(p.getDisplayName());
-						}
+			if (contactsList != null && contactsList.size() > 0) {
+				for (Contact p : contactsList) {
+					if (StringUtils.isEmpty(p.getFirstName())
+							&& StringUtils.isEmpty(p.getLastName())) {
+						p.setFirstName(p.getDisplayName());
 					}
 				}
-			} catch (Exception e) {
-				e.printStackTrace();
 			}
+
 			request.setAttribute("profile", profile);
 			request.setAttribute("contacts", contactsList);
 
 			return mapping.findForward("success");
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
-		// if provider null
 		return mapping.findForward("failure");
 	}
 }
