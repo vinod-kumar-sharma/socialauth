@@ -67,4 +67,5 @@ SASFHelper helper = SASFStaticHelper.getHelper(request);
 Profile profile = helper.getUserProfile();
 List<Contact> contactsList= helper.getContactList();
 }}}
- # Download the demo project [http://code.google.com/p/socialauth/source/browse/#svn%2Ftrunk%2Fsocialauth-struts-filter-demo]
+
+* You can download the demo project from* [http://code.google.com/p/socialauth/source/browse/#svn%2Ftrunk%2Fsocialauth-struts-filter-demo]
