@@ -149,7 +149,7 @@ That is all you have to do, really. We have the following tracks available on ho
  * [StrutsSample  Developing a Struts application using socialauth]
  * [GettingStartedWithSpring Developing a Spring MVC application using socialauth]
  * [GettingStartedWithYourOwnFramework Developing a application with your own framework OR Servlet application]
- * [GettingStartedWithSocialAuthFilte Developing a application using socialauth filter]
+ * [GettingStartedWithSocialAuthFilter Developing a application using socialauth filter]
 
 If you are new to these frameworks or face issues in following the above guides, we also have step-by-step guides available.
 
