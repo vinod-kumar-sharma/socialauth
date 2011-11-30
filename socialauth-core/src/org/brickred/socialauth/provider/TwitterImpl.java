@@ -102,6 +102,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	 *            It contains the access token and other information
 	 * @throws Exception
 	 */
+	@Override
 	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
 		oauth = new OAuthConsumer(config);
 		accessToken = accessGrant;
@@ -120,13 +121,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 		LOG.info("Determining URL for redirection");
 		setProviderState(true);
 		LOG.debug("Call to fetch Request Token");
-		try {
-			requestToken = oauth.getRequestToken(REQUEST_TOKEN_URL, successUrl);
-		} catch (SocialAuthException ex) {
-			String msg = ex.getMessage()
-					+ "OR you have not set any scope while registering your application. You will have to select atlest read public profile scope while registering your application";
-			throw new SocialAuthException(msg, ex);
-		}
+		requestToken = oauth.getRequestToken(REQUEST_TOKEN_URL, successUrl);
 		StringBuilder urlBuffer = oauth.buildAuthUrl(AUTHORIZATION_URL,
 				requestToken, successUrl);
 		LOG.info("Redirection to following URL should happen : "
