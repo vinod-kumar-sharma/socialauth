@@ -56,9 +56,11 @@ public class SocialAuthManager implements Serializable {
 	private String currentProviderId;
 	private Map<String, AuthProvider> providersMap;
 	private SocialAuthConfig socialAuthConfig;
+	private Map<String, Permission> permissionsMap;
 
 	public SocialAuthManager() {
 		providersMap = new HashMap<String, AuthProvider>();
+		permissionsMap = new HashMap<String, Permission>();
 	}
 
 	/**
@@ -150,6 +152,9 @@ public class SocialAuthManager implements Serializable {
 			authProvider = providersMap.get(id);
 		} else {
 			authProvider = getProviderInstance(id);
+			if (permissionsMap.get(id) != null) {
+				authProvider.setPermission(permissionsMap.get(id));
+			}
 			if (permission != null) {
 				authProvider.setPermission(permission);
 			}
@@ -286,6 +291,20 @@ public class SocialAuthManager implements Serializable {
 			return providersMap.get(currentProviderId);
 		}
 		return null;
+	}
+
+	/**
+	 * Sets the permission for given provider.
+	 * 
+	 * @param providerId
+	 *            the provider id for which permission need to be set
+	 * @param permission
+	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
+	 *            Permission.ALL, Permission.DEFAULT
+	 */
+	public void setPermission(final String providerId,
+			final Permission permission) {
+		permissionsMap.put(providerId, permission);
 	}
 
 }
