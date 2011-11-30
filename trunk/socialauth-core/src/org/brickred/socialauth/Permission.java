@@ -34,6 +34,7 @@ public class Permission implements Serializable {
 			"authenticate_only");
 	public static final Permission ALL = new Permission("all");
 	public static final Permission DEFAULT = new Permission("default");
+	public static final Permission CUSTOM = new Permission("custom");
 	private String scope;
 
 	private Permission(final String scope) {
