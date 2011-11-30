@@ -11,6 +11,7 @@ www.google.com.consumer_key = opensource.brickred.com
 www.google.com.consumer_secret = YC06FqhmCLWvtBg/O4W/aJfj
 #you can set custom permission by using custom_permissions with provider prefix.
 #www.google.com.custom_permissions = http://www.google.com/m8/feeds/,http://picasaweb.google.com/data/
+
 #yahoo 
 api.login.yahoo.com.consumer_key = dj0yJmk9VTdaSUVTU3RrWlRzJmQ9WVdrOWNtSjZNMFpITm1VbWNHbzlNQS0tJnM9Y29uc3VtZXJzZWNyZXQmeD1iMA--
 api.login.yahoo.com.consumer_secret = 1db3d0b897dac60e151aa9e2499fcb2a6b474546
