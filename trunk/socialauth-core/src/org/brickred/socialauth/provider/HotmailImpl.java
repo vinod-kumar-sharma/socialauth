@@ -88,6 +88,10 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	private Profile userProfile;
 	private AccessGrant accessGrant;
 
+	// set this to the list of extended permissions you want
+	private static final String AllPerms = new String(
+			"WL_Contacts.View,WL_Activities.Update");
+
 	/**
 	 * Stores configuration for the provider
 	 * 
@@ -98,6 +102,9 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	 */
 	public HotmailImpl(final OAuthConfig providerConfig) throws Exception {
 		config = providerConfig;
+		if (config.getCustomPermissions() != null) {
+			this.scope = Permission.CUSTOM;
+		}
 	}
 
 	/**
@@ -113,6 +120,7 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 		accessToken = accessGrant.getKey();
 		isVerify = true;
 		uid = accessGrant.getAttribute("uid").toString();
+		scope = accessGrant.getPermission();
 	}
 
 	/**
@@ -134,8 +142,9 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 		}
 		String consentUrl = String.format(CONSENT_URL,
 				config.get_consumerKey(), this.successUrl);
-		if (!Permission.AUTHENTICATE_ONLY.equals(scope)) {
-			consentUrl += "&wrap_scope=WL_Contacts.View,WL_Activities.Update";
+		String scopeStr = getScope();
+		if (scopeStr != null) {
+			consentUrl += "&wrap_scope=" + scopeStr;
 		}
 		LOG.info("Redirection to following URL should happen : " + consentUrl);
 		return consentUrl;
@@ -287,6 +296,10 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 		if (!isVerify) {
 			throw new SocialAuthException(
 					"Please call verifyResponse function first to get Access Token");
+		}
+		if (Permission.AUTHENTICATE_ONLY.equals(scope)) {
+			throw new SocialAuthException(
+					"You have not set permission to get contacts");
 		}
 		String u = String.format(CONTACTS_URL, uid);
 		LOG.info("Fetching contacts from " + u);
@@ -600,5 +613,17 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getProviderId() {
 		return config.getId();
+	}
+
+	private String getScope() {
+		String scopeStr = null;
+		if (Permission.AUTHENTICATE_ONLY.equals(scope)) {
+			scopeStr = null;
+		} else if (Permission.CUSTOM.equals(scope)) {
+			scopeStr = config.getCustomPermissions();
+		} else {
+			scopeStr = AllPerms;
+		}
+		return scopeStr;
 	}
 }
