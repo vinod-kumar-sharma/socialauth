@@ -97,6 +97,9 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 		oauth = new OAuthConsumer(config);
 		requestToken = null;
 		accessToken = null;
+		if (config.getCustomPermissions() != null) {
+			scope = Permission.CUSTOM;
+		}
 	}
 
 	/**
@@ -148,14 +151,12 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 
 		String realm = successUrl.substring(0, successUrl.indexOf("/", 9));
 		String consumerURL = realm.replace("http://", "");
+		consumerURL = consumerURL.replace("https://", "");
+		consumerURL = consumerURL.replaceAll(":{1}\\d*", "");
 
 		setProviderState(true);
-		String gscope = null;
-		if (!Permission.AUTHENTICATE_ONLY.equals(this.scope)) {
-			gscope = OAUTH_SCOPE;
-		}
 		String url = OpenIdConsumer.getRequestTokenURL(REQUEST_TOKEN_URL,
-				successUrl, realm, assocHandle, consumerURL, gscope);
+				successUrl, realm, assocHandle, consumerURL, getScope());
 		LOG.info("Redirection to following URL should happen : " + url);
 		return url;
 
@@ -271,7 +272,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 		LOG.info("Fetching contacts from " + CONTACTS_FEED_URL);
 		if (!isVerify) {
 			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token");
+					"Please call verifyResponse function first to get Access Token or you have not set Permission to get contacts.");
 		}
 		Response serviceResponse = null;
 		try {
@@ -447,5 +448,23 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getProviderId() {
 		return config.getId();
+	}
+
+	private String getScope() {
+		String scopeStr;
+		if (Permission.AUTHENTICATE_ONLY.equals(scope)) {
+			scopeStr = null;
+		} else if (Permission.CUSTOM.equals(scope)) {
+			StringBuffer sb = new StringBuffer();
+			String arr[] = config.getCustomPermissions().split(",");
+			sb.append(arr[0]);
+			for (int i = 1; i < arr.length; i++) {
+				sb.append(" ").append(arr[i]);
+			}
+			scopeStr = sb.toString();
+		} else {
+			scopeStr = OAUTH_SCOPE;
+		}
+		return scopeStr;
 	}
 }
