@@ -84,7 +84,7 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 	private Profile userProfile;
 	private AccessGrant accessGrant;
 
-	// / set this to the list of extended permissions you want
+	// set this to the list of extended permissions you want
 	private static final String[] AllPerms = new String[] { "publish_stream",
 			"email", "user_birthday", "user_location" };
 	private static final String[] AuthPerms = new String[] { "email",
@@ -100,6 +100,9 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 	 */
 	public FacebookImpl(final OAuthConfig providerConfig) throws Exception {
 		config = providerConfig;
+		if (config.getCustomPermissions() != null) {
+			scope = Permission.CUSTOM;
+		}
 	}
 
 	/**
@@ -133,22 +136,7 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 		}
 		String url = String.format(AUTHORIZATION_URL, config.get_consumerKey(),
 				this.successUrl);
-		StringBuffer result = new StringBuffer();
-		boolean isFirstSet = false;
-		if (Permission.AUTHENTICATE_ONLY.equals(scope)) {
-			result.append(AuthPerms[0]);
-			for (int i = 1; i < AuthPerms.length; i++) {
-				if (isFirstSet) {
-					result.append(",").append(AuthPerms[i]);
-				}
-			}
-		} else {
-			result.append(AllPerms[0]);
-			for (int i = 1; i < AllPerms.length; i++) {
-				result.append(",").append(AllPerms[i]);
-			}
-		}
-		url += "&scope=" + result.toString();
+		url += "&scope=" + getScope();
 		LOG.info("Redirection to following URL should happen : " + url);
 		return url;
 	}
@@ -523,5 +511,23 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getProviderId() {
 		return config.getId();
+	}
+
+	private String getScope() {
+		StringBuffer result = new StringBuffer();
+		String arr[] = null;
+		if (Permission.AUTHENTICATE_ONLY.equals(scope)) {
+			arr = AuthPerms;
+		} else if (Permission.CUSTOM.equals(scope)
+				&& config.getCustomPermissions() != null) {
+			arr = config.getCustomPermissions().split(",");
+		} else {
+			arr = AllPerms;
+		}
+		result.append(arr[0]);
+		for (int i = 1; i < arr.length; i++) {
+			result.append(",").append(arr[i]);
+		}
+		return result.toString();
 	}
 }
