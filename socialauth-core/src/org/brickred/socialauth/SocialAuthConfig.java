@@ -272,6 +272,14 @@ public class SocialAuthConfig implements Serializable {
 				OAuthConfig conf = new OAuthConfig(cKey, cSecret);
 				conf.setId(key);
 				conf.setProviderImplClass(providersImplMap.get(key));
+				if (applicationProperties.containsKey(value
+						+ ".custom_permissions")) {
+					String perms = applicationProperties.getProperty(
+							value + ".custom_permissions").trim();
+					if (perms.length() > 0) {
+						conf.setCustomPermissions(perms);
+					}
+				}
 				providersConfig.put(key, conf);
 			} else {
 				LOG.debug("Configuration for provider " + key
