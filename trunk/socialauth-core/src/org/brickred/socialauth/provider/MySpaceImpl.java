@@ -62,7 +62,7 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 
 	private static final long serialVersionUID = -4074039782095430942L;
 	private static final String REQUEST_TOKEN_URL = "http://api.myspace.com/request_token";
-	private static final String AUTHORIZATION_URL = "http://api.myspace.com/authorize?myspaceid.permissions=VIEWER_FULL_PROFILE_INFO|ViewFullProfileInfo|UpdateMoodStatus";
+	private static final String AUTHORIZATION_URL = "http://api.myspace.com/authorize";
 	private static final String ACCESS_TOKEN_URL = "http://api.myspace.com/access_token";
 	private static final String PROFILE_URL = "http://api.myspace.com/1.0/people/@me/@self";
 	private static final String CONTACTS_URL = "http://api.myspace.com/1.0/people/@me/@all";
@@ -77,6 +77,9 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 	private OAuthConfig config;
 	private Profile userProfile;
 
+	private static final String AllPerms = "VIEWER_FULL_PROFILE_INFO|ViewFullProfileInfo|UpdateMoodStatus";
+	private static final String AuthPerms = "VIEWER_FULL_PROFILE_INFO|ViewFullProfileInfo";
+
 	/**
 	 * Stores configuration for the provider
 	 * 
@@ -88,6 +91,10 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 	public MySpaceImpl(final OAuthConfig providerConfig) throws Exception {
 		config = providerConfig;
 		oauth = new OAuthConsumer(config);
+		if (config.getCustomPermissions() != null) {
+			this.scope = Permission.CUSTOM;
+		}
+
 	}
 
 	/**
@@ -97,10 +104,12 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 	 *            It contains the access token and other information
 	 * @throws Exception
 	 */
+	@Override
 	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
 		oauth = new OAuthConsumer(config);
 		accessToken = accessGrant;
 		isVerify = true;
+		scope = accessGrant.getPermission();
 	}
 
 	/**
@@ -117,8 +126,13 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 		setProviderState(true);
 		LOG.debug("Call to fetch Request Token");
 		requestToken = oauth.getRequestToken(REQUEST_TOKEN_URL, successUrl);
-		StringBuilder urlBuffer = oauth.buildAuthUrl(AUTHORIZATION_URL,
-				requestToken, successUrl);
+		String url = AUTHORIZATION_URL;
+		String scopeStr = getScope();
+		if (scopeStr != null) {
+			url = url + "?myspaceid.permissions=" + scopeStr;
+		}
+		StringBuilder urlBuffer = oauth.buildAuthUrl(url, requestToken,
+				successUrl);
 		LOG.info("Redirection to following URL should happen : "
 				+ urlBuffer.toString());
 		return urlBuffer.toString();
@@ -456,4 +470,18 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 	public String getProviderId() {
 		return config.getId();
 	}
+
+	private String getScope() {
+		String scopeStr;
+		if (Permission.AUTHENTICATE_ONLY.equals(scope)) {
+			scopeStr = AuthPerms;
+		} else if (Permission.CUSTOM.equals(scope)) {
+			String str = config.getCustomPermissions();
+			scopeStr = str.replaceAll(",", "|");
+		} else {
+			scopeStr = AllPerms;
+		}
+		return scopeStr;
+	}
+
 }
