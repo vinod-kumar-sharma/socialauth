@@ -42,6 +42,7 @@ public class OAuthConfig implements Serializable {
 	private final String _transportName;
 	private String id;
 	private Class<?> providerImplClass;
+	private String customPermissions;
 
 	/**
 	 * 
@@ -162,8 +163,17 @@ public class OAuthConfig implements Serializable {
 		result.append(" transportName: " + _transportName + NEW_LINE);
 		result.append(" id: " + id + NEW_LINE);
 		result.append(" providerImplClass: " + providerImplClass + NEW_LINE);
+		result.append(" customPermissions: " + customPermissions + NEW_LINE);
 		result.append("}");
 		return result.toString();
+	}
+
+	public String getCustomPermissions() {
+		return customPermissions;
+	}
+
+	public void setCustomPermissions(final String customPermissions) {
+		this.customPermissions = customPermissions;
 	}
 
 }
