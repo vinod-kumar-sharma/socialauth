@@ -47,6 +47,11 @@ public class Contact implements Serializable {
 	String id;
 
 	/**
+	 * Email hash
+	 */
+	String emailHash;
+
+	/**
 	 * Retrieves the first name
 	 * 
 	 * @return String the first name
@@ -180,6 +185,25 @@ public class Contact implements Serializable {
 	}
 
 	/**
+	 * Retrieves the email hash
+	 * 
+	 * @return String contact person email hash
+	 */
+	public String getEmailHash() {
+		return emailHash;
+	}
+
+	/**
+	 * Updates the contact person email hash
+	 * 
+	 * @param emailHash
+	 *            contact person email hash
+	 */
+	public void setEmailHash(final String emailHash) {
+		this.emailHash = emailHash;
+	}
+
+	/**
 	 * Retrieves the profile info as a string
 	 * 
 	 * @return String
@@ -195,6 +219,7 @@ public class Contact implements Serializable {
 		result.append(" displayName: " + displayName + NEW_LINE);
 		result.append(" id: " + id + NEW_LINE);
 		result.append("profileUrl: " + profileUrl + NEW_LINE);
+		result.append("emailHash: " + emailHash + NEW_LINE);
 		result.append(" otherEmails: ");
 		if (otherEmails != null) {
 			StringBuilder estr = new StringBuilder();
