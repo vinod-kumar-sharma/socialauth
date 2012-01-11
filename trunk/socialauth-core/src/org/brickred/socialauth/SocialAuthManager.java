@@ -197,6 +197,8 @@ public class SocialAuthManager implements Serializable {
 	 */
 	public boolean disconnectProvider(final String id) {
 		if (providersMap.get(id) != null) {
+			AuthProvider p = providersMap.get(id);
+			p.logout();
 			providersMap.remove(id);
 			return true;
 		}
