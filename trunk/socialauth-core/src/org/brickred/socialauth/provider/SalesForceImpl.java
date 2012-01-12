@@ -266,7 +266,7 @@ public class SalesForceImpl extends AbstractProvider implements AuthProvider,
 			LOG.debug("User Profile :" + result);
 		} catch (Exception e) {
 			throw new SocialAuthException("Failed to read response from  "
-					+ profileURL);
+					+ profileURL, e);
 		}
 		try {
 			JSONObject resp = new JSONObject(result);
@@ -302,7 +302,7 @@ public class SalesForceImpl extends AbstractProvider implements AuthProvider,
 			return p;
 		} catch (Exception e) {
 			throw new SocialAuthException(
-					"Failed to parse the user profile json : " + result);
+					"Failed to parse the user profile json : " + result, e);
 
 		}
 	}

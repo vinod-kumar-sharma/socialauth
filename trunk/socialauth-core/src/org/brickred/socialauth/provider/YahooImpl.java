@@ -194,7 +194,7 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 			serviceResponse = authenticationStrategy.executeFeed(url);
 		} catch (Exception e) {
 			throw new SocialAuthException(
-					"Failed to retrieve the user profile from  " + url);
+					"Failed to retrieve the user profile from  " + url, e);
 		}
 		if (serviceResponse.getStatus() != 200) {
 			throw new SocialAuthException(
@@ -208,7 +208,7 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 			LOG.debug("User Profile :" + result);
 		} catch (Exception exc) {
 			throw new SocialAuthException("Failed to read response from  "
-					+ url);
+					+ url, exc);
 		}
 		try {
 			JSONObject jobj = new JSONObject(result);
@@ -275,7 +275,7 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 			return profile;
 		} catch (Exception e) {
 			throw new ServerDataException(
-					"Failed to parse the user profile json : " + result);
+					"Failed to parse the user profile json : " + result, e);
 
 		}
 	}

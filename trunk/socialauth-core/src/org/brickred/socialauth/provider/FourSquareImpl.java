@@ -193,7 +193,7 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 			res = serviceResponse.getResponseBodyAsString(Constants.ENCODING);
 		} catch (Exception exc) {
 			throw new SocialAuthException("Failed to read response from  "
-					+ PROFILE_URL);
+					+ PROFILE_URL, exc);
 		}
 
 		JSONObject jobj = new JSONObject(res);
@@ -256,7 +256,7 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 			serviceResponse = authenticationStrategy.executeFeed(CONTACTS_URL);
 		} catch (Exception e) {
 			throw new SocialAuthException("Error while getting contacts from "
-					+ CONTACTS_URL);
+					+ CONTACTS_URL, e);
 		}
 		if (serviceResponse.getStatus() != 200) {
 			throw new SocialAuthException("Error while getting contacts from "
@@ -268,7 +268,7 @@ public class FourSquareImpl extends AbstractProvider implements AuthProvider,
 					.getResponseBodyAsString(Constants.ENCODING);
 		} catch (Exception exc) {
 			throw new SocialAuthException("Failed to read response from  "
-					+ CONTACTS_URL);
+					+ CONTACTS_URL, exc);
 		}
 		LOG.debug("User Contacts list in JSON " + respStr);
 		JSONObject resp = new JSONObject(respStr);

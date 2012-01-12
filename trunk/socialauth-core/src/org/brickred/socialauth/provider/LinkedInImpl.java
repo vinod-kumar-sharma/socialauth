@@ -279,7 +279,8 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 			serviceResponse = authenticationStrategy.executeFeed(PROFILE_URL);
 		} catch (Exception e) {
 			throw new SocialAuthException(
-					"Failed to retrieve the user profile from  " + PROFILE_URL);
+					"Failed to retrieve the user profile from  " + PROFILE_URL,
+					e);
 		}
 		if (serviceResponse.getStatus() != 200) {
 			throw new SocialAuthException(
