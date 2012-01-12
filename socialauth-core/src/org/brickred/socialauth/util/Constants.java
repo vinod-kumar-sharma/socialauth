@@ -98,6 +98,11 @@ public interface Constants {
 	public static final String OAUTH_REQUEST_TOKEN_URL = "reqTokenURL";
 
 	/**
+	 * authorization url
+	 */
+	public static final String OAUTH_AUTHORIZATION_URL = "authorizationURL";
+
+	/**
 	 * access token url
 	 */
 	public static final String OAUTH_ACCESS_TOKEN_URL = "accessTokenURL";
@@ -151,4 +156,20 @@ public interface Constants {
 	 * yahoo
 	 */
 	public static final String YAHOO = "yahoo";
+
+	/**
+	 * salesforce
+	 */
+	public static final String SALESFORCE = "salesforce";
+
+	/**
+	 * yammer
+	 */
+	public static final String YAMMER = "yammer";
+
+	/**
+	 * access token parameter name
+	 */
+	public static final String ACCESS_TOKEN_PARAMETER_NAME = "access_token";
+
 }
