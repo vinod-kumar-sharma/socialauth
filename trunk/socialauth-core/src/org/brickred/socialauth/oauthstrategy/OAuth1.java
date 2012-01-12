@@ -176,7 +176,7 @@ public class OAuth1 implements OAuthStrategyBase {
 	@Override
 	public void logout() {
 		accessToken = null;
-
+		providerState = false;
 	}
 
 }

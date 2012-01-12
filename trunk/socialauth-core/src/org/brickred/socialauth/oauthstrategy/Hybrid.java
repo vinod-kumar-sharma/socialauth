@@ -153,6 +153,10 @@ public class Hybrid implements OAuthStrategyBase {
 
 	@Override
 	public Response executeFeed(final String url) throws Exception {
+		if (accessToken == null) {
+			throw new SocialAuthException(
+					"Please call verifyResponse function first to get Access Token");
+		}
 		return oauth.httpGet(url, null, accessToken);
 	}
 
@@ -212,6 +216,6 @@ public class Hybrid implements OAuthStrategyBase {
 	@Override
 	public void logout() {
 		accessToken = null;
-
+		providerState = false;
 	}
 }
