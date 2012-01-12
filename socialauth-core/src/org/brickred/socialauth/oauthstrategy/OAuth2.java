@@ -301,6 +301,6 @@ public class OAuth2 implements OAuthStrategyBase {
 	@Override
 	public void logout() {
 		accessGrant = null;
-
+		providerState = false;
 	}
 }
