@@ -208,7 +208,7 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 			LOG.debug("Contacts JSON :" + result);
 		} catch (Exception exc) {
 			throw new SocialAuthException("Failed to read contacts from  "
-					+ CONTACTS_URL);
+					+ CONTACTS_URL, exc);
 		}
 		JSONArray fArr = new JSONArray();
 		JSONObject resObj = new JSONObject(result);
@@ -307,7 +307,8 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 			serviceResponse = authenticationStrategy.executeFeed(PROFILE_URL);
 		} catch (Exception e) {
 			throw new SocialAuthException(
-					"Failed to retrieve the user profile from  " + PROFILE_URL);
+					"Failed to retrieve the user profile from  " + PROFILE_URL,
+					e);
 		}
 		if (serviceResponse.getStatus() != 200) {
 			throw new SocialAuthException(
@@ -322,7 +323,7 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 			LOG.debug("User Profile :" + result);
 		} catch (Exception exc) {
 			throw new SocialAuthException("Failed to read response from  "
-					+ PROFILE_URL);
+					+ PROFILE_URL, exc);
 		}
 		JSONObject pObj = new JSONObject();
 		JSONObject jobj = new JSONObject(result);

@@ -297,7 +297,7 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 			respStr = response.getResponseBodyAsString(Constants.ENCODING);
 		} catch (Exception e) {
 			throw new SocialAuthException("Error while getting contacts from "
-					+ CONTACTS_URL);
+					+ CONTACTS_URL, e);
 		}
 		try {
 			LOG.debug("User Contacts list in json : " + respStr);

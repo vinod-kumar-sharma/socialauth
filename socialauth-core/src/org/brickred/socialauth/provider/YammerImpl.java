@@ -271,7 +271,7 @@ public class YammerImpl extends AbstractProvider implements AuthProvider,
 			respStr = response.getResponseBodyAsString(Constants.ENCODING);
 		} catch (Exception e) {
 			throw new SocialAuthException("Error while getting contacts from "
-					+ contactURL);
+					+ contactURL, e);
 		}
 		try {
 			LOG.debug("User Contacts list in json : " + respStr);
@@ -381,7 +381,7 @@ public class YammerImpl extends AbstractProvider implements AuthProvider,
 			LOG.debug("User Profile :" + result);
 		} catch (Exception e) {
 			throw new SocialAuthException("Failed to read response from  "
-					+ profileURL);
+					+ profileURL, e);
 		}
 		try {
 			JSONObject resp = new JSONObject(result);
@@ -429,7 +429,7 @@ public class YammerImpl extends AbstractProvider implements AuthProvider,
 			return userProfile;
 		} catch (Exception e) {
 			throw new SocialAuthException(
-					"Failed to parse the user profile json : " + result);
+					"Failed to parse the user profile json : " + result, e);
 
 		}
 	}

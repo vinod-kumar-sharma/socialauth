@@ -194,8 +194,7 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 			LOG.debug("Obtaining user profile");
 			return getProfile();
 		} else {
-			throw new SocialAuthException(
-					"Access token and expires not found from ");
+			throw new SocialAuthException("Unable to get Access token");
 		}
 	}
 
@@ -235,7 +234,8 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 			result = serviceResponse
 					.getResponseBodyAsString(Constants.ENCODING);
 		} catch (Exception e) {
-			throw new ServerDataException("Failed to get response from " + url);
+			throw new ServerDataException("Failed to get response from " + url,
+					e);
 		}
 		LOG.debug("User Contacts list in JSON " + result);
 		JSONObject resp = new JSONObject(result);
@@ -331,7 +331,7 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 			LOG.debug("User Profile :" + result);
 		} catch (Exception e) {
 			throw new SocialAuthException("Failed to read response from  "
-					+ PROFILE_URL);
+					+ PROFILE_URL, e);
 		}
 		try {
 			JSONObject resp = new JSONObject(result);
@@ -396,7 +396,7 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 			return p;
 		} catch (Exception e) {
 			throw new SocialAuthException(
-					"Failed to parse the user profile json : " + result);
+					"Failed to parse the user profile json : " + result, e);
 		}
 	}
 
