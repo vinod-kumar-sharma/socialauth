@@ -27,6 +27,7 @@ package org.brickred.socialauth.provider;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,15 +40,15 @@ import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
-import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.oauthstrategy.OAuth1;
+import org.brickred.socialauth.oauthstrategy.OAuthStrategyBase;
 import org.brickred.socialauth.util.AccessGrant;
 import org.brickred.socialauth.util.BirthDate;
 import org.brickred.socialauth.util.Constants;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
-import org.brickred.socialauth.util.OAuthConsumer;
 import org.brickred.socialauth.util.Response;
 import org.brickred.socialauth.util.SocialAuthUtil;
 import org.brickred.socialauth.util.XMLParseUtil;
@@ -67,21 +68,27 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 		Serializable {
 
 	private static final long serialVersionUID = 903564874550419470L;
-	private static final String REQUEST_TOKEN_URL = "https://api.login.yahoo.com/oauth/v2/get_request_token";
-	private static final String AUTHORIZATION_URL = "https://api.login.yahoo.com//oauth/v2/request_auth";
-	private static final String ACCESS_TOKEN_URL = "https://api.login.yahoo.com/oauth/v2/get_token";
 	private static final String PROFILE_URL = "http://social.yahooapis.com/v1/user/%1$s/profile?format=json";
 	private static final String CONTACTS_URL = "http://social.yahooapis.com/v1/user/%1$s/contacts;count=max";
 	private static final String UPDATE_STATUS_URL = "http://social.yahooapis.com/v1/user/%1$s/profile/status";
 	private final Log LOG = LogFactory.getLog(YahooImpl.class);
+	private static final Map<String, String> ENDPOINTS;
 
 	private Permission scope;
-	private boolean isVerify;
-	private AccessGrant requestToken;
 	private AccessGrant accessToken;
-	private OAuthConsumer oauth;
 	private OAuthConfig config;
 	private Profile userProfile;
+	private OAuthStrategyBase authenticationStrategy;
+
+	static {
+		ENDPOINTS = new HashMap<String, String>();
+		ENDPOINTS.put(Constants.OAUTH_REQUEST_TOKEN_URL,
+				"https://api.login.yahoo.com/oauth/v2/get_request_token");
+		ENDPOINTS.put(Constants.OAUTH_AUTHORIZATION_URL,
+				"https://api.login.yahoo.com//oauth/v2/request_auth");
+		ENDPOINTS.put(Constants.OAUTH_ACCESS_TOKEN_URL,
+				"https://api.login.yahoo.com/oauth/v2/get_token");
+	}
 
 	/**
 	 * Stores configuration for the provider
@@ -93,7 +100,7 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 	 */
 	public YahooImpl(final OAuthConfig providerConfig) throws Exception {
 		config = providerConfig;
-		oauth = new OAuthConsumer(config);
+		authenticationStrategy = new OAuth1(config, ENDPOINTS);
 	}
 
 	/**
@@ -105,9 +112,8 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
-		oauth = new OAuthConsumer(config);
 		accessToken = accessGrant;
-		isVerify = true;
+		authenticationStrategy.setAccessGrant(accessGrant);
 	}
 
 	/**
@@ -120,21 +126,16 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 
 	@Override
 	public String getLoginRedirectURL(final String successUrl) throws Exception {
-		LOG.info("Determining URL for redirection");
-		setProviderState(true);
-		LOG.debug("Call to fetch Request Token");
+		String url = null;
 		try {
-			requestToken = oauth.getRequestToken(REQUEST_TOKEN_URL, successUrl);
+			url = authenticationStrategy.getLoginRedirectURL(successUrl);
+
 		} catch (SocialAuthException ex) {
 			String msg = ex.getMessage()
 					+ "OR you have not set any scope while registering your application. You will have to select atlest read public profile scope while registering your application";
 			throw new SocialAuthException(msg, ex);
 		}
-		StringBuilder urlBuffer = oauth.buildAuthUrl(AUTHORIZATION_URL,
-				requestToken, successUrl);
-		LOG.info("Redirection to following URL should happen : "
-				+ urlBuffer.toString());
-		return urlBuffer.toString();
+		return url;
 	}
 
 	/**
@@ -175,26 +176,7 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 	private Profile doVerifyResponse(final Map<String, String> requestParams)
 			throws Exception {
 		LOG.info("Verifying the authentication response from provider");
-		if (!isProviderState()) {
-			throw new ProviderStateException();
-		}
-		if (requestToken == null) {
-			throw new SocialAuthException("Request token is null");
-		}
-		String verifier = requestParams.get(Constants.OAUTH_VERIFIER);
-		if (verifier != null) {
-			requestToken.setAttribute(Constants.OAUTH_VERIFIER, verifier);
-		}
-
-		LOG.debug("Call to fetch Access Token");
-		accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL, requestToken);
-		if (scope != null) {
-			accessToken.setPermission(scope);
-		} else {
-			accessToken.setPermission(Permission.DEFAULT);
-		}
-		accessToken.setProviderId(getProviderId());
-		isVerify = true;
+		accessToken = authenticationStrategy.verifyResponse(requestParams);
 		return getProfile();
 	}
 
@@ -209,7 +191,7 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 		String url = String.format(PROFILE_URL, guid);
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpGet(url, null, accessToken);
+			serviceResponse = authenticationStrategy.executeFeed(url);
 		} catch (Exception e) {
 			throw new SocialAuthException(
 					"Failed to retrieve the user profile from  " + url);
@@ -307,17 +289,13 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 
 	@Override
 	public List<Contact> getContactList() throws Exception {
-		if (!isVerify) {
-			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token");
-		}
 		String url = String.format(CONTACTS_URL,
 				accessToken.getAttribute("xoauth_yahoo_guid"));
 		LOG.info("Fetching contacts from " + url);
 
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpGet(url, null, accessToken);
+			serviceResponse = authenticationStrategy.executeFeed(url);
 		} catch (Exception ie) {
 			throw new SocialAuthException(
 					"Failed to retrieve the contacts from " + url, ie);
@@ -403,10 +381,6 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public void updateStatus(final String msg) throws Exception {
-		if (!isVerify) {
-			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token");
-		}
 		if (msg == null || msg.trim().length() == 0) {
 			throw new ServerDataException("Status cannot be blank");
 		}
@@ -416,8 +390,8 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 		String msgBody = "{\"status\":{\"message\":\"" + msg + "\"}}";
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpPut(url, null, null, msgBody,
-					accessToken);
+			serviceResponse = authenticationStrategy.executeFeed(url,
+					MethodType.PUT.toString(), null, null, msgBody);
 		} catch (Exception ie) {
 			throw new SocialAuthException("Failed to update status on " + url,
 					ie);
@@ -439,8 +413,8 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public void logout() {
-		requestToken = null;
 		accessToken = null;
+		authenticationStrategy.logout();
 	}
 
 	/**
@@ -483,39 +457,13 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 			final Map<String, String> params,
 			final Map<String, String> headerParams, final String body)
 			throws Exception {
-		if (!isVerify) {
-			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token");
-		}
-		Response response = null;
+
 		String urlStr = String.format(url,
 				accessToken.getAttribute("xoauth_yahoo_guid"));
 		LOG.debug("Calling URL : " + urlStr);
-		if (MethodType.GET.toString().equals(methodType)) {
-			try {
-				response = oauth.httpGet(urlStr, headerParams, accessToken);
-			} catch (Exception ie) {
-				throw new SocialAuthException(
-						"Error while making request to URL : " + urlStr, ie);
-			}
-		} else if (MethodType.PUT.toString().equals(methodType)) {
-			try {
-				response = oauth.httpPut(urlStr, params, headerParams, body,
-						accessToken);
-			} catch (Exception e) {
-				throw new SocialAuthException(
-						"Error while making request to URL : " + urlStr, e);
-			}
-		} else if (MethodType.POST.toString().equals(methodType)) {
-			try {
-				response = oauth.httpPost(urlStr, params, headerParams, body,
-						accessToken);
-			} catch (Exception e) {
-				throw new SocialAuthException(
-						"Error while making request to URL : " + urlStr, e);
-			}
-		}
-		return response;
+
+		return authenticationStrategy.executeFeed(urlStr, methodType, params,
+				headerParams, body);
 	}
 
 	/**
@@ -540,4 +488,5 @@ public class YahooImpl extends AbstractProvider implements AuthProvider,
 	public String getProviderId() {
 		return config.getId();
 	}
+
 }

@@ -40,15 +40,15 @@ import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
-import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.oauthstrategy.OAuth1;
+import org.brickred.socialauth.oauthstrategy.OAuthStrategyBase;
 import org.brickred.socialauth.util.AccessGrant;
 import org.brickred.socialauth.util.BirthDate;
 import org.brickred.socialauth.util.Constants;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
-import org.brickred.socialauth.util.OAuthConsumer;
 import org.brickred.socialauth.util.Response;
 import org.brickred.socialauth.util.SocialAuthUtil;
 import org.brickred.socialauth.util.XMLParseUtil;
@@ -68,22 +68,28 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 		Serializable {
 
 	private static final long serialVersionUID = -6141448721085510813L;
-	private static final String REQUEST_TOKEN_URL = "https://api.linkedin.com/uas/oauth/requestToken";
-	private static final String AUTHORIZATION_URL = "https://api.linkedin.com/uas/oauth/authenticate";
-	private static final String ACCESS_TOKEN_URL = "https://api.linkedin.com/uas/oauth/accessToken";
 	private static final String CONNECTION_URL = "http://api.linkedin.com/v1/people/~/connections:(id,first-name,last-name,public-profile-url)";
 	private static final String UPDATE_STATUS_URL = "http://api.linkedin.com/v1/people/~/shares";
 	private static final String PROFILE_URL = "http://api.linkedin.com/v1/people/~:(id,first-name,last-name,languages,date-of-birth,picture-url,location:(name))";
 	private static final String STATUS_BODY = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><share><comment>%1$s</comment><visibility><code>anyone</code></visibility></share>";
+	private static final Map<String, String> ENDPOINTS;
 	private final Log LOG = LogFactory.getLog(LinkedInImpl.class);
 
 	private Permission scope;
-	private boolean isVerify;
-	private AccessGrant requestToken;
 	private AccessGrant accessToken;
-	private OAuthConsumer oauth;
 	private OAuthConfig config;
 	private Profile userProfile;
+	private OAuthStrategyBase authenticationStrategy;
+
+	static {
+		ENDPOINTS = new HashMap<String, String>();
+		ENDPOINTS.put(Constants.OAUTH_REQUEST_TOKEN_URL,
+				"https://api.linkedin.com/uas/oauth/requestToken");
+		ENDPOINTS.put(Constants.OAUTH_AUTHORIZATION_URL,
+				"https://api.linkedin.com/uas/oauth/authenticate");
+		ENDPOINTS.put(Constants.OAUTH_ACCESS_TOKEN_URL,
+				"https://api.linkedin.com/uas/oauth/accessToken");
+	}
 
 	/**
 	 * Stores configuration for the provider
@@ -95,7 +101,7 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 	 */
 	public LinkedInImpl(final OAuthConfig providerConfig) throws Exception {
 		config = providerConfig;
-		oauth = new OAuthConsumer(config);
+		authenticationStrategy = new OAuth1(config, ENDPOINTS);
 	}
 
 	/**
@@ -105,10 +111,10 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 	 *            It contains the access token and other information
 	 * @throws Exception
 	 */
+	@Override
 	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
-		oauth = new OAuthConsumer(config);
 		this.accessToken = accessGrant;
-		isVerify = true;
+		authenticationStrategy.setAccessGrant(accessGrant);
 	}
 
 	/**
@@ -121,15 +127,7 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 
 	@Override
 	public String getLoginRedirectURL(final String successUrl) throws Exception {
-		LOG.info("Determining URL for redirection");
-		setProviderState(true);
-		LOG.debug("Call to fetch Request Token");
-		requestToken = oauth.getRequestToken(REQUEST_TOKEN_URL, successUrl);
-		StringBuilder urlBuffer = oauth.buildAuthUrl(AUTHORIZATION_URL,
-				requestToken, successUrl);
-		LOG.info("Redirection to following URL should happen : "
-				+ urlBuffer.toString());
-		return urlBuffer.toString();
+		return authenticationStrategy.getLoginRedirectURL(successUrl);
 	}
 
 	/**
@@ -170,27 +168,7 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 	private Profile doVerifyResponse(final Map<String, String> requestParams)
 			throws Exception {
 		LOG.info("Verifying the authentication response from provider");
-		if (!isProviderState()) {
-			throw new ProviderStateException();
-		}
-
-		if (requestToken == null) {
-			throw new SocialAuthException("Request token is null");
-		}
-		String verifier = requestParams.get(Constants.OAUTH_VERIFIER);
-		if (verifier != null) {
-			requestToken.setAttribute(Constants.OAUTH_VERIFIER, verifier);
-		}
-
-		LOG.debug("Call to fetch Access Token");
-		accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL, requestToken);
-		if (scope != null) {
-			accessToken.setPermission(scope);
-		} else {
-			accessToken.setPermission(Permission.DEFAULT);
-		}
-		accessToken.setProviderId(getProviderId());
-		isVerify = true;
+		accessToken = authenticationStrategy.verifyResponse(requestParams);
 		return getProfile();
 	}
 
@@ -203,15 +181,11 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 
 	@Override
 	public List<Contact> getContactList() throws Exception {
-		if (!isVerify) {
-			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token");
-		}
 		LOG.info("Fetching contacts from " + CONNECTION_URL);
-
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpGet(CONNECTION_URL, null, accessToken);
+			serviceResponse = authenticationStrategy
+					.executeFeed(CONNECTION_URL);
 		} catch (Exception ie) {
 			throw new SocialAuthException(
 					"Failed to retrieve the contacts from " + CONNECTION_URL,
@@ -263,10 +237,6 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 
 	@Override
 	public void updateStatus(final String msg) throws Exception {
-		if (!isVerify) {
-			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token");
-		}
 		if (msg == null || msg.trim().length() == 0) {
 			throw new ServerDataException("Status cannot be blank");
 		}
@@ -280,8 +250,9 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 		String msgBody = String.format(STATUS_BODY, msg);
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpPost(UPDATE_STATUS_URL, null,
-					headerParams, msgBody, accessToken);
+			serviceResponse = authenticationStrategy.executeFeed(
+					UPDATE_STATUS_URL, MethodType.POST.toString(), null,
+					headerParams, msgBody);
 		} catch (Exception ie) {
 			throw new SocialAuthException("Failed to update status on "
 					+ UPDATE_STATUS_URL, ie);
@@ -296,8 +267,8 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public void logout() {
-		requestToken = null;
 		accessToken = null;
+		authenticationStrategy.logout();
 	}
 
 	private Profile getProfile() throws Exception {
@@ -305,7 +276,7 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 		Profile profile = new Profile();
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpGet(PROFILE_URL, null, accessToken);
+			serviceResponse = authenticationStrategy.executeFeed(PROFILE_URL);
 		} catch (Exception e) {
 			throw new SocialAuthException(
 					"Failed to retrieve the user profile from  " + PROFILE_URL);
@@ -407,37 +378,9 @@ public class LinkedInImpl extends AbstractProvider implements AuthProvider,
 			final Map<String, String> params,
 			final Map<String, String> headerParams, final String body)
 			throws Exception {
-		if (!isVerify) {
-			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token");
-		}
-		Response response = null;
 		LOG.debug("Calling URL : " + url);
-		if (MethodType.GET.toString().equals(methodType)) {
-			try {
-				response = oauth.httpGet(url, headerParams, accessToken);
-			} catch (Exception ie) {
-				throw new SocialAuthException(
-						"Error while making request to URL : " + url, ie);
-			}
-		} else if (MethodType.PUT.toString().equals(methodType)) {
-			try {
-				response = oauth.httpPut(url, params, headerParams, body,
-						accessToken);
-			} catch (Exception e) {
-				throw new SocialAuthException(
-						"Error while making request to URL : " + url, e);
-			}
-		} else if (MethodType.POST.toString().equals(methodType)) {
-			try {
-				response = oauth.httpPost(url, params, headerParams, body,
-						accessToken);
-			} catch (Exception e) {
-				throw new SocialAuthException(
-						"Error while making request to URL : " + url, e);
-			}
-		}
-		return response;
+		return authenticationStrategy.executeFeed(url, methodType, params,
+				headerParams, body);
 	}
 
 	/**

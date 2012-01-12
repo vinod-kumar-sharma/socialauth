@@ -28,6 +28,7 @@ package org.brickred.socialauth.provider;
 import java.io.Serializable;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -40,14 +41,14 @@ import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
-import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.oauthstrategy.OAuth1;
+import org.brickred.socialauth.oauthstrategy.OAuthStrategyBase;
 import org.brickred.socialauth.util.AccessGrant;
 import org.brickred.socialauth.util.Constants;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
-import org.brickred.socialauth.util.OAuthConsumer;
 import org.brickred.socialauth.util.Response;
 import org.brickred.socialauth.util.SocialAuthUtil;
 import org.json.JSONArray;
@@ -64,23 +65,30 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 		Serializable {
 
 	private static final long serialVersionUID = 1908393649053616794L;
-	private static final String REQUEST_TOKEN_URL = "http://api.twitter.com/oauth/request_token";
-	private static final String AUTHORIZATION_URL = "https://api.twitter.com/oauth/authorize";
-	private static final String ACCESS_TOKEN_URL = "https://api.twitter.com/oauth/access_token";
 	private static final String PROFILE_URL = "http://api.twitter.com/1/users/show.json?screen_name=";
 	private static final String CONTACTS_URL = "http://api.twitter.com/1/friends/ids.json?screen_name=%1$s&cursor=-1";
 	private static final String LOOKUP_URL = "http://api.twitter.com/1/users/lookup.json?user_id=";
 	private static final String UPDATE_STATUS_URL = "http://api.twitter.com/1/statuses/update.json?status=";
 	private static final String PROPERTY_DOMAIN = "twitter.com";
+	private static final Map<String, String> ENDPOINTS;
 	private final Log LOG = LogFactory.getLog(TwitterImpl.class);
 
 	private Permission scope;
 	private boolean isVerify;
-	private AccessGrant requestToken;
 	private AccessGrant accessToken;
 	private OAuthConfig config;
-	private OAuthConsumer oauth;
 	private Profile userProfile;
+	private OAuthStrategyBase authenticationStrategy;
+
+	static {
+		ENDPOINTS = new HashMap<String, String>();
+		ENDPOINTS.put(Constants.OAUTH_REQUEST_TOKEN_URL,
+				"http://api.twitter.com/oauth/request_token");
+		ENDPOINTS.put(Constants.OAUTH_AUTHORIZATION_URL,
+				"https://api.twitter.com/oauth/authorize");
+		ENDPOINTS.put(Constants.OAUTH_ACCESS_TOKEN_URL,
+				"https://api.twitter.com/oauth/access_token");
+	}
 
 	/**
 	 * Stores configuration for the provider
@@ -92,7 +100,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	 */
 	public TwitterImpl(final OAuthConfig providerConfig) throws Exception {
 		config = providerConfig;
-		oauth = new OAuthConsumer(config);
+		authenticationStrategy = new OAuth1(config, ENDPOINTS);
 	}
 
 	/**
@@ -104,9 +112,9 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
-		oauth = new OAuthConsumer(config);
 		accessToken = accessGrant;
 		isVerify = true;
+		authenticationStrategy.setAccessGrant(accessGrant);
 	}
 
 	/**
@@ -119,14 +127,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getLoginRedirectURL(final String successUrl) throws Exception {
 		LOG.info("Determining URL for redirection");
-		setProviderState(true);
-		LOG.debug("Call to fetch Request Token");
-		requestToken = oauth.getRequestToken(REQUEST_TOKEN_URL, successUrl);
-		StringBuilder urlBuffer = oauth.buildAuthUrl(AUTHORIZATION_URL,
-				requestToken, successUrl);
-		LOG.info("Redirection to following URL should happen : "
-				+ urlBuffer.toString());
-		return urlBuffer.toString();
+		return authenticationStrategy.getLoginRedirectURL(successUrl);
 	}
 
 	/**
@@ -166,25 +167,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	private Profile doVerifyResponse(final Map<String, String> requestParams)
 			throws Exception {
 		LOG.info("Verifying the authentication response from provider");
-		if (!isProviderState()) {
-			throw new ProviderStateException();
-		}
-		if (requestToken == null) {
-			throw new SocialAuthException("Request token is null");
-		}
-		String verifier = requestParams.get(Constants.OAUTH_VERIFIER);
-		if (verifier != null) {
-			requestToken.setAttribute(Constants.OAUTH_VERIFIER, verifier);
-		}
-
-		LOG.debug("Call to fetch Access Token");
-		accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL, requestToken);
-		if (scope != null) {
-			accessToken.setPermission(scope);
-		} else {
-			accessToken.setPermission(Permission.DEFAULT);
-		}
-		accessToken.setProviderId(getProviderId());
+		accessToken = authenticationStrategy.verifyResponse(requestParams);
 		isVerify = true;
 		return getProfile();
 	}
@@ -195,7 +178,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 		LOG.debug("Obtaining user profile. Profile URL : " + url);
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpGet(url, null, accessToken);
+			serviceResponse = authenticationStrategy.executeFeed(url);
 		} catch (Exception e) {
 			throw new SocialAuthException(
 					"Failed to retrieve the user profile from  " + url);
@@ -265,8 +248,8 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 				+ URLEncoder.encode(msg, Constants.ENCODING);
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth
-					.httpPost(url, null, null, null, accessToken);
+			serviceResponse = authenticationStrategy.executeFeed(url,
+					MethodType.POST.toString(), null, null, null);
 		} catch (Exception e) {
 			throw new SocialAuthException("Failed to update status on " + url,
 					e);
@@ -298,7 +281,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 		LOG.info("Fetching contacts from " + url);
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpGet(url, null, accessToken);
+			serviceResponse = authenticationStrategy.executeFeed(url);
 		} catch (Exception ie) {
 			throw new SocialAuthException(
 					"Failed to retrieve the contacts from " + url, ie);
@@ -363,7 +346,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 		LOG.debug("Fetching info of following users : " + url);
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpGet(url, null, accessToken);
+			serviceResponse = authenticationStrategy.executeFeed(url);
 		} catch (Exception ie) {
 			throw new SocialAuthException(
 					"Failed to retrieve the contacts from " + url, ie);
@@ -405,8 +388,8 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public void logout() {
-		requestToken = null;
 		accessToken = null;
+		authenticationStrategy.logout();
 	}
 
 	/**
@@ -450,30 +433,8 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 		}
 		Response response = null;
 		LOG.debug("Calling URL : " + url);
-		if (MethodType.GET.toString().equals(methodType)) {
-			try {
-				response = oauth.httpGet(url, headerParams, accessToken);
-			} catch (Exception ie) {
-				throw new SocialAuthException(
-						"Error while making request to URL : " + url, ie);
-			}
-		} else if (MethodType.PUT.toString().equals(methodType)) {
-			try {
-				response = oauth.httpPut(url, params, headerParams, body,
-						accessToken);
-			} catch (Exception e) {
-				throw new SocialAuthException(
-						"Error while making request to URL : " + url, e);
-			}
-		} else if (MethodType.POST.toString().equals(methodType)) {
-			try {
-				response = oauth.httpPost(url, params, headerParams, body,
-						accessToken);
-			} catch (Exception e) {
-				throw new SocialAuthException(
-						"Error while making request to URL : " + url, e);
-			}
-		}
+		response = authenticationStrategy.executeFeed(url, methodType, params,
+				headerParams, body);
 		return response;
 	}
 
