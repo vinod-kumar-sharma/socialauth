@@ -125,6 +125,17 @@ public class AccessGrant implements Serializable {
 	}
 
 	/**
+	 * Sets an attributes from given attributes map.
+	 */
+	public void setAttributes(final Map<String, Object> attributes) {
+		if (_attributes == null) {
+			_attributes = new HashMap<String, Object>();
+		}
+
+		_attributes.putAll(attributes);
+	}
+
+	/**
 	 * Retrieves the provider id.
 	 * 
 	 * @return the provider id.
