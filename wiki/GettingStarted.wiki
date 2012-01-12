@@ -26,16 +26,16 @@ You can either download our pre-built jars or use Maven to integrate socialauth 
     <th>Application Type</th><th colspan=3>Jars Required</th>
   </tr>
   <tr>
-    <td>Generic / Struts Application</td><td>[http://socialauth.googlecode.com/files/socialauth-2.0-beta4.jar socialauth-2.0-beta4.jar]</td><td>[http://socialauth.googlecode.com/files/dependencies-2.0.zip dependencies-2.0.zip]</td><td></td>
+    <td>Generic / Struts Application</td><td>[http://socialauth.googlecode.com/files/socialauth-2.1.jar socialauth-2.1.jar]</td><td>[http://socialauth.googlecode.com/files/dependencies-2.0.zip dependencies-2.0.zip]</td><td></td>
   </tr>
   <tr>
-    <td>Spring Application</td><td>[http://socialauth.googlecode.com/files/socialauth-2.0-beta4.jar socialauth-2.0-beta4.jar]</td><td>[http://socialauth.googlecode.com/files/dependencies-2.0.zip dependencies-2.0.zip]</td><td>[http://socialauth.googlecode.com/files/socialauth-spring-2.0-beta2.jar socialauth-spring-2.0-beta2.jar]</td>
+    <td>Spring Application</td><td>[http://socialauth.googlecode.com/files/socialauth-2.1.jar socialauth-2.1.jar]</td><td>[http://socialauth.googlecode.com/files/dependencies-2.0.zip dependencies-2.0.zip]</td><td>[http://socialauth.googlecode.com/files/socialauth-spring-2.0-beta2.jar socialauth-spring-2.0-beta2.jar]</td>
   </tr>
   <tr>
-    <td>Seam Application</td><td>[http://socialauth.googlecode.com/files/socialauth-2.0-beta4.jar socialauth-2.0-beta4.jar]</td><td>[http://socialauth.googlecode.com/files/dependencies-2.0.zip dependencies-2.0.zip]</td><td>[http://socialauth.googlecode.com/files/socialauth-seam-2.0-beta1.jar socialauth-seam-2.0-beta1.jar]</td>
+    <td>Seam Application</td><td>[http://socialauth.googlecode.com/files/socialauth-2.1.jar socialauth-2.1.jar]</td><td>[http://socialauth.googlecode.com/files/dependencies-2.0.zip dependencies-2.0.zip]</td><td>[http://socialauth.googlecode.com/files/socialauth-seam-2.0-beta1.jar socialauth-seam-2.0-beta1.jar]</td>
   </tr>
    <tr>
-    <td>Using Filter</td><td>[http://socialauth.googlecode.com/files/socialauth-2.0-beta4.jar socialauth-2.0-beta4.jar]</td><td>[http://socialauth.googlecode.com/files/dependencies-2.0.zip dependencies-2.0.zip]</td><td>[http://socialauth.googlecode.com/files/socialauth-filter-2.0-beta1.jar socialauth-filter-2.0-beta1.jar]</td>
+    <td>Using Filter</td><td>[http://socialauth.googlecode.com/files/socialauth-2.1.jar socialauth-2.1.jar]</td><td>[http://socialauth.googlecode.com/files/dependencies-2.0.zip dependencies-2.0.zip]</td><td>[http://socialauth.googlecode.com/files/socialauth-filter-2.0-beta1.jar socialauth-filter-2.0-beta1.jar]</td>
   </tr>
 </table>
 
