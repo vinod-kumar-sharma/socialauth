@@ -86,7 +86,8 @@ public class OAuthConsumer implements Serializable, Constants {
 	 */
 	public String generateSignature(final String signatureType,
 			final String method, final String url,
-			final Map<String, String> args, final AccessGrant token) throws Exception {
+			final Map<String, String> args, final AccessGrant token)
+			throws Exception {
 		LOG.debug("Generating OAUTH Signature");
 		LOG.debug("Given Signature Type : " + signatureType);
 		LOG.debug("Given Method Type : " + method);
@@ -101,7 +102,8 @@ public class OAuthConsumer implements Serializable, Constants {
 	}
 
 	private String getHMACSHA1(final String method, final String url,
-			final Map<String, String> args, final AccessGrant token) throws Exception {
+			final Map<String, String> args, final AccessGrant token)
+			throws Exception {
 
 		if (config.get_consumerSecret().length() == 0) {
 			throw new SignatureException("Please check consumer secret");
@@ -348,7 +350,8 @@ public class OAuthConsumer implements Serializable, Constants {
 	public Response httpPut(final String reqURL,
 			final Map<String, String> params,
 			final Map<String, String> headerParams, final String body,
-			final AccessGrant token, final boolean isHeaderRequired) throws Exception {
+			final AccessGrant token, final boolean isHeaderRequired)
+			throws Exception {
 		return send(reqURL, params, headerParams, body,
 				MethodType.PUT.toString(), token, isHeaderRequired);
 	}
@@ -464,8 +467,8 @@ public class OAuthConsumer implements Serializable, Constants {
 	 * @return
 	 * @throws Exception
 	 */
-	public StringBuilder buildAuthUrl(final String authUrl, final AccessGrant token,
-			final String callbackUrl) throws Exception {
+	public StringBuilder buildAuthUrl(final String authUrl,
+			final AccessGrant token, final String callbackUrl) throws Exception {
 		char separator = authUrl.indexOf('?') == -1 ? '?' : '&';
 		return new StringBuilder()
 				.append(authUrl)
@@ -537,5 +540,9 @@ public class OAuthConsumer implements Serializable, Constants {
 		headerStr.insert(0, "OAuth");
 		LOG.debug("Authorize Header : " + headerStr.toString());
 		return headerStr.toString();
+	}
+
+	public OAuthConfig getConfig() {
+		return config;
 	}
 }
