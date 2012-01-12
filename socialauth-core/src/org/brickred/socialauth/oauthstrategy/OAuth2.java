@@ -51,7 +51,6 @@ public class OAuth2 implements OAuthStrategyBase {
 
 	private static final long serialVersionUID = -8431902665718727947L;
 	private final Log LOG = LogFactory.getLog(OAuth2.class);
-	private String accessToken;
 	private AccessGrant accessGrant;
 	private OAuthConsumer oauth;
 	private boolean providerState;
@@ -103,9 +102,8 @@ public class OAuth2 implements OAuthStrategyBase {
 	}
 
 	@Override
-	public AccessGrant verifyResponse(
-			final Map<String, String> requestParams, final String methodType)
-			throws Exception {
+	public AccessGrant verifyResponse(final Map<String, String> requestParams,
+			final String methodType) throws Exception {
 		LOG.info("Verifying the authentication response from provider");
 		if (!providerState) {
 			throw new ProviderStateException();
@@ -116,6 +114,7 @@ public class OAuth2 implements OAuthStrategyBase {
 		}
 		LOG.debug("Verification Code : " + code);
 		String acode;
+		String accessToken = null;
 		try {
 			acode = URLEncoder.encode(code, "UTF-8");
 		} catch (Exception e) {
@@ -297,5 +296,11 @@ public class OAuth2 implements OAuthStrategyBase {
 	public void setAccessTokenParameterName(
 			final String accessTokenParameterName) {
 		this.accessTokenParameterName = accessTokenParameterName;
+	}
+
+	@Override
+	public void logout() {
+		accessGrant = null;
+
 	}
 }

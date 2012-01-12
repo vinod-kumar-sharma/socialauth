@@ -132,4 +132,9 @@ public interface OAuthStrategyBase extends Serializable {
 	 * @param accessTokenParameterName
 	 */
 	public void setAccessTokenParameterName(String accessTokenParameterName);
+
+	/**
+	 * Logout
+	 */
+	public void logout();
 }
