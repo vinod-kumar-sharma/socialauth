@@ -25,11 +25,9 @@
 
 package org.brickred.socialauth.provider;
 
-import java.io.IOException;
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -42,14 +40,14 @@ import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
-import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.exception.UserDeniedPermissionException;
+import org.brickred.socialauth.oauthstrategy.OAuth2;
+import org.brickred.socialauth.oauthstrategy.OAuthStrategyBase;
 import org.brickred.socialauth.util.AccessGrant;
 import org.brickred.socialauth.util.BirthDate;
 import org.brickred.socialauth.util.Constants;
-import org.brickred.socialauth.util.HttpUtil;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.Response;
@@ -67,28 +65,33 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 		Serializable {
 
 	private static final long serialVersionUID = 8644510564735754296L;
-	private static final String AUTHORIZATION_URL = "https://graph.facebook.com/oauth/authorize?client_id=%1$s&display=page&redirect_uri=%2$s";
-	private static final String ACCESS_TOKEN_URL = "https://graph.facebook.com/oauth/access_token?client_id=%1$s&redirect_uri=%2$s&client_secret=%3$s&code=%4$s";
-	private static final String PROFILE_URL = "https://graph.facebook.com/me?access_token=%1$s";
-	private static final String CONTACTS_URL = "https://graph.facebook.com/me/friends?access_token=%1$s";
+	private static final String PROFILE_URL = "https://graph.facebook.com/me";
+	private static final String CONTACTS_URL = "https://graph.facebook.com/me/friends";
 	private static final String UPDATE_STATUS_URL = "https://graph.facebook.com/me/feed";
 	private static final String PROFILE_IMAGE_URL = "http://graph.facebook.com/%1$s/picture";
 	private static final String PUBLIC_PROFILE_URL = "http://www.facebook.com/profile.php?id=";
+	private static final Map<String, String> ENDPOINTS;
 	private final Log LOG = LogFactory.getLog(FacebookImpl.class);
 
-	private String accessToken;
-	private String successUrl;
 	private Permission scope;
-	private boolean isVerify;
 	private OAuthConfig config;
 	private Profile userProfile;
 	private AccessGrant accessGrant;
+	private OAuthStrategyBase authenticationStrategy;
 
 	// set this to the list of extended permissions you want
 	private static final String[] AllPerms = new String[] { "publish_stream",
 			"email", "user_birthday", "user_location" };
 	private static final String[] AuthPerms = new String[] { "email",
 			"user_birthday", "user_location" };
+
+	static {
+		ENDPOINTS = new HashMap<String, String>();
+		ENDPOINTS.put(Constants.OAUTH_AUTHORIZATION_URL,
+				"https://graph.facebook.com/oauth/authorize");
+		ENDPOINTS.put(Constants.OAUTH_ACCESS_TOKEN_URL,
+				"https://graph.facebook.com/oauth/access_token");
+	}
 
 	/**
 	 * Stores configuration for the provider
@@ -103,6 +106,9 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 		if (config.getCustomPermissions() != null) {
 			scope = Permission.CUSTOM;
 		}
+		authenticationStrategy = new OAuth2(config, ENDPOINTS);
+		authenticationStrategy.setPermission(scope);
+		authenticationStrategy.setScope(getScope());
 	}
 
 	/**
@@ -115,8 +121,7 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
 		this.accessGrant = accessGrant;
-		accessToken = accessGrant.getKey();
-		isVerify = true;
+		authenticationStrategy.setAccessGrant(accessGrant);
 	}
 
 	/**
@@ -126,19 +131,8 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 	 * 
 	 */
 	@Override
-	public String getLoginRedirectURL(final String successUrl) {
-		LOG.info("Determining URL for redirection");
-		setProviderState(true);
-		try {
-			this.successUrl = URLEncoder.encode(successUrl, Constants.ENCODING);
-		} catch (UnsupportedEncodingException e) {
-			this.successUrl = successUrl;
-		}
-		String url = String.format(AUTHORIZATION_URL, config.get_consumerKey(),
-				this.successUrl);
-		url += "&scope=" + getScope();
-		LOG.info("Redirection to following URL should happen : " + url);
-		return url;
+	public String getLoginRedirectURL(final String successUrl) throws Exception {
+		return authenticationStrategy.getLoginRedirectURL(successUrl);
 	}
 
 	/**
@@ -183,91 +177,25 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 				&& "user_denied".equals(requestParams.get("error_reason"))) {
 			throw new UserDeniedPermissionException();
 		}
-		if (!isProviderState()) {
-			throw new ProviderStateException();
-		}
-		String code = requestParams.get("code");
-		if (code == null || code.length() == 0) {
-			throw new SocialAuthException("Verification code is null");
-		}
-		LOG.debug("Verification Code : " + code);
-		String acode;
-		try {
-			acode = URLEncoder.encode(code, "UTF-8");
-		} catch (Exception e) {
-			acode = code;
-		}
-		String authURL = String.format(ACCESS_TOKEN_URL,
-				config.get_consumerKey(), successUrl,
-				config.get_consumerSecret(), acode);
-		Response response;
-		try {
-			response = HttpUtil.doHttpRequest(authURL,
-					MethodType.GET.toString(), null, null);
-		} catch (Exception e) {
-			throw new SocialAuthException("Error in url : " + authURL, e);
-		}
-		String result;
-		try {
-			result = response.getResponseBodyAsString(Constants.ENCODING);
-		} catch (IOException io) {
-			throw new SocialAuthException(io);
-		}
-		Integer expires = null;
-		String[] pairs = result.split("&");
-		for (String pair : pairs) {
-			String[] kv = pair.split("=");
-			if (kv.length != 2) {
-				throw new SocialAuthException("Unexpected auth response from "
-						+ authURL);
-			} else {
-				if (kv[0].equals("access_token")) {
-					accessToken = kv[1];
-				}
-				if (kv[0].equals("expires")) {
-					expires = Integer.valueOf(kv[1]);
-				}
-			}
-		}
-		LOG.debug("Access Token : " + accessToken);
-		LOG.debug("Expires : " + expires);
+		accessGrant = authenticationStrategy.verifyResponse(requestParams);
 
-		if (accessToken != null) {
-			isVerify = true;
-			accessGrant = new AccessGrant();
-			accessGrant.setKey(accessToken);
-			accessGrant.setAttribute(Constants.EXPIRES, expires);
-			if (scope != null) {
-				accessGrant.setPermission(scope);
-			} else {
-				accessGrant.setPermission(Permission.ALL);
-			}
-			accessGrant.setProviderId(getProviderId());
+		if (accessGrant != null) {
 			LOG.debug("Obtaining user profile");
-			return authFacebookLogin(accessToken);
+			return authFacebookLogin();
 		} else {
-			throw new SocialAuthException(
-					"Access token and expires not found from " + authURL);
+			throw new SocialAuthException("Access token not found");
 		}
 	}
 
-	private Profile authFacebookLogin(final String accessToken)
-			throws Exception {
+	private Profile authFacebookLogin() throws Exception {
 		String presp;
-		String aToken;
+
 		try {
-			aToken = URLEncoder.encode(accessToken, Constants.ENCODING);
-		} catch (Exception e) {
-			aToken = accessToken;
-		}
-		String profileurl = String.format(PROFILE_URL, aToken);
-		try {
-			Response response = HttpUtil.doHttpRequest(profileurl,
-					MethodType.GET.toString(), null, null);
+			Response response = authenticationStrategy.executeFeed(PROFILE_URL);
 			presp = response.getResponseBodyAsString(Constants.ENCODING);
 		} catch (Exception e) {
 			throw new SocialAuthException("Error while getting profile from "
-					+ profileurl, e);
+					+ PROFILE_URL, e);
 		}
 		try {
 			LOG.debug("User Profile : " + presp);
@@ -328,22 +256,17 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public void updateStatus(final String msg) throws Exception {
 		LOG.info("Updating status : " + msg);
-		if (!isVerify) {
-			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token and then update status");
-		}
 		if (msg == null || msg.trim().length() == 0) {
 			throw new ServerDataException("Status cannot be blank");
 		}
 		StringBuilder strb = new StringBuilder();
-		strb.append("access_token=").append(accessToken).append("&");
 		strb.append("message=").append(msg);
-
+		strb.append("&access_token").append("=").append(accessGrant.getKey());
 		Response serviceResponse;
 		try {
-			serviceResponse = HttpUtil.doHttpRequest(UPDATE_STATUS_URL,
-					MethodType.POST.toString(), strb.toString(), null);
-
+			serviceResponse = authenticationStrategy.executeFeed(
+					UPDATE_STATUS_URL, MethodType.POST.toString(), null, null,
+					strb.toString());
 			if (serviceResponse.getStatus() != 200) {
 				throw new SocialAuthException(
 						"Status not updated. Return Status code :"
@@ -365,21 +288,16 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 
 	@Override
 	public List<Contact> getContactList() throws Exception {
-		if (!isVerify) {
-			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token");
-		}
 		List<Contact> plist = new ArrayList<Contact>();
-		String contactURL = String.format(CONTACTS_URL, accessToken);
-		LOG.info("Fetching contacts from " + contactURL);
+		LOG.info("Fetching contacts from " + CONTACTS_URL);
 		String respStr;
 		try {
-			Response response = HttpUtil.doHttpRequest(contactURL,
-					MethodType.GET.toString(), null, null);
+			Response response = authenticationStrategy
+					.executeFeed(CONTACTS_URL);
 			respStr = response.getResponseBodyAsString(Constants.ENCODING);
 		} catch (Exception e) {
 			throw new SocialAuthException("Error while getting contacts from "
-					+ contactURL);
+					+ CONTACTS_URL);
 		}
 		try {
 			LOG.debug("User Contacts list in json : " + respStr);
@@ -416,7 +334,8 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public void logout() {
-		accessToken = null;
+		accessGrant = null;
+		authenticationStrategy.logout();
 	}
 
 	/**
@@ -429,6 +348,8 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 	public void setPermission(final Permission p) {
 		LOG.debug("Permission requested : " + p.toString());
 		this.scope = p;
+		authenticationStrategy.setPermission(this.scope);
+		authenticationStrategy.setScope(getScope());
 	}
 
 	/**
@@ -452,40 +373,14 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 			final Map<String, String> params,
 			final Map<String, String> headerParams, final String body)
 			throws Exception {
+		LOG.info("Calling api function for url	:	" + url);
 		Response response = null;
-		if (!isVerify) {
+		try {
+			response = authenticationStrategy.executeFeed(url, methodType,
+					params, headerParams, body);
+		} catch (Exception e) {
 			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token");
-		}
-		if (MethodType.GET.toString().equals(methodType)) {
-			String urlStr = url;
-			try {
-				char separator = url.indexOf('?') == -1 ? '?' : '&';
-				urlStr = urlStr + separator + "access_token=" + accessToken;
-				LOG.debug("Calling URL : " + urlStr);
-				response = HttpUtil.doHttpRequest(urlStr,
-						MethodType.GET.toString(), null, headerParams);
-			} catch (Exception e) {
-				throw new SocialAuthException(
-						"Error while making request to URL : " + urlStr, e);
-			}
-		} else if (MethodType.PUT.toString().equals(methodType)
-				|| MethodType.POST.toString().equals(methodType)) {
-			StringBuilder strb = new StringBuilder();
-			strb.append("access_token=").append(accessToken);
-			if (body != null) {
-				strb.append("&").append(body);
-			}
-			try {
-				LOG.debug("Calling URL : " + url);
-				LOG.debug("Request Body : " + strb.toString());
-				response = HttpUtil.doHttpRequest(url, methodType,
-						strb.toString(), headerParams);
-			} catch (Exception e) {
-				throw new SocialAuthException(
-						"Error while making request to URL : " + url, e);
-			}
-
+					"Error while making request to URL : " + url, e);
 		}
 		return response;
 	}
@@ -497,8 +392,8 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public Profile getUserProfile() throws Exception {
-		if (userProfile == null && accessToken != null) {
-			authFacebookLogin(accessToken);
+		if (userProfile == null && accessGrant != null) {
+			authFacebookLogin();
 		}
 		return userProfile;
 	}

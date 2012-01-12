@@ -27,6 +27,7 @@ package org.brickred.socialauth.provider;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -39,15 +40,15 @@ import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
-import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.exception.UserDeniedPermissionException;
+import org.brickred.socialauth.oauthstrategy.OAuth1;
+import org.brickred.socialauth.oauthstrategy.OAuthStrategyBase;
 import org.brickred.socialauth.util.AccessGrant;
 import org.brickred.socialauth.util.Constants;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
-import org.brickred.socialauth.util.OAuthConsumer;
 import org.brickred.socialauth.util.Response;
 import org.brickred.socialauth.util.SocialAuthUtil;
 import org.json.JSONArray;
@@ -61,24 +62,30 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 		Serializable {
 
 	private static final long serialVersionUID = -4074039782095430942L;
-	private static final String REQUEST_TOKEN_URL = "http://api.myspace.com/request_token";
-	private static final String AUTHORIZATION_URL = "http://api.myspace.com/authorize";
-	private static final String ACCESS_TOKEN_URL = "http://api.myspace.com/access_token";
 	private static final String PROFILE_URL = "http://api.myspace.com/1.0/people/@me/@self";
 	private static final String CONTACTS_URL = "http://api.myspace.com/1.0/people/@me/@all";
 	private static final String UPDATE_STATUS_URL = "http://api.myspace.com/1.0/statusmood/@me/@self";
+	private static final Map<String, String> ENDPOINTS;
 	private final Log LOG = LogFactory.getLog(MySpaceImpl.class);
 
 	private Permission scope;
-	private boolean isVerify;
-	private AccessGrant requestToken;
 	private AccessGrant accessToken;
-	private OAuthConsumer oauth;
 	private OAuthConfig config;
 	private Profile userProfile;
+	private OAuthStrategyBase authenticationStrategy;
 
 	private static final String AllPerms = "VIEWER_FULL_PROFILE_INFO|ViewFullProfileInfo|UpdateMoodStatus";
 	private static final String AuthPerms = "VIEWER_FULL_PROFILE_INFO|ViewFullProfileInfo";
+
+	static {
+		ENDPOINTS = new HashMap<String, String>();
+		ENDPOINTS.put(Constants.OAUTH_REQUEST_TOKEN_URL,
+				"http://api.myspace.com/request_token");
+		ENDPOINTS.put(Constants.OAUTH_AUTHORIZATION_URL,
+				"http://api.myspace.com/authorize?myspaceid.permissions=");
+		ENDPOINTS.put(Constants.OAUTH_ACCESS_TOKEN_URL,
+				"http://api.myspace.com/access_token");
+	}
 
 	/**
 	 * Stores configuration for the provider
@@ -90,10 +97,12 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 	 */
 	public MySpaceImpl(final OAuthConfig providerConfig) throws Exception {
 		config = providerConfig;
-		oauth = new OAuthConsumer(config);
 		if (config.getCustomPermissions() != null) {
 			this.scope = Permission.CUSTOM;
 		}
+		authenticationStrategy = new OAuth1(config, ENDPOINTS);
+		authenticationStrategy.setPermission(scope);
+		authenticationStrategy.setScope(getScope());
 
 	}
 
@@ -106,10 +115,9 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
-		oauth = new OAuthConsumer(config);
 		accessToken = accessGrant;
-		isVerify = true;
 		scope = accessGrant.getPermission();
+		authenticationStrategy.setAccessGrant(accessGrant);
 	}
 
 	/**
@@ -122,20 +130,7 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 
 	@Override
 	public String getLoginRedirectURL(final String successUrl) throws Exception {
-		LOG.info("Determining URL for redirection");
-		setProviderState(true);
-		LOG.debug("Call to fetch Request Token");
-		requestToken = oauth.getRequestToken(REQUEST_TOKEN_URL, successUrl);
-		String url = AUTHORIZATION_URL;
-		String scopeStr = getScope();
-		if (scopeStr != null) {
-			url = url + "?myspaceid.permissions=" + scopeStr;
-		}
-		StringBuilder urlBuffer = oauth.buildAuthUrl(url, requestToken,
-				successUrl);
-		LOG.info("Redirection to following URL should happen : "
-				+ urlBuffer.toString());
-		return urlBuffer.toString();
+		return authenticationStrategy.getLoginRedirectURL(successUrl);
 	}
 
 	/**
@@ -180,27 +175,7 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 				&& "user_refused".equals(requestParams.get("oauth_problem"))) {
 			throw new UserDeniedPermissionException();
 		}
-		if (!isProviderState()) {
-			throw new ProviderStateException();
-		}
-
-		if (requestToken == null) {
-			throw new SocialAuthException("Request token is null");
-		}
-		String verifier = requestParams.get(Constants.OAUTH_VERIFIER);
-		if (verifier != null) {
-			requestToken.setAttribute(Constants.OAUTH_VERIFIER, verifier);
-		}
-
-		LOG.debug("Call to fetch Access Token");
-		accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL, requestToken);
-		if (scope != null) {
-			accessToken.setPermission(scope);
-		} else {
-			accessToken.setPermission(Permission.DEFAULT);
-		}
-		accessToken.setProviderId(getProviderId());
-		isVerify = true;
+		accessToken = authenticationStrategy.verifyResponse(requestParams);
 		return getProfile();
 	}
 
@@ -213,7 +188,7 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 
 	@Override
 	public List<Contact> getContactList() throws Exception {
-		if (!isVerify) {
+		if (accessToken == null) {
 			throw new SocialAuthException(
 					"Please call verifyResponse function first to get Access Token");
 		}
@@ -221,7 +196,7 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpGet(CONTACTS_URL, null, accessToken);
+			serviceResponse = authenticationStrategy.executeFeed(CONTACTS_URL);
 		} catch (Exception ie) {
 			throw new SocialAuthException(
 					"Failed to retrieve the contacts from " + CONTACTS_URL, ie);
@@ -284,10 +259,6 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public void updateStatus(final String msg) throws Exception {
-		if (!isVerify) {
-			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token");
-		}
 		if (msg == null || msg.trim().length() == 0) {
 			throw new ServerDataException("Status cannot be blank");
 		}
@@ -295,8 +266,9 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 		String msgBody = "{\"status\":\"" + msg + "\"}";
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpPut(UPDATE_STATUS_URL, null, null,
-					msgBody, accessToken, false);
+			serviceResponse = authenticationStrategy.executeFeed(
+					UPDATE_STATUS_URL, MethodType.PUT.toString(), null, null,
+					msgBody);
 		} catch (Exception ie) {
 			throw new SocialAuthException("Failed to update status on "
 					+ UPDATE_STATUS_URL, ie);
@@ -310,8 +282,8 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public void logout() {
-		requestToken = null;
 		accessToken = null;
+		authenticationStrategy.logout();
 	}
 
 	/**
@@ -332,7 +304,7 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpGet(PROFILE_URL, null, accessToken);
+			serviceResponse = authenticationStrategy.executeFeed(PROFILE_URL);
 		} catch (Exception e) {
 			throw new SocialAuthException(
 					"Failed to retrieve the user profile from  " + PROFILE_URL);
@@ -415,37 +387,9 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 			final Map<String, String> params,
 			final Map<String, String> headerParams, final String body)
 			throws Exception {
-		if (!isVerify) {
-			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token");
-		}
-		Response response = null;
-		LOG.debug("Calling URL : " + url);
-		if (MethodType.GET.toString().equals(methodType)) {
-			try {
-				response = oauth.httpGet(url, headerParams, accessToken);
-			} catch (Exception ie) {
-				throw new SocialAuthException(
-						"Error while making request to URL : " + url, ie);
-			}
-		} else if (MethodType.PUT.toString().equals(methodType)) {
-			try {
-				response = oauth.httpPut(url, params, headerParams, body,
-						accessToken);
-			} catch (Exception e) {
-				throw new SocialAuthException(
-						"Error while making request to URL : " + url, e);
-			}
-		} else if (MethodType.POST.toString().equals(methodType)) {
-			try {
-				response = oauth.httpPost(url, params, headerParams, body,
-						accessToken);
-			} catch (Exception e) {
-				throw new SocialAuthException(
-						"Error while making request to URL : " + url, e);
-			}
-		}
-		return response;
+		return authenticationStrategy.executeFeed(url, methodType, params,
+				headerParams, body);
+
 	}
 
 	/**

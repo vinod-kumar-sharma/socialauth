@@ -25,8 +25,6 @@
 
 package org.brickred.socialauth.provider;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,16 +40,15 @@ import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
-import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
-import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.exception.UserDeniedPermissionException;
+import org.brickred.socialauth.oauthstrategy.Hybrid;
+import org.brickred.socialauth.oauthstrategy.OAuthStrategyBase;
 import org.brickred.socialauth.util.AccessGrant;
-import org.brickred.socialauth.util.HttpUtil;
+import org.brickred.socialauth.util.Constants;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
-import org.brickred.socialauth.util.OAuthConsumer;
 import org.brickred.socialauth.util.OpenIdConsumer;
 import org.brickred.socialauth.util.Response;
 import org.brickred.socialauth.util.SocialAuthUtil;
@@ -68,21 +65,25 @@ import org.w3c.dom.NodeList;
 public class GoogleImpl extends AbstractProvider implements AuthProvider,
 		Serializable {
 	private static final long serialVersionUID = -6075582192266022341L;
-	private static final String REQUEST_TOKEN_URL = "https://www.google.com/accounts/o8/ud";
-	private static final String ACCESS_TOKEN_URL = "https://www.google.com/accounts/OAuthGetAccessToken";
 	private static final String OAUTH_SCOPE = "http://www.google.com/m8/feeds/";
 	private static final String CONTACTS_FEED_URL = "http://www.google.com/m8/feeds/contacts/default/full/?max-results=1000";
 	private static final String CONTACT_NAMESPACE = "http://schemas.google.com/g/2005";
-
+	private static final Map<String, String> ENDPOINTS;
 	private final Log LOG = LogFactory.getLog(GoogleImpl.class);
 
 	private Permission scope;
-	private boolean isVerify;
-	private AccessGrant requestToken;
 	private AccessGrant accessToken;
-	private OAuthConsumer oauth;
 	private OAuthConfig config;
 	private Profile userProfile;
+	private OAuthStrategyBase authenticationStrategy;
+
+	static {
+		ENDPOINTS = new HashMap<String, String>();
+		ENDPOINTS.put(Constants.OAUTH_REQUEST_TOKEN_URL,
+				"https://www.google.com/accounts/o8/ud");
+		ENDPOINTS.put(Constants.OAUTH_ACCESS_TOKEN_URL,
+				"https://www.google.com/accounts/OAuthGetAccessToken");
+	}
 
 	/**
 	 * Stores configuration for the provider
@@ -94,12 +95,13 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	 */
 	public GoogleImpl(final OAuthConfig providerConfig) throws Exception {
 		config = providerConfig;
-		oauth = new OAuthConsumer(config);
-		requestToken = null;
 		accessToken = null;
 		if (config.getCustomPermissions() != null) {
 			scope = Permission.CUSTOM;
 		}
+		authenticationStrategy = new Hybrid(config, ENDPOINTS);
+		authenticationStrategy.setPermission(scope);
+		authenticationStrategy.setScope(getScope());
 	}
 
 	/**
@@ -112,9 +114,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
 		this.accessToken = accessGrant;
-		oauth = new OAuthConsumer(config);
-		requestToken = null;
-		isVerify = true;
+		authenticationStrategy.setAccessGrant(accessGrant);
 	}
 
 	/**
@@ -126,37 +126,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public String getLoginRedirectURL(final String successUrl) throws Exception {
-		LOG.info("Determining URL for redirection");
-		String associationURL = OpenIdConsumer
-				.getAssociationURL(REQUEST_TOKEN_URL);
-		Response r = HttpUtil.doHttpRequest(associationURL,
-				MethodType.GET.toString(), null, null);
-		StringBuffer sb = new StringBuffer();
-		String assocHandle = "";
-		try {
-			BufferedReader reader = new BufferedReader(new InputStreamReader(
-					r.getInputStream(), "UTF-8"));
-			String line = null;
-			while ((line = reader.readLine()) != null) {
-				sb.append(line).append("\n");
-				if ("assoc_handle:".equals(line.substring(0, 13))) {
-					assocHandle = line.substring(13);
-					break;
-				}
-			}
-			LOG.debug("ASSOCCIATION : " + assocHandle);
-		} catch (Exception exc) {
-			throw new SocialAuthException("Failed to read response from  ");
-		}
-
-		String realm = successUrl.substring(0, successUrl.indexOf("/", 9));
-		String consumerURL = realm.replace("http://", "");
-		consumerURL = consumerURL.replace("https://", "");
-		consumerURL = consumerURL.replaceAll(":{1}\\d*", "");
-
-		setProviderState(true);
-		String url = OpenIdConsumer.getRequestTokenURL(REQUEST_TOKEN_URL,
-				successUrl, realm, assocHandle, consumerURL, getScope());
+		String url = authenticationStrategy.getLoginRedirectURL(successUrl);
 		LOG.info("Redirection to following URL should happen : " + url);
 		return url;
 
@@ -202,47 +172,9 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 				&& "cancel".equals(requestParams.get("openid.mode"))) {
 			throw new UserDeniedPermissionException();
 		}
-		if (!isProviderState()) {
-			throw new ProviderStateException();
-		}
-		try {
-			LOG.debug("Running OpenID discovery");
-			String reqTokenStr = "";
-			if (Permission.AUTHENTICATE_ONLY.equals(this.scope)) {
-				accessToken = new AccessGrant();
-			} else {
-				if (requestParams.get(OpenIdConsumer.OPENID_REQUEST_TOKEN) != null) {
-					reqTokenStr = HttpUtil.decodeURIComponent(requestParams
-							.get(OpenIdConsumer.OPENID_REQUEST_TOKEN));
-				}
-				requestToken = new AccessGrant();
-				requestToken.setKey(reqTokenStr);
-				LOG.debug("Call to fetch Access Token");
-				accessToken = oauth.getAccessToken(ACCESS_TOKEN_URL,
-						requestToken);
-				if (accessToken == null) {
-					throw new SocialAuthConfigurationException(
-							"Application keys are not correct. "
-									+ "The server running the application should be same that was registered to get the keys.");
-				}
-				isVerify = true;
-				LOG.debug("Obtaining profile from OpenID response");
-			}
-			for (Map.Entry<String, String> entry : requestParams.entrySet()) {
-				String key = entry.getKey();
-				String value = entry.getValue();
-				accessToken.setAttribute(key, value);
-			}
-			if (scope != null) {
-				accessToken.setPermission(scope);
-			} else {
-				accessToken.setPermission(Permission.DEFAULT);
-			}
-			accessToken.setProviderId(getProviderId());
-			return getProfile(requestParams);
-		} catch (Exception e) {
-			throw new SocialAuthException(e);
-		}
+		accessToken = authenticationStrategy.verifyResponse(requestParams);
+		LOG.debug("Obtaining profile from OpenID response");
+		return getProfile(requestParams);
 	}
 
 	private Profile getProfile(final Map<String, String> requestParams) {
@@ -270,14 +202,14 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public List<Contact> getContactList() throws Exception {
 		LOG.info("Fetching contacts from " + CONTACTS_FEED_URL);
-		if (!isVerify) {
+		if (Permission.AUTHENTICATE_ONLY.equals(this.scope)) {
 			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token or you have not set Permission to get contacts.");
+					"You have not set Permission to get contacts.");
 		}
 		Response serviceResponse = null;
 		try {
-			serviceResponse = oauth.httpGet(CONTACTS_FEED_URL, null,
-					accessToken);
+			serviceResponse = authenticationStrategy
+					.executeFeed(CONTACTS_FEED_URL);
 		} catch (Exception ie) {
 			throw new SocialAuthException(
 					"Failed to retrieve the contacts from " + CONTACTS_FEED_URL,
@@ -361,8 +293,8 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public void logout() {
-		requestToken = null;
 		accessToken = null;
+		authenticationStrategy.logout();
 	}
 
 	/**
@@ -399,10 +331,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 			final Map<String, String> params,
 			final Map<String, String> headerParams, final String body)
 			throws Exception {
-		if (!isVerify) {
-			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token");
-		}
+
 		Response serviceResponse = null;
 		if (!MethodType.GET.toString().equals(methodType)) {
 			throw new SocialAuthException(
@@ -410,7 +339,8 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 		}
 		LOG.debug("Calling URL : " + url);
 		try {
-			serviceResponse = oauth.httpGet(url, headerParams, accessToken);
+			serviceResponse = authenticationStrategy.executeFeed(url,
+					methodType, params, headerParams, body);
 		} catch (Exception ie) {
 			throw new SocialAuthException(
 					"Error while making request to URL : " + url, ie);

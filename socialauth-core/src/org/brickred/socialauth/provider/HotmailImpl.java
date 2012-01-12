@@ -26,8 +26,6 @@
 package org.brickred.socialauth.provider;
 
 import java.io.Serializable;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -42,15 +40,14 @@ import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
-import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.ServerDataException;
-import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.exception.UserDeniedPermissionException;
+import org.brickred.socialauth.oauthstrategy.OAuth2;
+import org.brickred.socialauth.oauthstrategy.OAuthStrategyBase;
 import org.brickred.socialauth.util.AccessGrant;
 import org.brickred.socialauth.util.BirthDate;
 import org.brickred.socialauth.util.Constants;
-import org.brickred.socialauth.util.HttpUtil;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.Response;
@@ -72,25 +69,33 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 		Serializable {
 
 	private static final long serialVersionUID = 4559561466129062485L;
-	private static final String CONSENT_URL = "https://consent.live.com/Connect.aspx?wrap_client_id=%1$s&wrap_callback=%2$s";
-	private static final String ACCESS_TOKEN_URL = "https://consent.live.com/AccessToken.aspx";
-	private static final String PROFILE_URL = "http://apis.live.net/V4.1/cid-%1$s/Profiles/1-%2$s";
-	private static final String CONTACTS_URL = "http://apis.live.net/V4.1/cid-%1$s/Contacts/AllContacts?$type=portable";
-	private static final String UPDATE_STATUS_URL = "http://apis.live.net/V4.1/cid-%1$s/MyActivities";
+	private static final String PROFILE_URL = "https://apis.live.net/v5.0/me";
+	private static final String CONTACTS_URL = "https://apis.live.net/v5.0/me/contacts";
+	private static final String UPDATE_STATUS_URL = "https://apis.live.net/v5.0/me/share";
+	private static final String PROFILE_PICTURE_URL = "https://apis.live.net/v5.0/me/picture?access_token=%1$s";
+	private static final Map<String, String> ENDPOINTS;
 	private final Log LOG = LogFactory.getLog(HotmailImpl.class);
 
-	private String accessToken;
-	private String uid;
-	private String successUrl;
 	private Permission scope;
 	private boolean isVerify;
 	private OAuthConfig config;
 	private Profile userProfile;
 	private AccessGrant accessGrant;
+	private OAuthStrategyBase authenticationStrategy;
 
 	// set this to the list of extended permissions you want
 	private static final String AllPerms = new String(
-			"WL_Contacts.View,WL_Activities.Update");
+			"wl.basic,wl.emails,wl.share,wl.birthday");
+	private static final String AuthenticateOnlyPerms = new String(
+			"wl.basic,wl.emails");
+
+	static {
+		ENDPOINTS = new HashMap<String, String>();
+		ENDPOINTS.put(Constants.OAUTH_AUTHORIZATION_URL,
+				"https://oauth.live.com/authorize");
+		ENDPOINTS.put(Constants.OAUTH_ACCESS_TOKEN_URL,
+				"https://oauth.live.com/token");
+	}
 
 	/**
 	 * Stores configuration for the provider
@@ -105,6 +110,9 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 		if (config.getCustomPermissions() != null) {
 			this.scope = Permission.CUSTOM;
 		}
+		authenticationStrategy = new OAuth2(config, ENDPOINTS);
+		authenticationStrategy.setPermission(scope);
+		authenticationStrategy.setScope(getScope());
 	}
 
 	/**
@@ -117,10 +125,8 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
 		this.accessGrant = accessGrant;
-		accessToken = accessGrant.getKey();
-		isVerify = true;
-		uid = accessGrant.getAttribute("uid").toString();
 		scope = accessGrant.getPermission();
+		authenticationStrategy.setAccessGrant(accessGrant);
 	}
 
 	/**
@@ -133,21 +139,7 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 
 	@Override
 	public String getLoginRedirectURL(final String successUrl) throws Exception {
-		LOG.info("Determining URL for redirection");
-		setProviderState(true);
-		try {
-			this.successUrl = URLEncoder.encode(successUrl, Constants.ENCODING);
-		} catch (UnsupportedEncodingException e) {
-			this.successUrl = successUrl;
-		}
-		String consentUrl = String.format(CONSENT_URL,
-				config.get_consumerKey(), this.successUrl);
-		String scopeStr = getScope();
-		if (scopeStr != null) {
-			consentUrl += "&wrap_scope=" + scopeStr;
-		}
-		LOG.info("Redirection to following URL should happen : " + consentUrl);
-		return consentUrl;
+		return authenticationStrategy.getLoginRedirectURL(successUrl);
 	}
 
 	/**
@@ -193,93 +185,17 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 				&& "user_denied".equals(requestParams.get("wrap_error_reason"))) {
 			throw new UserDeniedPermissionException();
 		}
-		if (!isProviderState()) {
-			throw new ProviderStateException();
-		}
-		String code = requestParams.get("wrap_verification_code");
-		if (code == null || code.length() == 0) {
-			throw new SocialAuthException("Verification code is null");
-		}
-		StringBuilder strb = new StringBuilder();
-		strb.append("wrap_client_id=").append(config.get_consumerKey());
-		strb.append("&wrap_client_secret=").append(config.get_consumerSecret());
-		strb.append("&wrap_callback=").append(successUrl);
-		strb.append("&wrap_verification_code=").append(code);
-		strb.append("&idtype=CID");
-		LOG.debug("Parameters for access token : " + strb.toString());
-		Response serviceResponse;
-		try {
-			serviceResponse = HttpUtil.doHttpRequest(ACCESS_TOKEN_URL,
-					MethodType.POST.toString(), strb.toString(), null);
 
-		} catch (Exception e) {
-			throw new SocialAuthException(e);
-		}
-		if (serviceResponse.getStatus() != 200) {
-			throw new SocialAuthConfigurationException(
-					"Problem in getting Access Token. Application key or Secret key may be wrong."
-							+ "The server running the application should be same that was registered to get the keys.");
-		}
-		String result = null;
-		if (serviceResponse.getStatus() == 200) {
-			try {
-				result = serviceResponse
-						.getResponseBodyAsString(Constants.ENCODING);
-			} catch (Exception exc) {
-				throw new SocialAuthException("Failed to parse response", exc);
-			}
-		}
-		if (result == null || result.length() == 0) {
-			throw new SocialAuthConfigurationException(
-					"Problem in getting Access Token. Application key or Secret key may be wrong."
-							+ "The server running the application should be same that was registered to get the keys.");
-		}
+		accessGrant = authenticationStrategy.verifyResponse(requestParams);
 
-		try {
-			Integer expires = null;
-			String[] pairs = result.split("&");
-			for (String pair : pairs) {
-				String[] kv = pair.split("=");
-				if (kv.length != 2) {
-					throw new SocialAuthException(
-							"Unexpected auth response from " + ACCESS_TOKEN_URL);
-				} else {
-					if (kv[0].equals("wrap_access_token")) {
-						accessToken = kv[1];
-					}
-					if (kv[0].equals("wrap_access_token_expires_in")) {
-						expires = Integer.valueOf(kv[1]);
-					}
-					if (kv[0].equals("uid")) {
-						uid = kv[1];
-					}
-				}
-			}
-			LOG.debug("Access Token : " + accessToken);
-			LOG.debug("Expires : " + expires);
-			if (accessToken != null && expires != null) {
-				isVerify = true;
-				LOG.debug("Obtaining user profile");
-				accessGrant = new AccessGrant();
-				accessGrant.setKey(accessToken);
-				accessGrant.setAttribute(Constants.EXPIRES, expires);
-				if (scope != null) {
-					accessGrant.setPermission(scope);
-				} else {
-					accessGrant.setPermission(Permission.DEFAULT);
-				}
-				accessGrant.setProviderId(getProviderId());
-				accessGrant.setAttribute("uid", uid);
-				return getProfile();
-			} else {
-				throw new SocialAuthException(
-						"Access token and expires not found from "
-								+ ACCESS_TOKEN_URL);
-			}
-		} catch (Exception e) {
-			throw e;
-		} finally {
-			serviceResponse.close();
+		if (accessGrant != null) {
+			isVerify = true;
+			System.out.println(accessGrant.toString());
+			LOG.debug("Obtaining user profile");
+			return getProfile();
+		} else {
+			throw new SocialAuthException(
+					"Access token and expires not found from ");
 		}
 	}
 
@@ -293,29 +209,19 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 
 	@Override
 	public List<Contact> getContactList() throws Exception {
-		if (!isVerify) {
-			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token");
-		}
+
 		if (Permission.AUTHENTICATE_ONLY.equals(scope)) {
 			throw new SocialAuthException(
 					"You have not set permission to get contacts");
 		}
-		String u = String.format(CONTACTS_URL, uid);
-		LOG.info("Fetching contacts from " + u);
-		return getContacts(u, 0);
+		LOG.info("Fetching contacts from " + CONTACTS_URL);
+		return getContacts(CONTACTS_URL);
 	}
 
-	private List<Contact> getContacts(final String url, final int page)
-			throws Exception {
-		Map<String, String> headerParam = new HashMap<String, String>();
-		headerParam.put("Authorization", "WRAP access_token=" + accessToken);
-		headerParam.put("Content-Type", "application/json");
-		headerParam.put("Accept", "application/json");
+	private List<Contact> getContacts(final String url) throws Exception {
 		Response serviceResponse;
 		try {
-			serviceResponse = HttpUtil.doHttpRequest(url, "GET", null,
-					headerParam);
+			serviceResponse = authenticationStrategy.executeFeed(url);
 		} catch (Exception e) {
 			throw new SocialAuthException("Error while getting contacts from "
 					+ url, e);
@@ -334,59 +240,31 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 		LOG.debug("User Contacts list in JSON " + result);
 		JSONObject resp = new JSONObject(result);
 		List<Contact> plist = new ArrayList<Contact>();
-		if (resp.has("entries")) {
-			JSONArray addArr = resp.getJSONArray("entries");
+		if (resp.has("data")) {
+			JSONArray addArr = resp.getJSONArray("data");
 			LOG.debug("Contacts Found : " + addArr.length());
 			for (int i = 0; i < addArr.length(); i++) {
 				JSONObject obj = addArr.getJSONObject(i);
 				Contact p = new Contact();
-				if (obj.has("emails")) {
-					JSONArray emailArr = obj.getJSONArray("emails");
-					int emailCount = emailArr.length();
-					if (emailCount > 0) {
-
-						JSONObject eobj = emailArr.getJSONObject(0);
-						if (eobj.has("value")) {
-							p.setEmail(eobj.getString("value"));
-						}
-						if (emailCount > 1) {
-							String sarr[] = new String[emailCount - 1];
-							for (int k = 0; k < emailCount - 1; k++) {
-								eobj = emailArr.getJSONObject(k + 1);
-								if (eobj.has("value")) {
-									sarr[k] = eobj.getString("value");
-								}
-							}
-							p.setOtherEmails(sarr);
-						}
-
+				if (obj.has("email_hashes")) {
+					JSONArray emailArr = obj.getJSONArray("email_hashes");
+					if (emailArr.length() > 0) {
+						p.setEmailHash(emailArr.getString(0));
 					}
 				}
 				if (obj.has("name")) {
-					JSONObject nameObj = obj.getJSONObject("name");
-					if (nameObj.has("familyName")) {
-						p.setLastName(nameObj.getString("familyName"));
-					}
-					if (nameObj.has("formatted")) {
-						p.setDisplayName(nameObj.getString("formatted"));
-					}
-					if (nameObj.has("givenName")) {
-						p.setFirstName(nameObj.getString("givenName"));
-					}
+					p.setDisplayName(obj.getString("name"));
+				}
+				if (obj.has("first_name")) {
+					p.setFirstName(obj.getString("first_name"));
+				}
+				if (obj.has("last_name")) {
+					p.setLastName(obj.getString("last_name"));
 				}
 				if (obj.has("id")) {
 					p.setId(obj.getString("id"));
 				}
 				plist.add(p);
-			}
-		}
-		if (resp.has("totalResults")) {
-			int total = resp.getInt("totalResults");
-			if (total == 100) {
-				int p = page + 1;
-				String u = String.format(CONTACTS_URL, uid);
-				u += "&$skip=" + (p * 100);
-				plist.addAll(getContacts(u, p));
 			}
 		}
 		serviceResponse.close();
@@ -411,22 +289,14 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 		if (msg == null || msg.trim().length() == 0) {
 			throw new ServerDataException("Status cannot be blank");
 		}
-		String u = String.format(UPDATE_STATUS_URL, uid);
-
-		String body = "{\"__type\" : \"AddStatusActivity:http://schemas.microsoft.com/ado/2007/08/dataservices\",\"ActivityVerb\" : \"http://activitystrea.ms/schema/1.0/post\",\"ApplicationLink\" : \"http://rex.mslivelabs.com\",\"ActivityObjects\" : [{\"ActivityObjectType\" : \"http://activitystrea.ms/schema/1.0/status\",\"Content\" : \""
-				+ msg
-				+ "\",\"AlternateLink\" : \"http://www.contoso.com/wp-content/uploads/2009/06/comments-icon.jpg\"}}]}";
 
 		Map<String, String> headerParam = new HashMap<String, String>();
-		headerParam.put("Authorization", "WRAP access_token=" + accessToken);
+		headerParam.put("Authorization", "Bearer " + accessGrant.getKey());
 		headerParam.put("Content-Type", "application/json");
-		headerParam.put("Accept", "application/json");
-		headerParam
-				.put("Content-Length", new Integer(body.length()).toString());
+		String body = "{message:\"" + msg + "\"}";
 		Response serviceResponse;
-
-		serviceResponse = HttpUtil.doHttpRequest(u, MethodType.POST.toString(),
-				body, headerParam);
+		serviceResponse = authenticationStrategy.executeFeed(UPDATE_STATUS_URL,
+				MethodType.POST.toString(), null, headerParam, body);
 
 		int code = serviceResponse.getStatus();
 		LOG.debug("Status updated and return status code is :" + code);
@@ -439,23 +309,19 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public void logout() {
-		accessToken = null;
+		accessGrant = null;
+		authenticationStrategy.logout();
 	}
 
 	private Profile getProfile() throws Exception {
 		Profile p = new Profile();
-		String u = String.format(PROFILE_URL, uid, uid);
-		Map<String, String> headerParam = new HashMap<String, String>();
-		headerParam.put("Authorization", "WRAP access_token=" + accessToken);
-		headerParam.put("Content-Type", "application/json");
-		headerParam.put("Accept", "application/json");
 		Response serviceResponse;
 		try {
-			serviceResponse = HttpUtil.doHttpRequest(u, "GET", null,
-					headerParam);
+			serviceResponse = authenticationStrategy.executeFeed(PROFILE_URL);
 		} catch (Exception e) {
 			throw new SocialAuthException(
-					"Failed to retrieve the user profile from  " + u, e);
+					"Failed to retrieve the user profile from  " + PROFILE_URL,
+					e);
 		}
 
 		String result;
@@ -464,56 +330,68 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 					.getResponseBodyAsString(Constants.ENCODING);
 			LOG.debug("User Profile :" + result);
 		} catch (Exception e) {
-			throw new SocialAuthException("Failed to read response from  " + u);
+			throw new SocialAuthException("Failed to read response from  "
+					+ PROFILE_URL);
 		}
 		try {
 			JSONObject resp = new JSONObject(result);
 			if (resp.has("Id")) {
 				p.setValidatedId(resp.getString("Id"));
 			}
-			if (resp.has("FirstName")) {
-				p.setFirstName(resp.getString("FirstName"));
+			if (resp.has("name")) {
+				p.setFullName(resp.getString("name"));
 			}
-			if (resp.has("LastName")) {
-				p.setLastName(resp.getString("LastName"));
+			if (resp.has("first_name")) {
+				p.setFirstName(resp.getString("first_name"));
+			}
+			if (resp.has("last_name")) {
+				p.setLastName(resp.getString("last_name"));
 			}
 			if (resp.has("Location")) {
 				p.setLocation(resp.getString("Location"));
 			}
-			if (resp.has("Gender")) {
-				String g = resp.getString("Gender");
-				if ("1".equals(g)) {
-					p.setGender("Female");
-				} else if ("2".equals(g)) {
-					p.setGender("Male");
-				}
+			if (resp.has("gender")) {
+				p.setGender(resp.getString("gender"));
 			}
 			if (resp.has("ThumbnailImageLink")) {
 				p.setProfileImageURL(resp.getString("ThumbnailImageLink"));
 			}
 
-			if (resp.has("BirthMonth")) {
+			if (resp.has("birth_day")) {
 				BirthDate bd = new BirthDate();
-				bd.setMonth(resp.getInt("BirthMonth"));
+				bd.setDay(resp.getInt("birth_day"));
+				if (resp.has("birth_month")) {
+					bd.setMonth(resp.getInt("birth_month"));
+				}
+				if (resp.has("birth_year")) {
+					bd.setYear(resp.getInt("birth_year"));
+				}
 				p.setDob(bd);
 			}
 
-			if (resp.has("Emails")) {
-				JSONArray earr = resp.getJSONArray("Emails");
-				for (int i = 0; i < earr.length(); i++) {
-					JSONObject eobj = earr.getJSONObject(i);
-					if (eobj.has("Type") && "1".equals(eobj.getString("Type"))) {
-						p.setEmail(eobj.getString("Address"));
-						break;
-					}
+			if (resp.has("emails")) {
+				JSONObject eobj = resp.getJSONObject("emails");
+				String email = null;
+				if (eobj.has("preferred")) {
+					email = eobj.getString("preferred");
 				}
-				if (p.getEmail() == null || p.getEmail().length() <= 0) {
-					JSONObject eobj = earr.getJSONObject(0);
-					p.setEmail(eobj.getString("Address"));
+				if ((email == null || email.isEmpty()) && eobj.has("account")) {
+					email = eobj.getString("account");
 				}
+				if ((email == null || email.isEmpty()) && eobj.has("personal")) {
+					email = eobj.getString("personal");
+				}
+				p.setEmail(email);
+
+			}
+			if (resp.has("locale")) {
+				p.setLanguage(resp.getString("locale"));
 			}
 			serviceResponse.close();
 			p.setProviderId(getProviderId());
+			String picUrl = String.format(PROFILE_PICTURE_URL,
+					accessGrant.getKey());
+			p.setProfileImageURL(picUrl);
 			userProfile = p;
 			return p;
 		} catch (Exception e) {
@@ -534,16 +412,10 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	}
 
 	/**
-	 * Makes OAuth signed HTTP request to a given URL. It attaches CID in URL
-	 * and Authorization header to make HTTP request. URL string should contain
-	 * "format specifier" for CID.
+	 * Makes HTTP request to a given URL.
 	 * 
 	 * @param url
-	 *            URL to make HTTP request. It should contain format specifier
-	 *            to pass CID. E.g.
-	 *            "http://apis.live.net/V4.1/cid-%1$s/Contacts/AllContacts?$type=portable"
-	 *            . This URL contains format specifier "%1$s", which will be
-	 *            replaced by CID.
+	 *            URL to make HTTP request.
 	 * @param methodType
 	 *            Method type can be GET, POST or PUT
 	 * @param params
@@ -561,33 +433,20 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 			final Map<String, String> params,
 			final Map<String, String> headerParams, final String body)
 			throws Exception {
-		if (!isVerify) {
-			throw new SocialAuthException(
-					"Please call verifyResponse function first to get Access Token");
-		}
-		Map<String, String> headerParam = new HashMap<String, String>();
-		headerParam.put("Content-Type", "application/json");
-		headerParam.put("Accept", "application/json");
-		if (headerParams != null) {
-			headerParam.putAll(headerParams);
-		}
-		headerParam.put("Authorization", "WRAP access_token=" + accessToken);
+		LOG.debug("Calling URL : " + url);
 		Response serviceResponse;
-		String urlStr = String.format(url, uid);
-		LOG.debug("Calling URL : " + urlStr);
-		LOG.debug("Header Params : " + headerParam.toString());
 		try {
-			serviceResponse = HttpUtil.doHttpRequest(urlStr, methodType, body,
-					headerParam);
+			serviceResponse = authenticationStrategy.executeFeed(url,
+					methodType, params, headerParams, body);
 		} catch (Exception e) {
 			throw new SocialAuthException(
-					"Error while making request to URL : " + urlStr, e);
+					"Error while making request to URL : " + url, e);
 		}
 		if (serviceResponse.getStatus() != 200) {
-			LOG.debug("Return statuc for URL " + urlStr + " is "
+			LOG.debug("Return statuc for URL " + url + " is "
 					+ serviceResponse.getStatus());
 			throw new SocialAuthException("Error while making request to URL :"
-					+ urlStr + "Status : " + serviceResponse.getStatus());
+					+ url + "Status : " + serviceResponse.getStatus());
 		}
 		return serviceResponse;
 	}
@@ -599,7 +458,7 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public Profile getUserProfile() throws Exception {
-		if (userProfile == null && accessToken != null) {
+		if (userProfile == null && accessGrant != null) {
 			getProfile();
 		}
 		return userProfile;
@@ -618,7 +477,7 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	private String getScope() {
 		String scopeStr = null;
 		if (Permission.AUTHENTICATE_ONLY.equals(scope)) {
-			scopeStr = null;
+			scopeStr = AuthenticateOnlyPerms;
 		} else if (Permission.CUSTOM.equals(scope)) {
 			scopeStr = config.getCustomPermissions();
 		} else {
