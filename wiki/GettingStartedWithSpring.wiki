@@ -19,7 +19,7 @@ Authenticating using the external oAuth providers requires that we register our 
   # We do not recommend it at all, but if you do not want to obtain your own keys and secrets while testing, you can use the keys and secrets that we obtained by registering "opensource.brickred.com" for our demo.  [HowToRunApplicationWithLocalhostOnWindows Follow the same steps] as above but with domain as "opensource.brickred.com" and [SampleProperties keys from our sample].
 
 == Download the jars ==
-  # Download the [http://socialauth.googlecode.com/files/socialauth-2.0-beta4.jar socialauth-2.0-beta4.jar] 
+  # Download the [http://socialauth.googlecode.com/files/socialauth-2.1.jar socialauth-2.1.jar] 
   # Download the [http://socialauth.googlecode.com/files/socialauth-spring-2.0-beta2.jar socialauth-spring-2.0-beta2.jar] 
   # Download the [http://socialauth.googlecode.com/files/dependencies-2.0.zip dependencies-2.0.zip]
   # Include all the jars in your project
