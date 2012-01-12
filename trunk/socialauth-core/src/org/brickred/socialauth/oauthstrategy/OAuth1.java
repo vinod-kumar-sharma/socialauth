@@ -79,9 +79,8 @@ public class OAuth1 implements OAuthStrategyBase {
 	}
 
 	@Override
-	public AccessGrant verifyResponse(
-			final Map<String, String> requestParams, final String methodType)
-			throws Exception {
+	public AccessGrant verifyResponse(final Map<String, String> requestParams,
+			final String methodType) throws Exception {
 		LOG.info("Verifying the authentication response from provider");
 		if (!providerState) {
 			throw new ProviderStateException();
@@ -170,7 +169,13 @@ public class OAuth1 implements OAuthStrategyBase {
 	@Override
 	public void setAccessTokenParameterName(
 			final String accessTokenParameterName) {
-		// TODO Auto-generated method stub
+		LOG.warn("It is not implemented for OAuth1");
+
+	}
+
+	@Override
+	public void logout() {
+		accessToken = null;
 
 	}
 

@@ -109,9 +109,8 @@ public class Hybrid implements OAuthStrategyBase {
 	}
 
 	@Override
-	public AccessGrant verifyResponse(
-			final Map<String, String> requestParams, final String methodType)
-			throws Exception {
+	public AccessGrant verifyResponse(final Map<String, String> requestParams,
+			final String methodType) throws Exception {
 		if (!providerState) {
 			throw new ProviderStateException();
 		}
@@ -206,7 +205,13 @@ public class Hybrid implements OAuthStrategyBase {
 	@Override
 	public void setAccessTokenParameterName(
 			final String accessTokenParameterName) {
-		// TODO Auto-generated method stub
+		LOG.warn("It is not implemented for Hybrid");
+
+	}
+
+	@Override
+	public void logout() {
+		accessToken = null;
 
 	}
 }
