@@ -55,9 +55,9 @@ If you are using Maven, you can configure the pom.xml as follows:
  * Add dependency of core library
 {{{
 <dependency>
-    <groupId>org.brickred</groupId>
-    <artifactId>socialauth</artifactId>
-    <version>2.0-beta4</version>
+  <groupId>org.brickred</groupId>
+  <artifactId>socialauth</artifactId>
+  <version>2.1</version>
 </dependency>
 }}}
  * Add Dependency for spring library if required
