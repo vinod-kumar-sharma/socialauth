@@ -129,7 +129,8 @@ Using the socialauth.jar consists of two main steps:
   SocialAuthManager manager = (SocialAuthManager)session.getAttribute("authManager");
 
   // call connect method of manager which returns the provider object. 
-  // Pass request parameter map while calling connect method. 
+  // Pass request parameter map while calling connect method.
+   Map<String, String> paramsMap = SocialAuthUtil.getRequestParametersMap(request); 
    AuthProvider provider = manager.connect(paramsMap);
 
   // get profile
