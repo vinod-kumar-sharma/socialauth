@@ -357,13 +357,13 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 				p.setProfileImageURL(resp.getString("ThumbnailImageLink"));
 			}
 
-			if (resp.has("birth_day")) {
+			if (resp.has("birth_day") && !resp.isNull("birth_day")) {
 				BirthDate bd = new BirthDate();
 				bd.setDay(resp.getInt("birth_day"));
-				if (resp.has("birth_month")) {
+				if (resp.has("birth_month") && !resp.isNull("birth_month")) {
 					bd.setMonth(resp.getInt("birth_month"));
 				}
-				if (resp.has("birth_year")) {
+				if (resp.has("birth_year") && !resp.isNull("birth_year")) {
 					bd.setYear(resp.getInt("birth_year"));
 				}
 				p.setDob(bd);
