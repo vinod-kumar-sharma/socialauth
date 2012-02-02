@@ -33,8 +33,8 @@ public class SocialAuthSecurityFilter implements Filter {
 	}
 
 	@Override
-	public void doFilter(ServletRequest req, ServletResponse res, FilterChain fc)
-			throws IOException, ServletException {
+	public void doFilter(final ServletRequest req, final ServletResponse res,
+			final FilterChain fc) throws IOException, ServletException {
 		try {
 			doFilter((HttpServletRequest) req, (HttpServletResponse) res, fc);
 		} catch (Exception e) {
@@ -42,10 +42,11 @@ public class SocialAuthSecurityFilter implements Filter {
 		}
 	}
 
-	public void doFilter(HttpServletRequest req, HttpServletResponse res,
-			FilterChain fc) throws Exception {
+	public void doFilter(final HttpServletRequest req,
+			final HttpServletResponse res, final FilterChain fc)
+			throws Exception {
 		SASFHelper h = new DefaultSASFHelper(req, this.props,
-				this.sdbSocialAuthManager);
+				this.sdbSocialAuthManager, req.getSession());
 		String path = lookupPath(req);
 		if (path != null && path.startsWith(h.getServletMain())) {
 			try {
@@ -58,10 +59,17 @@ public class SocialAuthSecurityFilter implements Filter {
 					return;
 				} else {
 					String id = req.getParameter("id");
+					SocialAuthManager socialAuthManager = null;
+					synchronized (req.getSession()) {
+						if (h.getAuthManager() != null) {
+							socialAuthManager = h.getAuthManager();
+						} else {
+							socialAuthManager = h.getMgr()
+									.getSocialAuthManager();
+							h.setAuthManager(socialAuthManager);
+						}
+					}
 
-					SocialAuthManager socialAuthManager = h.getMgr()
-							.getSocialAuthManager();
-					h.setAuthManager(socialAuthManager);
 					res.sendRedirect(socialAuthManager.getAuthenticationUrl(id,
 							h.getOpenidReturnUrl()));
 					return;
@@ -73,16 +81,17 @@ public class SocialAuthSecurityFilter implements Filter {
 				return;
 			}
 		}
-		if (!res.isCommitted())
+		if (!res.isCommitted()) {
 			fc.doFilter(req, res);
+		}
 	}
 
-	private String lookupPath(HttpServletRequest req) {
+	private String lookupPath(final HttpServletRequest req) {
 		return req.getRequestURI();
 	}
 
 	@Override
-	public void init(FilterConfig config) throws ServletException {
+	public void init(final FilterConfig config) throws ServletException {
 		try {
 			this.props = new SASFProperties(InitParamUtil.getInitParam(config,
 					VAR_PROPERTIES));
