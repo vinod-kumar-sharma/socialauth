@@ -206,6 +206,21 @@ public class SocialAuthConfig implements Serializable {
 			registerProviders();
 			loadProvidersConfig();
 			setProxy();
+			String timeout = null;
+			if (applicationProperties
+					.containsKey(Constants.HTTP_CONNECTION_TIMEOUT)) {
+				timeout = applicationProperties.getProperty(
+						Constants.HTTP_CONNECTION_TIMEOUT).trim();
+			}
+			if (timeout != null && !timeout.isEmpty()) {
+				int time = 0;
+				try {
+					time = Integer.parseInt(timeout);
+				} catch (NumberFormatException ne) {
+					LOG.warn("Http connection timout is not an integer in configuration");
+				}
+				HttpUtil.setConnectionTimeout(time);
+			}
 			isConfigLoaded = true;
 		}
 	}
@@ -342,11 +357,13 @@ public class SocialAuthConfig implements Serializable {
 	private void setProxy() {
 		String proxyHost = null;
 		String proxyPort = null;
-		if (applicationProperties.containsKey("proxy.host")) {
-			proxyHost = applicationProperties.getProperty("proxy.host").trim();
+		if (applicationProperties.containsKey(Constants.PROXY_HOST)) {
+			proxyHost = applicationProperties.getProperty(Constants.PROXY_HOST)
+					.trim();
 		}
-		if (applicationProperties.containsKey("proxy.port")) {
-			proxyPort = applicationProperties.getProperty("proxy.port").trim();
+		if (applicationProperties.containsKey(Constants.PROXY_PORT)) {
+			proxyPort = applicationProperties.getProperty(Constants.PROXY_PORT)
+					.trim();
 		}
 		if (proxyHost != null && !proxyHost.isEmpty()) {
 			int port = 0;
