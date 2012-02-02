@@ -27,6 +27,9 @@ package org.brickred.socialauth.util;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
+import java.net.Proxy.Type;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.security.KeyManagementException;
@@ -44,6 +47,8 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.exception.SocialAuthException;
 
 /**
@@ -60,6 +65,9 @@ import org.brickred.socialauth.exception.SocialAuthException;
  * 
  */
 public class HttpUtil {
+
+	private static final Log LOG = LogFactory.getLog(HttpUtil.class);
+	private static Proxy proxyObj = null;
 	static {
 		SSLContext ctx;
 		try {
@@ -71,6 +79,13 @@ public class HttpUtil {
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		} catch (KeyManagementException e) {
+			e.printStackTrace();
+		} catch (NoClassDefFoundError e) {
+			LOG.warn("SSLContext is not supported by your applicaiton server."
+					+ e.getMessage());
+			e.printStackTrace();
+		} catch (Exception e) {
+			LOG.warn("Error while createing SSLContext");
 			e.printStackTrace();
 		}
 	}
@@ -95,10 +110,16 @@ public class HttpUtil {
 		HttpURLConnection conn;
 		try {
 			URL url = new URL(urlStr);
-			conn = (HttpURLConnection) url.openConnection();
+			if (proxyObj != null) {
+				conn = (HttpURLConnection) url.openConnection(proxyObj);
+			} else {
+				conn = (HttpURLConnection) url.openConnection();
+			}
+
 			conn.setDoOutput(true);
 			conn.setDoInput(true);
 			conn.setInstanceFollowRedirects(true);
+			conn.setConnectTimeout(5000);
 			if (requestMethod != null) {
 				conn.setRequestMethod(requestMethod);
 			}
@@ -279,6 +300,17 @@ public class HttpUtil {
 		@Override
 		public X509Certificate[] getAcceptedIssuers() {
 			return null;
+		}
+	}
+
+	public static void setProxyConfig(final String host, final int port) {
+		if (host != null) {
+			int proxyPort = port;
+			if (proxyPort < 0) {
+				proxyPort = 0;
+			}
+			LOG.debug("Setting proxy - Host : " + host + "   port : " + port);
+			proxyObj = new Proxy(Type.HTTP, new InetSocketAddress(host, port));
 		}
 	}
 
