@@ -172,4 +172,19 @@ public interface Constants {
 	 */
 	public static final String ACCESS_TOKEN_PARAMETER_NAME = "access_token";
 
+	/**
+	 * Proxy host property name
+	 */
+	public static final String PROXY_HOST = "proxy.host";
+
+	/**
+	 * Proxy port property name
+	 * 
+	 */
+	public static final String PROXY_PORT = "proxy.port";
+
+	/**
+	 * HTTP connection timeout property
+	 */
+	public static final String HTTP_CONNECTION_TIMEOUT = "http.connectionTimeOut";
 }
