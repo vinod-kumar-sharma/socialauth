@@ -40,6 +40,7 @@ import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.util.Constants;
+import org.brickred.socialauth.util.HttpUtil;
 import org.brickred.socialauth.util.OAuthConfig;
 
 /**
@@ -204,6 +205,7 @@ public class SocialAuthConfig implements Serializable {
 			this.applicationProperties = properties;
 			registerProviders();
 			loadProvidersConfig();
+			setProxy();
 			isConfigLoaded = true;
 		}
 	}
@@ -335,5 +337,27 @@ public class SocialAuthConfig implements Serializable {
 
 	protected boolean isConfigSetup() {
 		return configSetup;
+	}
+
+	private void setProxy() {
+		String proxyHost = null;
+		String proxyPort = null;
+		if (applicationProperties.containsKey("proxy.host")) {
+			proxyHost = applicationProperties.getProperty("proxy.host").trim();
+		}
+		if (applicationProperties.containsKey("proxy.port")) {
+			proxyPort = applicationProperties.getProperty("proxy.port").trim();
+		}
+		if (proxyHost != null && !proxyHost.isEmpty()) {
+			int port = 0;
+			if (proxyPort != null && !proxyPort.isEmpty()) {
+				try {
+					port = Integer.parseInt(proxyPort);
+				} catch (NumberFormatException ne) {
+					LOG.warn("Proxy port is not an integer in configuration");
+				}
+			}
+			HttpUtil.setProxyConfig(proxyHost, port);
+		}
 	}
 }
