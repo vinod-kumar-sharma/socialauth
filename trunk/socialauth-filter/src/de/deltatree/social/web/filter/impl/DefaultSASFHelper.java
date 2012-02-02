@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 
 import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
@@ -25,19 +26,22 @@ public class DefaultSASFHelper implements SASFHelper {
 	private final static String SESSION_ERROR_CAUSE = "S_SASFErrorCause";
 	private final SASFSocialAuthManager sdbSocialAuthManager;
 	private final HttpServletRequest request;
+	private final HttpSession session;
 	private final SASFProperties props;
 
-	public DefaultSASFHelper(HttpServletRequest req, SASFProperties props,
-			SASFSocialAuthManager sdbSocialAuthManager)
-			throws SASFSecurityException {
+	public DefaultSASFHelper(final HttpServletRequest req,
+			final SASFProperties props,
+			final SASFSocialAuthManager sdbSocialAuthManager,
+			final HttpSession session) throws SASFSecurityException {
 		this.request = req;
 		this.props = props;
 		this.sdbSocialAuthManager = sdbSocialAuthManager;
+		this.session = session;
 		setSessionKey();
 	}
 
 	private void setSessionKey() {
-		this.request.getSession().setAttribute(SESSION_KEY, this);
+		this.session.setAttribute(SESSION_KEY, this);
 	}
 
 	@Override
@@ -46,52 +50,53 @@ public class DefaultSASFHelper implements SASFHelper {
 	}
 
 	@Override
-	public void setError(String message, Throwable cause) {
-		this.request.getSession().setAttribute(SESSION_ERROR, message);
-		this.request.getSession().setAttribute(SESSION_ERROR_CAUSE, cause);
+	public void setError(final String message, final Throwable cause) {
+		this.session.setAttribute(SESSION_ERROR, message);
+		this.session.setAttribute(SESSION_ERROR_CAUSE, cause);
 	}
 
 	@Override
 	public String getError() {
-		return (String) this.request.getSession().getAttribute(SESSION_ERROR);
+		return (String) this.getSession().getAttribute(SESSION_ERROR);
 	}
 
 	@Override
 	public Throwable getErrorCause() {
-		return (Throwable) this.request.getSession().getAttribute(
-				SESSION_ERROR_CAUSE);
+		return (Throwable) this.getSession().getAttribute(SESSION_ERROR_CAUSE);
 	}
 
 	@Override
 	public String getErrorCauseAsString() {
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		Throwable errorCause = getErrorCause();
-		if (errorCause != null)
+		if (errorCause != null) {
 			errorCause.printStackTrace(new PrintStream(bos));
+		}
 		return bos.toString();
 	}
 
 	@Override
-	public void setProvider(AuthProvider provider) {
-		this.request.getSession().setAttribute(
+	public void setProvider(final AuthProvider provider) {
+		this.session.setAttribute(
 				DefaultSASFHelper.SESSION_SOCIAL_AUTH_PROVIDER, provider);
 	}
 
 	@Override
 	public AuthProvider getProvider() {
-		return (AuthProvider) this.request.getSession().getAttribute(
+		return (AuthProvider) this.getSession().getAttribute(
 				DefaultSASFHelper.SESSION_SOCIAL_AUTH_PROVIDER);
 	}
 
-	public void setAuthManager(SocialAuthManager socialAuthManager) {
-		this.request.getSession().setAttribute(
+	@Override
+	public void setAuthManager(final SocialAuthManager socialAuthManager) {
+		this.session.setAttribute(
 				DefaultSASFHelper.SESSION_SOCIAL_AUTH_MANAGER,
 				socialAuthManager);
 	}
 
 	@Override
 	public SocialAuthManager getAuthManager() {
-		return (SocialAuthManager) this.request.getSession().getAttribute(
+		return (SocialAuthManager) this.getSession().getAttribute(
 				DefaultSASFHelper.SESSION_SOCIAL_AUTH_MANAGER);
 	}
 
@@ -148,6 +153,7 @@ public class DefaultSASFHelper implements SASFHelper {
 		return this.request.getContextPath() + props.getErrorPage();
 	}
 
+	@Override
 	public SASFProperties getProps() {
 		return props;
 	}
@@ -182,5 +188,9 @@ public class DefaultSASFHelper implements SASFHelper {
 			}
 		}
 		return contactsList;
+	}
+
+	public HttpSession getSession() {
+		return session;
 	}
 }
