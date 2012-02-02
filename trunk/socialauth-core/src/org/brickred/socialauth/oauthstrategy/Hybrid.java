@@ -117,36 +117,40 @@ public class Hybrid implements OAuthStrategyBase {
 
 		LOG.debug("Running OpenID discovery");
 		String reqTokenStr = "";
-		if (Permission.AUTHENTICATE_ONLY.equals(this.permission)) {
-			accessToken = new AccessGrant();
-		} else {
-			if (requestParams.get(OpenIdConsumer.OPENID_REQUEST_TOKEN) != null) {
-				reqTokenStr = HttpUtil.decodeURIComponent(requestParams
-						.get(OpenIdConsumer.OPENID_REQUEST_TOKEN));
+		if (this.scope != null) {
+			if (Permission.AUTHENTICATE_ONLY.equals(this.permission)) {
+				accessToken = new AccessGrant();
+			} else {
+				if (requestParams.get(OpenIdConsumer.OPENID_REQUEST_TOKEN) != null) {
+					reqTokenStr = HttpUtil.decodeURIComponent(requestParams
+							.get(OpenIdConsumer.OPENID_REQUEST_TOKEN));
+				}
+				requestToken = new AccessGrant();
+				requestToken.setKey(reqTokenStr);
+				LOG.debug("Call to fetch Access Token");
+				accessToken = oauth.getAccessToken(
+						endpoints.get(Constants.OAUTH_ACCESS_TOKEN_URL),
+						requestToken);
+				if (accessToken == null) {
+					throw new SocialAuthConfigurationException(
+							"Application keys may not be correct. "
+									+ "The server running the application should be same that was registered to get the keys.");
+				}
 			}
-			requestToken = new AccessGrant();
-			requestToken.setKey(reqTokenStr);
-			LOG.debug("Call to fetch Access Token");
-			accessToken = oauth.getAccessToken(
-					endpoints.get(Constants.OAUTH_ACCESS_TOKEN_URL),
-					requestToken);
-			if (accessToken == null) {
-				throw new SocialAuthConfigurationException(
-						"Application keys may not be correct. "
-								+ "The server running the application should be same that was registered to get the keys.");
+			for (Map.Entry<String, String> entry : requestParams.entrySet()) {
+				String key = entry.getKey();
+				String value = entry.getValue();
+				accessToken.setAttribute(key, value);
 			}
-		}
-		for (Map.Entry<String, String> entry : requestParams.entrySet()) {
-			String key = entry.getKey();
-			String value = entry.getValue();
-			accessToken.setAttribute(key, value);
-		}
-		if (permission != null) {
-			accessToken.setPermission(permission);
+			if (permission != null) {
+				accessToken.setPermission(permission);
+			} else {
+				accessToken.setPermission(Permission.DEFAULT);
+			}
+			accessToken.setProviderId(providerId);
 		} else {
-			accessToken.setPermission(Permission.DEFAULT);
+			LOG.warn("No Scope is given for the  Provider : " + providerId);
 		}
-		accessToken.setProviderId(providerId);
 		return accessToken;
 
 	}
