@@ -68,6 +68,7 @@ public class HttpUtil {
 
 	private static final Log LOG = LogFactory.getLog(HttpUtil.class);
 	private static Proxy proxyObj = null;
+	private static int timeoutValue = 0;
 	static {
 		SSLContext ctx;
 		try {
@@ -119,7 +120,10 @@ public class HttpUtil {
 			conn.setDoOutput(true);
 			conn.setDoInput(true);
 			conn.setInstanceFollowRedirects(true);
-			conn.setConnectTimeout(5000);
+			if (timeoutValue > 0) {
+				LOG.debug("Setting connection timeout : " + timeoutValue);
+				conn.setConnectTimeout(timeoutValue);
+			}
 			if (requestMethod != null) {
 				conn.setRequestMethod(requestMethod);
 			}
@@ -303,6 +307,16 @@ public class HttpUtil {
 		}
 	}
 
+	/**
+	 * 
+	 * Sets the proxy host and port. This will be implicitly called if
+	 * "proxy.host" and "proxy.port" properties are given in properties file
+	 * 
+	 * @param host
+	 *            proxy host
+	 * @param port
+	 *            proxy port
+	 */
 	public static void setProxyConfig(final String host, final int port) {
 		if (host != null) {
 			int proxyPort = port;
@@ -312,6 +326,17 @@ public class HttpUtil {
 			LOG.debug("Setting proxy - Host : " + host + "   port : " + port);
 			proxyObj = new Proxy(Type.HTTP, new InetSocketAddress(host, port));
 		}
+	}
+
+	/**
+	 * Sets the connection time out. This will be implicitly called if
+	 * "http.connectionTimeOut" property is given in properties file
+	 * 
+	 * @param timeout
+	 *            httpconnection timeout value
+	 */
+	public static void setConnectionTimeout(final int timeout) {
+		timeoutValue = timeout;
 	}
 
 }
