@@ -84,7 +84,7 @@ grails install-templates
 	<param-value>properties.ini</param-value>
 </context-param>
 }}} 
-== Step 7. Create SocialAuthController  ==
+== Step 7. Create !SocialAuthController  ==
 
 Create socialAuth controller by using following command from your application root directory
 {{{
@@ -127,7 +127,7 @@ class SocialAuthController {
 
 }}}
 
-== Step 8. Create SocialAuthSuccessController  ==
+== Step 8. Create !SocialAuthSuccessController  ==
 
 Create socialAuthSuccess controller by using following command from your application root directory
 {{{
@@ -156,7 +156,7 @@ class SocialAuthSuccessController {
 }
 }}}
 
-== Step 9. Create SocialAuthUpdateStatusController  ==
+== Step 9. Create !SocialAuthUpdateStatusController  ==
 
 Create socialAuthUpdateStatus controller by using following command from your application root directory
 {{{
