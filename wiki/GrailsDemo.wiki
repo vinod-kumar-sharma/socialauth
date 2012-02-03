@@ -65,6 +65,7 @@ grails install-templates
 
 
 == Step 6. web.xml  ==
+You will get web.xml file in "socialauthdemo\src\templates\war" folder.
  # Add filter definition in web.xml.
 {{{
 <filter>
