@@ -552,3 +552,6 @@ Create index.gsp in the "socialauthdemo\grails-app\views\socialAuthUpdateStatus"
 {{{
 ${callbackMesg}
 }}}
+
+You can download the complete demo from the following location
+http://socialauth.googlecode.com/svn/trunk/socialauth-grails-demo
