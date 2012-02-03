@@ -1,4 +1,5 @@
 #summary Shows how to create the sample Grails application
+#labels Grails,SocialAuth-Grails
 
 = Introduction =
 
@@ -553,5 +554,9 @@ Create index.gsp in the "socialauthdemo\grails-app\views\socialAuthUpdateStatus"
 ${callbackMesg}
 }}}
 
-You can download the complete demo from the following location
+= Conclusion =
+
+You can get the entire source code of the sample by browsing the source code or from following location
 http://socialauth.googlecode.com/svn/trunk/socialauth-grails-demo
+
+Hope this guide would have been of help. If you have any questions, please file an issue. 
