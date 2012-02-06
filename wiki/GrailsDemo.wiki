@@ -555,7 +555,7 @@ ${callbackMesg}
 
 == Step 13. Project Directory Structure   ==
 Project directory structure will be as given below:-<br><br>
-http://socialauth.googlecode.com/svn/wiki/images/socialauth_grails.png
+http://socialauth.googlecode.com/svn/wiki/images/socialauth_grails.jpg
 
 = Conclusion =
 
