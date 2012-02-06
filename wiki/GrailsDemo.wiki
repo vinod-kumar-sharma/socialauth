@@ -553,6 +553,10 @@ Create index.gsp in the "socialauthdemo\grails-app\views\socialAuthUpdateStatus"
 ${callbackMesg}
 }}}
 
+== Step 13. Project Directory Structure   ==
+Project directory structure will be as given below:-<br><br>
+http://socialauth.googlecode.com/svn/wiki/images/struts-sample-structure.png
+
 = Conclusion =
 
 You can get the entire source code of the sample by browsing the source code or from following location<br>
