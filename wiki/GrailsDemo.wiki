@@ -555,7 +555,7 @@ ${callbackMesg}
 
 = Conclusion =
 
-You can get the entire source code of the sample by browsing the source code or from following location
+You can get the entire source code of the sample by browsing the source code or from following location<br>
 http://socialauth.googlecode.com/svn/trunk/socialauth-grails-demo
 
 Hope this guide would have been of help. If you have any questions, please file an issue. 
