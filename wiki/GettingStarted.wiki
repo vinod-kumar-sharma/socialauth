@@ -37,6 +37,9 @@ You can either download our pre-built jars or use Maven to integrate socialauth 
    <tr>
     <td>Using Filter</td><td>[http://socialauth.googlecode.com/files/socialauth-2.2.jar socialauth-2.2.jar]</td><td>[http://socialauth.googlecode.com/files/dependencies-2.0.zip dependencies-2.0.zip]</td><td>[http://socialauth.googlecode.com/files/socialauth-filter-2.2.jar socialauth-filter-2.2.jar]</td>
   </tr>
+   <tr>
+    <td>Grails Application</td><td>[http://socialauth.googlecode.com/files/socialauth-2.2.jar socialauth-2.2.jar]</td><td>[http://socialauth.googlecode.com/files/dependencies-2.0.zip dependencies-2.0.zip]</td><td>[http://socialauth.googlecode.com/files/socialauth-filter-2.2.jar socialauth-filter-2.2.jar]</td>
+  </tr>
 </table>
 
 *Note:* If you are not using OpenID provider, in that case you can remove commons-codec.jar,commons-httpclient-3.1.jar, openid4java.jar from dependencies folder.
