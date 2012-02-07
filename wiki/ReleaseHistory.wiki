@@ -7,7 +7,7 @@
  # Support to manage state of logged-in providers in socialauth filter
  # Fixes to work with GAE
  # Options in properties file to set proxy
- # Option in properties file to set HttpConnection timeout
+ # Option in properties file to set !HttpConnection timeout
 
 
 == Whats new in Version 2.1 ? ==
