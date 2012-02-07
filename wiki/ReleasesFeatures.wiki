@@ -1,0 +1,7 @@
+#List of features incorporated in different versions.
+
+= Whats new in Version 2.1 ? =
+
+ # New providers - Salesforce and Yammer.
+ # New framework to easily add any provider supporting OAuth1.0a, Oauth1.0+OpenID Hybrid or OAuth2.0 protocols
+ # Easy to add permission scopes through properties file. 
