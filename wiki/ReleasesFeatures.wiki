@@ -1,4 +1,4 @@
-#List of features incorporated in different versions.
+#summary List of features incorporated in different versions.
 
 = Whats new in Version 2.1 ? =
 
