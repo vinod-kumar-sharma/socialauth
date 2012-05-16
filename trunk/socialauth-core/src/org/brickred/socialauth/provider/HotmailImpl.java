@@ -335,8 +335,8 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 		}
 		try {
 			JSONObject resp = new JSONObject(result);
-			if (resp.has("Id")) {
-				p.setValidatedId(resp.getString("Id"));
+			if (resp.has("id")) {
+				p.setValidatedId(resp.getString("id"));
 			}
 			if (resp.has("name")) {
 				p.setFullName(resp.getString("name"));
