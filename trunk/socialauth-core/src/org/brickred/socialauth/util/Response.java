@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.util.zip.GZIPInputStream;
 
 /**
  * Encapsulates the HTTP status, headers and the content.
@@ -89,10 +90,19 @@ public class Response {
 	 */
 	public String getResponseBodyAsString(final String encoding)
 			throws Exception {
-		StringBuffer sb = new StringBuffer();
-		BufferedReader reader = new BufferedReader(new InputStreamReader(
-				_connection.getInputStream(), encoding));
 		String line = null;
+		BufferedReader reader = null;
+		StringBuffer sb = new StringBuffer();
+
+		if (Constants.GZIP_CONTENT_ENCODING.equals(_connection
+				.getHeaderField(Constants.CONTENT_ENCODING_HEADER))) {
+			reader = new BufferedReader(
+					new InputStreamReader(new GZIPInputStream(
+							_connection.getInputStream()), encoding));
+		} else {
+			reader = new BufferedReader(new InputStreamReader(
+					_connection.getInputStream(), encoding));
+		}
 		while ((line = reader.readLine()) != null) {
 			sb.append(line);
 		}

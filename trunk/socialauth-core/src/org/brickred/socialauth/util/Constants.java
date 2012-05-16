@@ -187,4 +187,14 @@ public interface Constants {
 	 * HTTP connection timeout property
 	 */
 	public static final String HTTP_CONNECTION_TIMEOUT = "http.connectionTimeOut";
+
+	/**
+	 * Content Encoding Header
+	 */
+	public static final String CONTENT_ENCODING_HEADER = "Content-Encoding";
+
+	/**
+	 * GZip Content Encoding
+	 */
+	public static final String GZIP_CONTENT_ENCODING = "gzip";
 }
