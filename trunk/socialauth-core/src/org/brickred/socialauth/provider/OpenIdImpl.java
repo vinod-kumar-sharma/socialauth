@@ -74,6 +74,7 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider,
 	private String id;
 	private AccessGrant accessGrant;
 	private String successUrl;
+	private Profile userProfile;
 
 	public OpenIdImpl(final Properties props) throws ConsumerException {
 		manager = new ConsumerManager();
@@ -237,7 +238,7 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider,
 					}
 
 				}
-
+				userProfile = p;
 				return p;
 			}
 		} catch (OpenIDException e) {
@@ -323,7 +324,7 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider,
 					}
 
 				}
-
+				userProfile = p;
 				return p;
 			}
 		} catch (OpenIDException e) {
@@ -401,7 +402,7 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider,
 	 */
 	@Override
 	public Profile getUserProfile() {
-		return null;
+		return userProfile;
 	}
 
 	@Override
