@@ -43,6 +43,7 @@ import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.exception.UserDeniedPermissionException;
 import org.brickred.socialauth.oauthstrategy.OAuth1;
 import org.brickred.socialauth.oauthstrategy.OAuthStrategyBase;
 import org.brickred.socialauth.util.AccessGrant;
@@ -167,6 +168,9 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	private Profile doVerifyResponse(final Map<String, String> requestParams)
 			throws Exception {
 		LOG.info("Verifying the authentication response from provider");
+		if (requestParams.get("denied") != null) {
+			throw new UserDeniedPermissionException();
+		}
 		accessToken = authenticationStrategy.verifyResponse(requestParams);
 		isVerify = true;
 		return getProfile();
@@ -254,9 +258,6 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 			throw new SocialAuthException("Failed to update status on " + url,
 					e);
 		}
-		System.out.println(serviceResponse.getStatus());
-		System.out.println(serviceResponse
-				.getResponseBodyAsString(Constants.ENCODING));
 		if (serviceResponse.getStatus() != 200) {
 			throw new SocialAuthException("Failed to update status on " + url
 					+ ". Staus :" + serviceResponse.getStatus());
