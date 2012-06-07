@@ -409,6 +409,8 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public void setPermission(final Permission p) {
 		this.scope = p;
+		authenticationStrategy.setPermission(scope);
+		authenticationStrategy.setScope(getScope());
 	}
 
 	/**
