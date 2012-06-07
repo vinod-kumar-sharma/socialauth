@@ -296,6 +296,8 @@ public class MySpaceImpl extends AbstractProvider implements AuthProvider,
 	public void setPermission(final Permission p) {
 		LOG.debug("Permission requested : " + p.toString());
 		this.scope = p;
+		authenticationStrategy.setPermission(scope);
+		authenticationStrategy.setScope(getScope());
 	}
 
 	private Profile getProfile() throws Exception {
