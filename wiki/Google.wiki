@@ -1,4 +1,7 @@
 #summary step by step guide for obtaining consumer key and consumer secret.
+Go to the following URL:-
+http://code.google.com/apis/accounts/docs/RegistrationForWebAppsAuto.html
+
 = Step 1=
 http://socialauth.googlecode.com/svn/wiki/images/google-step1.png
 
