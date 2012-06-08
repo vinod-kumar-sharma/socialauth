@@ -36,6 +36,7 @@
 	<c:set var="myspace" value="false" />
 	<c:set var="salesforce" value="false" />
 	<c:set var="yammer" value="false" />
+	<c:set var="mendeley" value="false" />
 	<c:forEach var="item" items="${authForm.socialAuthManager.connectedProvidersIds}">
 	 	<c:if test="${item eq 'facebook'}">
 	    	<c:set var="facebook" value="true" />
@@ -66,6 +67,9 @@
 	  	</c:if>
 	  	<c:if test="${item eq 'yammer'}">
 	    	<c:set var="yammer" value="true" />
+	  	</c:if>
+	  	<c:if test="${item eq 'mendeley'}">
+	    	<c:set var="mendeley" value="true" />
 	  	</c:if>
 	</c:forEach>
     <div id="logo">
@@ -160,6 +164,16 @@
 						</c:if>
 						<c:if test="${myspace eq false}">
 							<a href="socialAuth.do?id=myspace">Signin</a><br/>
+						</c:if>
+					</td>
+					<td>
+						<a href="socialAuth.do?id=mendeley"><img src="images/mendeley.jpg" alt="Mendeley" title="Mendeley" border="0"></img></a>
+						<br/><br/>
+						<c:if test="${mendeley eq true}">
+							<a href="socialAuth.do?id=mendeley&mode=signout">Signout</a>
+						</c:if>
+						<c:if test="${mendeley eq false}">
+							<a href="socialAuth.do?id=mendeley">Signin</a><br/>
 						</c:if>
 					</td>
 					<td>
