@@ -18,11 +18,14 @@ Authenticating using the external oAuth providers requires that we register our 
   # You can now develop the application using keys and secrets obtained above and deploy the application on your public domain. However, most people need to [HowToRunApplicationWithLocalhostOnWindows test the application on a local development machine] using the API keys and secrets obtained above.
   # We do not recommend it at all, but if you do not want to obtain your own keys and secrets while testing, you can use the keys and secrets that we obtained by registering "opensource.brickred.com" for our demo.  [HowToRunApplicationWithLocalhostOnWindows Follow the same steps] as above but with domain as "opensource.brickred.com" and [SampleProperties keys from our sample].
 
-== Download the jars ==
-  # Download the [http://socialauth.googlecode.com/files/socialauth-2.2.jar socialauth-2.2.jar]
-  # Download the [http://socialauth.googlecode.com/files/socialauth-seam-2.0-beta1.jar socialauth-seam-2.0-beta1.jar] 
-  # Download the [http://socialauth.googlecode.com/files/dependencies-2.0.zip dependencies-2.0.zip]
-  # Include all the jars in your project
+== Include the jars ==
+
+Download [http://socialauth.googlecode.com/files/socialauth-java-sdk-2.3.zip socialauth-java-sdk-2.3.zip] and include the following from dist and dependencies folder
+
+  # socialauth-2.3.jar
+  # socialauth-seam-2.0-beta1.jar 
+  # jars from dependencies folder
+ 
 
 == Implementation ==
 
