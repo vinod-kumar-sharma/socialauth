@@ -17,6 +17,7 @@ Authenticating using the external oAuth providers requires that we register our 
     * Linkedin - [Linkedin (show screenshot)] - https://www.linkedin.com/secure/developer
     * Salesforce - [Salesforce (show screenshot)]
     * Yammer - [Yammer (show screenshot)] - https://www.yammer.com/client_applications/new
+    * Mendeley - [Mendeley (show screenshot)] - http://dev.mendeley.com/applications/register/
 
   # You can now develop the application using keys and secrets obtained above and deploy the application on your public domain. However, most people need to [HowToRunApplicationWithLocalhostOnWindows test the application on a local development machine] using the API keys and secrets obtained above.
   # We do not recommend it at all, but if you do not want to obtain your own keys and secrets while testing, you can use the keys and secrets that we obtained by registering "opensource.brickred.com" for our demo.  [HowToRunApplicationWithLocalhostOnWindows Follow the same steps] as above but with domain as "opensource.brickred.com" and [SampleProperties keys from our sample].
