@@ -29,7 +29,7 @@ You can either download our SDK and use pre-built jars or use Maven to integrate
     <th>Application Type</th><th colspan=3>Jars Required</th>
   </tr>
   <tr>
-    <td>Generic / Struts Application</td><td>socialauth-2.3.jar</td><td>Files from dependency folder</td><td></td>
+    <td>Generic / Struts Application</td><td>socialauth-2.3.jar</td><td>Files from dependencies folder</td><td></td>
   </tr>
   <tr>
     <td>Spring Application</td><td>socialauth-2.3.jar</td><td>Files from dependencies folder</td><td>socialauth-spring-2.0-beta2.jar</td>
