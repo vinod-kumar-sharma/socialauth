@@ -22,7 +22,7 @@ Authenticating using the external oAuth providers requires that we register our 
 
 Download [http://socialauth.googlecode.com/files/socialauth-java-sdk-2.3.zip socialauth-java-sdk-2.3.zip] and include the following from dist and dependencies folder
 
-  # socialauth-2.2.jar
+  # socialauth-2.3.jar
   # socialauth-filter-2.2.jar
   # jars from dependencies folder
 
@@ -46,10 +46,10 @@ socialauth-filter.jar contains a filter class and set of helper classes which ar
 {{{
 <context-param>
 	<param-name>properties</param-name>
-	<param-value>properties.ini</param-value>
+	<param-value>socialauth_filter.properties</param-value>
 </context-param>
 }}} 
- # Properties.ini: This file consists of properties which are used to configure socialauth-filter api. Please note that this file should be included in your class path.
+ # socialauth_filter.properties: This file consists of properties which are used to configure socialauth-filter api. Please note that this file should be included in your class path.
 {{{
 oauth_consumers = oauth_consumer.properties #file contains keys
 filter.url = /SAF #filter url-mapping
