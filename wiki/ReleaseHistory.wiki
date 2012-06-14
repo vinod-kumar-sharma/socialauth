@@ -2,6 +2,12 @@
 
 = !SocialAuth History =
 
+== Whats new in Version 2.3 ? ==
+
+ # Added new provider "Mendeley"
+ # Bug fixes
+
+
 == Whats new in Version 2.2 ? ==
 
  # Support to manage state of logged-in providers in socialauth filter
