@@ -46,6 +46,18 @@ api.myspace.com.consumer_secret = 0fdccc829c474e42867e16b68cda37a4c4b7b08eda574f
 foursquare.com.consumer_key = JQKEM1PHWFW4YF2YPEQBRRESXE3SBGNCYJWWDTZKF3IZNJ3V
 foursquare.com.consumer_secret = 4IILLDFDVPP2LC554S4KXKETQNTDKPDSEVCKVHA2QEHKYBEQ
 
+#Yammer
+www.yammer.com.consumer_key=5zyIkp12TrkulSRbSegQ
+www.yammer.com.consumer_secret=zUcCB9kqWhI1IiTAJbl9QdG2AWcUJMDWp3Qyv5VJJw
+
+#Mendeley
+api.mendeley.com.consumer_key=f31077a7576d5e02537e232eb649403c04fce1dd0
+api.mendeley.com.consumer_secret=1810bc92d4625f673e4ff35cb248aab3
+
+#Salesforce
+login.salesforce.com.consumer_key = 3MVG9Y6d_Btp4xp4yFMR0tPSndkAVu4OBejuYcL2iGFC68tA49PknWKX20XdPl5s1iwWldyuAbSINWHbB2Jcu
+login.salesforce.com.consumer_secret = 1993703471433041656
+
 #Implementations
 #you can provide your custom provider here e.g 'myprovider' is your provider id 
 #and 'org.brickred.socialauth.provider.GoogleImpl' is your provider implementation. 
