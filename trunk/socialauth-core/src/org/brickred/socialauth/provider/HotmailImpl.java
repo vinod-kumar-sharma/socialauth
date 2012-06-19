@@ -190,7 +190,6 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 
 		if (accessGrant != null) {
 			isVerify = true;
-			System.out.println(accessGrant.toString());
 			LOG.debug("Obtaining user profile");
 			return getProfile();
 		} else {
