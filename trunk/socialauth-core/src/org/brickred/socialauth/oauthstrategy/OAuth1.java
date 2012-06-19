@@ -150,9 +150,6 @@ public class OAuth1 implements OAuthStrategyBase {
 			try {
 				response = oauth.httpPost(urlStr, params, headerParams, body,
 						accessToken);
-				System.out.println(response.getStatus());
-				System.out.println(response
-						.getResponseBodyAsString(Constants.ENCODING));
 			} catch (Exception e) {
 				throw new SocialAuthException(
 						"Error while making request to URL : " + urlStr, e);
