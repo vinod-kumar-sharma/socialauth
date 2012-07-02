@@ -110,6 +110,7 @@ public class HttpUtil {
 			final Map<String, String> header) throws Exception {
 		HttpURLConnection conn;
 		try {
+
 			URL url = new URL(urlStr);
 			if (proxyObj != null) {
 				conn = (HttpURLConnection) url.openConnection(proxyObj);
@@ -117,8 +118,14 @@ public class HttpUtil {
 				conn = (HttpURLConnection) url.openConnection();
 			}
 
-			conn.setDoOutput(true);
+			if (requestMethod.equalsIgnoreCase(MethodType.POST.toString())
+					|| requestMethod
+							.equalsIgnoreCase(MethodType.PUT.toString())) {
+				conn.setDoOutput(true);
+			}
+
 			conn.setDoInput(true);
+
 			conn.setInstanceFollowRedirects(true);
 			if (timeoutValue > 0) {
 				LOG.debug("Setting connection timeout : " + timeoutValue);
@@ -145,6 +152,7 @@ public class HttpUtil {
 				}
 			}
 			conn.connect();
+			System.out.println(conn.getResponseCode());
 		} catch (Exception e) {
 			throw new SocialAuthException(e);
 		}
