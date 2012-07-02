@@ -173,6 +173,11 @@ public interface Constants {
 	public static final String MENDELEY = "mendeley";
 
 	/**
+	 * runkeeper
+	 */
+	public static final String RUNKEEPER = "runkeeper";
+
+	/**
 	 * access token parameter name
 	 */
 	public static final String ACCESS_TOKEN_PARAMETER_NAME = "access_token";
