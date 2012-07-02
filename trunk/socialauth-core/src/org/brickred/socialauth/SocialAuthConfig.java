@@ -100,6 +100,8 @@ public class SocialAuthConfig implements Serializable {
 				org.brickred.socialauth.provider.YammerImpl.class);
 		providersImplMap.put(Constants.MENDELEY,
 				org.brickred.socialauth.provider.MendeleyImpl.class);
+		providersImplMap.put(Constants.RUNKEEPER,
+				org.brickred.socialauth.provider.RunkeeperImpl.class);
 
 		domainMap = new HashMap<String, String>();
 		domainMap.put(Constants.GOOGLE, "www.google.com");
@@ -113,6 +115,7 @@ public class SocialAuthConfig implements Serializable {
 		domainMap.put(Constants.SALESFORCE, "login.salesforce.com");
 		domainMap.put(Constants.YAMMER, "www.yammer.com");
 		domainMap.put(Constants.MENDELEY, "api.mendeley.com");
+		domainMap.put(Constants.RUNKEEPER, "runkeeper.com");
 
 		providersConfig = new HashMap<String, OAuthConfig>();
 
