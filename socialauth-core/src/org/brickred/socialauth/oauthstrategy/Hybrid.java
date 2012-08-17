@@ -89,7 +89,13 @@ public class Hybrid implements OAuthStrategyBase {
 			throw new SocialAuthException("Failed to read response from  ");
 		}
 
-		String realm = successUrl.substring(0, successUrl.indexOf("/", 9));
+		String realm;
+		if (successUrl.indexOf("/", 9) > 0) {
+			realm = successUrl.substring(0, successUrl.indexOf("/", 9));
+		} else {
+			realm = successUrl;
+		}
+
 		String consumerURL = realm.replace("http://", "");
 		consumerURL = consumerURL.replace("https://", "");
 		consumerURL = consumerURL.replaceAll(":{1}\\d*", "");
