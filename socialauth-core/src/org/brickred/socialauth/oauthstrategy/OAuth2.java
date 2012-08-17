@@ -122,7 +122,7 @@ public class OAuth2 implements OAuthStrategyBase {
 		}
 		StringBuffer sb = new StringBuffer();
 		sb.append(endpoints.get(Constants.OAUTH_ACCESS_TOKEN_URL));
-		char separator = endpoints.get(Constants.OAUTH_AUTHORIZATION_URL)
+		char separator = endpoints.get(Constants.OAUTH_ACCESS_TOKEN_URL)
 				.indexOf('?') == -1 ? '?' : '&';
 		sb.append(separator);
 		sb.append("client_id=").append(oauth.getConfig().get_consumerKey());
