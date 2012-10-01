@@ -25,6 +25,7 @@
 
 package org.brickred.socialauth.provider;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -349,6 +350,14 @@ public class RunkeeperImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getProviderId() {
 		return config.getId();
+	}
+
+	@Override
+	public Response uploadImage(final String message, final String fileName,
+			final InputStream inputStream) throws Exception {
+		LOG.warn("WARNING: Not implemented for Runkeeper");
+		throw new SocialAuthException(
+				"Update Status is not implemented for Runkeeper");
 	}
 
 	private String getScope() {

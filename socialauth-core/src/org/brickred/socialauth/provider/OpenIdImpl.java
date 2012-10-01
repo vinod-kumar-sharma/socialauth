@@ -26,6 +26,7 @@
 package org.brickred.socialauth.provider;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -413,5 +414,13 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getProviderId() {
 		return id;
+	}
+
+	@Override
+	public Response uploadImage(final String message, final String fileName,
+			final InputStream inputStream) throws Exception {
+		LOG.warn("WARNING: Not implemented for OpenId");
+		throw new SocialAuthException(
+				"Update Status is not implemented for OpenId");
 	}
 }

@@ -25,6 +25,7 @@
 
 package org.brickred.socialauth.provider;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
@@ -375,6 +376,14 @@ public class SalesForceImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getProviderId() {
 		return config.getId();
+	}
+
+	@Override
+	public Response uploadImage(final String message, final String fileName,
+			final InputStream inputStream) throws Exception {
+		LOG.warn("WARNING: Not implemented for SalesForce");
+		throw new SocialAuthException(
+				"Update Status is not implemented for SalesForce");
 	}
 
 	private String getScope() {

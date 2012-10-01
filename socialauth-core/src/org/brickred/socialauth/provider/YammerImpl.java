@@ -25,6 +25,7 @@
 
 package org.brickred.socialauth.provider;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -519,6 +520,14 @@ public class YammerImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getProviderId() {
 		return config.getId();
+	}
+
+	@Override
+	public Response uploadImage(final String message, final String fileName,
+			final InputStream inputStream) throws Exception {
+		LOG.warn("WARNING: Not implemented for Yammer");
+		throw new SocialAuthException(
+				"Update Status is not implemented for Yammer");
 	}
 
 	private String getScope() {
