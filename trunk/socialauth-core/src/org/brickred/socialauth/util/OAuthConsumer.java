@@ -545,4 +545,75 @@ public class OAuthConsumer implements Serializable, Constants {
 	public OAuthConfig getConfig() {
 		return config;
 	}
+
+	/**
+	 * 
+	 * @param reqURL
+	 *            URL to send request to.
+	 * @param paramsMap
+	 *            Any additional parameters whose signature we want to compute.
+	 * @param headerParams
+	 *            Header Parameters
+	 * @param inputStream
+	 *            Input Stream of image
+	 * @param fileParamName
+	 *            Image Filename parameter. It requires in some provider.
+	 * @param fileName
+	 *            Image file name
+	 * @param methodName
+	 *            Method type
+	 * @param token
+	 *            Token to pass in PUT request
+	 * @param isHeaderRequired
+	 *            True if header is required
+	 * @return Response Object
+	 * @throws Exception
+	 */
+	public Response uploadImage(final String reqURL,
+			final Map<String, String> paramsMap,
+			final Map<String, String> headerParams,
+			final InputStream inputStream, final String fileParamName,
+			final String fileName, final String methodName,
+			final AccessGrant token, final boolean isHeaderRequired)
+			throws Exception {
+		Map<String, String> params = new HashMap<String, String>();
+		params.put(OAUTH_TOKEN, token.getKey());
+		putOauthParams(params);
+		String url;
+		int idx = reqURL.indexOf('?');
+		if (idx != -1) {
+			String[] pairs = AMPERSAND.split(reqURL.substring(idx + 1));
+			for (String pair : pairs) {
+				int eq = pair.indexOf('=');
+				if (eq == -1) {
+					params.put(pair, "");
+				} else {
+					params.put(pair.substring(0, eq),
+							HttpUtil.decodeURIComponent(pair.substring(eq + 1)));
+				}
+			}
+			url = reqURL.substring(0, idx);
+		} else {
+			url = reqURL;
+		}
+		String sig = generateSignature(config.get_signatureMethod(),
+				methodName, url, params, token);
+		params.put(OAUTH_SIGNATURE, sig);
+		Map<String, String> headerMap = null;
+		if (isHeaderRequired) {
+			String headerVal = getAuthHeaderValue(params);
+			headerMap = new HashMap<String, String>();
+			headerMap.put("Authorization", headerVal);
+			if (headerParams != null) {
+				for (String key : headerParams.keySet()) {
+					headerMap.put(key, headerParams.get(key));
+				}
+			}
+			url = reqURL;
+		} else {
+			url += "?" + HttpUtil.buildParams(params);
+		}
+		return HttpUtil.doHttpRequest(reqURL, methodName, paramsMap, headerMap,
+				inputStream, fileName, fileParamName);
+	}
 }
