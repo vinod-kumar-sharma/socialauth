@@ -24,6 +24,7 @@
 
 package org.brickred.socialauth;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -182,4 +183,20 @@ public interface AuthProvider {
 	 * @throws Exception
 	 */
 	public void setAccessGrant(AccessGrant accessGrant) throws Exception;
+
+	/**
+	 * Updates the image and message on the chosen provider if available. This
+	 * is implemented only for Facebook and Twitter.
+	 * 
+	 * @param message
+	 *            Status Message
+	 * @param fileName
+	 *            Image file name
+	 * @param inputStream
+	 *            Input Stream of image
+	 * @return Response object
+	 * @throws Exception
+	 */
+	public Response uploadImage(final String message, final String fileName,
+			final InputStream inputStream) throws Exception;
 }
