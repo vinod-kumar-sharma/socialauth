@@ -25,6 +25,7 @@
 
 package org.brickred.socialauth.provider;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -473,6 +474,14 @@ public class HotmailImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getProviderId() {
 		return config.getId();
+	}
+
+	@Override
+	public Response uploadImage(final String message, final String fileName,
+			final InputStream inputStream) throws Exception {
+		LOG.warn("WARNING: Not implemented for Hotmail");
+		throw new SocialAuthException(
+				"Update Status is not implemented for Hotmail");
 	}
 
 	private String getScope() {
