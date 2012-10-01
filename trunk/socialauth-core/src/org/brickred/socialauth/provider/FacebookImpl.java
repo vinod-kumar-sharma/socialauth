@@ -25,6 +25,7 @@
 
 package org.brickred.socialauth.provider;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,6 +71,7 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 	private static final String UPDATE_STATUS_URL = "https://graph.facebook.com/me/feed";
 	private static final String PROFILE_IMAGE_URL = "http://graph.facebook.com/%1$s/picture";
 	private static final String PUBLIC_PROFILE_URL = "http://www.facebook.com/profile.php?id=";
+	private static final String IMAGE_UPLOAD_URL = "https://graph.facebook.com/me/photos";
 	private static final Map<String, String> ENDPOINTS;
 	private final Log LOG = LogFactory.getLog(FacebookImpl.class);
 
@@ -406,6 +408,20 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getProviderId() {
 		return config.getId();
+	}
+
+	@Override
+	public Response uploadImage(final String message, final String fileName,
+			final InputStream inputStream) throws Exception {
+		LOG.info("Uploading Image :: " + fileName + ", status message :: "
+				+ message);
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("name", message);
+		Response response = authenticationStrategy.uploadImage(
+				IMAGE_UPLOAD_URL, MethodType.POST.toString(), map, null,
+				fileName, inputStream, null);
+		LOG.info("Upload Image status::" + response.getStatus());
+		return response;
 	}
 
 	private String getScope() {
