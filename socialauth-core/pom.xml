@@ -4,7 +4,7 @@
 	<groupId>org.brickred</groupId>
 	<artifactId>socialauth</artifactId>
 	<name>socialauth</name>
-	<version>2.3</version>
+	<version>3.0</version>
 	<description>SocialAuth library</description>
 	<url>http://code.google.com/p/socialauth/</url>
 	<licenses>
