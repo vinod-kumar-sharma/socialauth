@@ -25,6 +25,7 @@
 
 package org.brickred.socialauth.oauthstrategy;
 
+import java.io.InputStream;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -174,6 +175,16 @@ public class OAuth1 implements OAuthStrategyBase {
 	public void logout() {
 		accessToken = null;
 		providerState = false;
+	}
+
+	@Override
+	public Response uploadImage(final String url, final String methodType,
+			final Map<String, String> params,
+			final Map<String, String> headerParams, final String fileName,
+			final InputStream inputStream, final String fileParamName)
+			throws Exception {
+		return oauth.uploadImage(url, params, headerParams, inputStream,
+				fileParamName, fileName, methodType, accessToken, true);
 	}
 
 }
