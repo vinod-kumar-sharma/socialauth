@@ -27,6 +27,7 @@ package org.brickred.socialauth.provider;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.net.HttpURLConnection;
@@ -265,5 +266,12 @@ public class AolImpl implements AuthProvider, Serializable {
 	@Override
 	public String getProviderId() {
 		return config.getId();
+	}
+
+	@Override
+	public Response uploadImage(final String message, final String fileName,
+			final InputStream inputStream) throws Exception {
+		LOG.warn("Update status not implemented");
+		return null;
 	}
 }
