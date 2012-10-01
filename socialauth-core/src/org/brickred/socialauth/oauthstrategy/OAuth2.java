@@ -26,6 +26,7 @@
 package org.brickred.socialauth.oauthstrategy;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
@@ -302,5 +303,20 @@ public class OAuth2 implements OAuthStrategyBase {
 	public void logout() {
 		accessGrant = null;
 		providerState = false;
+	}
+
+	@Override
+	public Response uploadImage(final String url, final String methodType,
+			final Map<String, String> params,
+			final Map<String, String> headerParams, final String fileName,
+			final InputStream inputStream, final String fileParamName)
+			throws Exception {
+		Map<String, String> map = new HashMap<String, String>();
+		map.put(accessTokenParameterName, accessGrant.getKey());
+		if (params != null && params.size() > 0) {
+			map.putAll(params);
+		}
+		return HttpUtil.doHttpRequest(url, methodType, map, headerParams,
+				inputStream, fileName, null);
 	}
 }
