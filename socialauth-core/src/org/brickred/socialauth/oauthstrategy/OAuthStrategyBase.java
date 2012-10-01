@@ -25,6 +25,7 @@
 
 package org.brickred.socialauth.oauthstrategy;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.util.Map;
 
@@ -137,4 +138,30 @@ public interface OAuthStrategyBase extends Serializable {
 	 * Logout
 	 */
 	public void logout();
+
+	/**
+	 * Makes HTTP request to upload image and status.
+	 * 
+	 * @param url
+	 *            URL to make HTTP request.
+	 * @param methodType
+	 *            Method type can be GET, POST or PUT
+	 * @param params
+	 *           Parameters need to pass in request
+	 * @param headerParams
+	 *            Parameters need to pass as Header Parameters
+	 * @param fileName
+	 *            Image file name
+	 * @param inputStream
+	 *            Input stream of image
+	 * @param fileParamName
+	 *            Image Filename parameter. It requires in some provider.
+	 * @return Response object
+	 * @throws Exception
+	 */
+	public Response uploadImage(final String url, final String methodType,
+			final Map<String, String> params,
+			final Map<String, String> headerParams, final String fileName,
+			final InputStream inputStream, final String fileParamName)
+			throws Exception;
 }
