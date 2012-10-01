@@ -24,6 +24,10 @@
  */
 package org.brickred.socialauth.util;
 
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -39,6 +43,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -152,7 +157,121 @@ public class HttpUtil {
 				}
 			}
 			conn.connect();
-			System.out.println(conn.getResponseCode());
+		} catch (Exception e) {
+			throw new SocialAuthException(e);
+		}
+		return new Response(conn);
+
+	}
+
+	/**
+	 * 
+	 * @param urlStr
+	 *            the URL String
+	 * @param requestMethod
+	 *            Method type
+	 * @param params
+	 *            Parameters to pass in request
+	 * @param header
+	 *            Header parameters
+	 * @param inputStream
+	 *            Input stream of image
+	 * @param fileName
+	 *            Image file name
+	 * @param fileParamName
+	 *            Image Filename parameter. It requires in some provider.
+	 * @return Response object
+	 * @throws Exception
+	 */
+	public static Response doHttpRequest(final String urlStr,
+			final String requestMethod, final Map<String, String> params,
+			final Map<String, String> header, final InputStream inputStream,
+			final String fileName, final String fileParamName) throws Exception {
+		HttpURLConnection conn;
+		try {
+
+			URL url = new URL(urlStr);
+			if (proxyObj != null) {
+				conn = (HttpURLConnection) url.openConnection(proxyObj);
+			} else {
+				conn = (HttpURLConnection) url.openConnection();
+			}
+
+			if (requestMethod.equalsIgnoreCase(MethodType.POST.toString())
+					|| requestMethod
+							.equalsIgnoreCase(MethodType.PUT.toString())) {
+				conn.setDoOutput(true);
+			}
+
+			conn.setDoInput(true);
+
+			conn.setInstanceFollowRedirects(true);
+			if (timeoutValue > 0) {
+				LOG.debug("Setting connection timeout : " + timeoutValue);
+				conn.setConnectTimeout(timeoutValue);
+			}
+			if (requestMethod != null) {
+				conn.setRequestMethod(requestMethod);
+			}
+			if (header != null) {
+				for (String key : header.keySet()) {
+					conn.setRequestProperty(key, header.get(key));
+				}
+			}
+
+			// If use POST or PUT must use this
+			OutputStream os = null;
+			if (inputStream != null) {
+				if (requestMethod != null
+						&& !MethodType.GET.toString().equals(requestMethod)
+						&& !MethodType.DELETE.toString().equals(requestMethod)) {
+					LOG.debug(requestMethod + " request");
+					String boundary = "----Socialauth-posting"
+							+ System.currentTimeMillis();
+					conn.setRequestProperty("Content-Type",
+							"multipart/form-data; boundary=" + boundary);
+					boundary = "--" + boundary;
+
+					os = conn.getOutputStream();
+					DataOutputStream out = new DataOutputStream(os);
+					write(out, boundary + "\r\n");
+
+					if (fileParamName != null) {
+						write(out, "Content-Disposition: form-data; name=\""
+								+ fileParamName + "\"; filename=\"" + fileName
+								+ "\"\r\n");
+					} else {
+						write(out,
+								"Content-Disposition: form-data;  filename=\""
+										+ fileName + "\"\r\n");
+					}
+					write(out, "Content-Type: " + "multipart/form-data"
+							+ "\r\n\r\n");
+					int b;
+					while ((b = inputStream.read()) != -1) {
+						out.write(b);
+					}
+					// out.write(imageFile);
+					write(out, "\r\n");
+
+					Iterator<Map.Entry<String, String>> entries = params
+							.entrySet().iterator();
+					while (entries.hasNext()) {
+						Map.Entry<String, String> entry = entries.next();
+						write(out, boundary + "\r\n");
+						write(out, "Content-Disposition: form-data; name=\""
+								+ entry.getKey() + "\"\r\n");
+						write(out,
+								"Content-Type: text/plain; charset=UTF-8\r\n\r\n");
+						write(out, entry.getValue());
+						write(out, "\r\n");
+					}
+
+					write(out, boundary + "--\r\n");
+					write(out, "\r\n");
+				}
+			}
+			conn.connect();
 		} catch (Exception e) {
 			throw new SocialAuthException(e);
 		}
@@ -345,6 +464,12 @@ public class HttpUtil {
 	 */
 	public static void setConnectionTimeout(final int timeout) {
 		timeoutValue = timeout;
+	}
+
+	public static void write(final DataOutputStream out, final String outStr)
+			throws IOException {
+		out.writeBytes(outStr);
+		LOG.debug(outStr);
 	}
 
 }
