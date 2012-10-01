@@ -25,12 +25,14 @@
 
 package org.brickred.socialauth.provider;
 
+import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -70,8 +72,11 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	private static final String CONTACTS_URL = "http://api.twitter.com/1/friends/ids.json?screen_name=%1$s&cursor=-1";
 	private static final String LOOKUP_URL = "http://api.twitter.com/1/users/lookup.json?user_id=";
 	private static final String UPDATE_STATUS_URL = "http://api.twitter.com/1/statuses/update.json?status=";
+	private static final String IMAGE_UPLOAD_URL = "https://upload.twitter.com/1/statuses/update_with_media.json";
 	private static final String PROPERTY_DOMAIN = "twitter.com";
 	private static final Map<String, String> ENDPOINTS;
+	private static final Pattern IMAGE_FILE_PATTERN = Pattern.compile(
+			"(jpg|jpeg|gif|png)$", Pattern.CASE_INSENSITIVE);
 	private final Log LOG = LogFactory.getLog(TwitterImpl.class);
 
 	private Permission scope;
@@ -461,5 +466,36 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getProviderId() {
 		return config.getId();
+	}
+
+	/**
+	 * Updates the image and message on Twitter. Twitter supports only PNG,JPG
+	 * and GIF image formats. Animated GIFs are not supported.
+	 * 
+	 * @param message
+	 *            Status Message
+	 * @param fileName
+	 *            Image file name
+	 * @param inputStream
+	 *            Input Stream of image
+	 * @return Response object
+	 * @throws Exception
+	 */
+	@Override
+	public Response uploadImage(final String message, final String fileName,
+			final InputStream inputStream) throws Exception {
+		LOG.info("Uploading Image :: " + fileName + ", message :: " + message);
+		if (!IMAGE_FILE_PATTERN.matcher(fileName).find()) {
+			throw new SocialAuthException(
+					"Twitter supports only PNG, JPG and GIF image formats");
+		}
+		String fileNameParam = "media[]";
+		Map<String, String> map = new HashMap<String, String>();
+		map.put("status", message);
+		Response response = authenticationStrategy.uploadImage(
+				IMAGE_UPLOAD_URL, MethodType.POST.toString(), map, null,
+				fileName, inputStream, fileNameParam);
+		LOG.info("Upload Image status::" + response.getStatus());
+		return response;
 	}
 }
