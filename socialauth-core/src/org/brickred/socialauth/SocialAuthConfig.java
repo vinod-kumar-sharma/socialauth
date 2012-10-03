@@ -68,7 +68,7 @@ public class SocialAuthConfig implements Serializable {
 	/**
 	 * Returns the instance of SocialAuthConfig
 	 * 
-	 * @return
+	 * @return SocialAuthConfig default object
 	 */
 	public static SocialAuthConfig getDefault() {
 		return DEFAULT;

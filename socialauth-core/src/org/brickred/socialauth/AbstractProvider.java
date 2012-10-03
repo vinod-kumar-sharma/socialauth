@@ -41,7 +41,7 @@ public class AbstractProvider implements Serializable {
 	/**
 	 * Returns the provider state.
 	 * 
-	 * @return
+	 * @return providerState
 	 */
 	public boolean isProviderState() {
 		return providerState;
