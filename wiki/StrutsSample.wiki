@@ -29,7 +29,7 @@ With the prerequisites out of the way, we are ready to begin development. Since 
 == Step 1. Create the structure ==
 
 Create a dynamic web project and add struts dependencies. You can download struts dependencies from [http://archive.apache.org/dist/struts/struts-1.2.7/ here]. <br>
-Download [http://socialauth.googlecode.com/files/socialauth-java-sdk-2.3.zip socialauth-java-sdk-2.3.zip] and copy socialauth-2.3.jar from dist folder and all jars from  dependencies folder into the WEB-INF/lib directory. Now your project should look as follows
+Download [http://socialauth.googlecode.com/files/socialauth-java-sdk-3.0.zip socialauth-java-sdk-3.0.zip] and copy socialauth-3.0.jar from dist folder and all jars from  dependencies folder into the WEB-INF/lib directory. Now your project should look as follows
 
 http://socialauth.googlecode.com/svn/wiki/images/struts-sample-structure.png
 
