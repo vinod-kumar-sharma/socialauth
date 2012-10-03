@@ -316,7 +316,7 @@ public class Profile implements Serializable {
 	/**
 	 * Retrieves the profile image URL
 	 * 
-	 * @return
+	 * @return String the profileImageURL
 	 */
 	public String getProfileImageURL() {
 		return profileImageURL;

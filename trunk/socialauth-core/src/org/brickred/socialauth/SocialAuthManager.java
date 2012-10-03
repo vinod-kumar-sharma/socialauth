@@ -233,7 +233,7 @@ public class SocialAuthManager implements Serializable {
 	 * 
 	 * @param providerId
 	 *            the provider id
-	 * @return
+	 * @return provider connected status
 	 */
 	public boolean isConnected(final String providerId) {
 		if (providersMap.containsKey(providerId)) {
@@ -273,7 +273,7 @@ public class SocialAuthManager implements Serializable {
 	/**
 	 * Returns the array list of connected providers ids.
 	 * 
-	 * @return
+	 * @return List of connected providers ids string.
 	 */
 	public List<String> getConnectedProvidersIds() {
 		List<String> list = new ArrayList<String>();
@@ -286,7 +286,7 @@ public class SocialAuthManager implements Serializable {
 	/**
 	 * Retrieves the current auth provider instance which is last connected.
 	 * 
-	 * @return
+	 * @return AuthProvider object
 	 */
 	public AuthProvider getCurrentAuthProvider() {
 		if (currentProviderId != null) {
