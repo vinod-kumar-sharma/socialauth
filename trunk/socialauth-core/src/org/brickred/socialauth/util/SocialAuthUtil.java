@@ -49,7 +49,7 @@ public class SocialAuthUtil {
 	 * This method will convert month name to an int value.
 	 * 
 	 * @param monthName
-	 * @return
+	 * @return integer value of month
 	 */
 	public static int getMonthInInt(final String monthName) {
 		DateFormatSymbols dfs = new DateFormatSymbols();

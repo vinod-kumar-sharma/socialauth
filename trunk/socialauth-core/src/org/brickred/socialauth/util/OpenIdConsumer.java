@@ -133,8 +133,8 @@ public class OpenIdConsumer {
 	/**
 	 * Parses the user info from request
 	 * 
-	 * @param req
-	 *            request object
+	 * @param requestParams
+	 *            request parameters map
 	 * @return User Profile
 	 */
 	public static Profile getUserInfo(final Map<String, String> requestParams) {

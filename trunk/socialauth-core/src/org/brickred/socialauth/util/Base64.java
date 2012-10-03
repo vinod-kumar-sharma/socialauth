@@ -681,9 +681,6 @@ public class Base64 {
 	 *            Length of data to convert
 	 * @param options
 	 *            Specified options
-	 * @param options
-	 *            alphabet type is pulled from this (standard, url-safe,
-	 *            ordered)
 	 * @see Base64#GZIP
 	 * @see Base64#DONT_BREAK_LINES
 	 * @since 2.0
