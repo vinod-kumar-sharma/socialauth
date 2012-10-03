@@ -37,11 +37,32 @@
 			};
 			req.send(msg);
     	}
+    	
+    	function uploadDone(name){
+    		var frame = getFrameByName(name);
+    		if (frame) {
+    			var res = frame.document.getElementsByTagName("body")[0].innerHTML;
+    			if (res.length) {
+    				alert(res);
+    				document.getElementById("upButton").disabled = false;
+    				document.getElementById("message").value="";
+    				document.getElementById("imageFile").value="";
+    			}
+    		}
+    	}
+    	
+    	function getFrameByName(name) {
+    		for (var i = 0; i < frames.length; i++)
+    			if (frames[i].name == name)
+    				return frames[i];
+			return null;
+    	}
 	</script>
 </head>
 <body>
 <%@page import="org.brickred.socialauth.Profile,java.util.*;" %>
 <%@ taglib prefix="c" uri="http://java.sun.com/jsp/jstl/core" %>
+<%@ taglib uri="struts-html" prefix="html" %>
 <%@ page isELIgnored="false"%>
     <div id="logo">
         <div id="slogan">
@@ -118,6 +139,31 @@
 					</td>
 				</tr>
 			</table>
+			<br/>
+			<h3 align="center">Upload Status with Image</h3>
+			<html:form action="socialAuthUploadPhotoAction.do"  enctype="multipart/form-data" method="post" target="hidden_upload">
+				<table cellspacing="1" cellspacing="4" border="0" bgcolor="e5e5e5" align="center" width="60%">
+					<tr class="sectiontableheader">
+						<th colspan="2">This is only for Facebook & Twitter</th>
+					</tr>
+					<tr class="sectiontableentry1">
+						<td>Status:</td>
+						<td>
+							<html:text property="message" styleId="message" size="50"></html:text>
+						</td>
+					</tr>
+					<tr class="sectiontableentry2">
+						<td>Select File:</td>
+						<td>
+							<html:file property="imageFile" styleId="imageFile"/>  (JPG, JPEG, PNG, GIF only.)
+						</td>
+					</tr>
+					<tr class="sectiontableentry2">
+						<td colspan="2" align="center"><html:submit property="upButton" styleId="upButton" onclick="this.disabled=true;"/></td>
+					</tr>
+				</table>
+			</html:form>
+			<IFRAME id="hidden_upload" name="hidden_upload" src='' onLoad='uploadDone("hidden_upload")' style="width:0;height:0;border:0px solid #fff"></IFRAME>
 			<h3 align="center">Contact Details</h3>
 			<table cellspacing="1" cellspacing="4" border="0" bgcolor="e5e5e5" align="center" width="60%">
 				<tr class="sectiontableheader">
