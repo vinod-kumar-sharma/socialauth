@@ -103,7 +103,7 @@ public interface OAuthStrategyBase extends Serializable {
 	/**
 	 * Sets the permission
 	 * 
-	 * @param p
+	 * @param permission
 	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
 	 *            Permission.ALL, Permission.DEFAULT
 	 */
@@ -147,7 +147,7 @@ public interface OAuthStrategyBase extends Serializable {
 	 * @param methodType
 	 *            Method type can be GET, POST or PUT
 	 * @param params
-	 *           Parameters need to pass in request
+	 *            Parameters need to pass in request
 	 * @param headerParams
 	 *            Parameters need to pass as Header Parameters
 	 * @param fileName

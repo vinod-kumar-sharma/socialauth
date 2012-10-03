@@ -77,7 +77,7 @@ public class AolImpl implements AuthProvider, Serializable {
 	/**
 	 * Reads properties provided in the configuration file
 	 * 
-	 * @param props
+	 * @param providerConfig
 	 *            Properties for consumer key
 	 */
 	public AolImpl(final OAuthConfig providerConfig) {

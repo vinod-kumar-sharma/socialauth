@@ -174,9 +174,10 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider,
 	 * Verifies the user when the external provider redirects back to our
 	 * application.
 	 * 
-	 * @return Profile object containing the profile information
-	 * @param request
+	 * @param httpReq
 	 *            Request object the request is received from the provider
+	 * @return Profile object containing the profile information
+	 * 
 	 * @throws Exception
 	 */
 
@@ -383,7 +384,7 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider,
 	 * @param params
 	 * @param headerParams
 	 * @param body
-	 * @return
+	 * @return Response object
 	 * @throws Exception
 	 */
 	@Override
