@@ -2,6 +2,12 @@
 
 = !SocialAuth History =
 
+== Whats new in Version 3.0 ? ==
+
+ # Upload Photo option in Facebook and Twitter
+ # Bug fixes
+
+
 == Whats new in Version 2.3 ? ==
 
  # Added new provider "Mendeley"
