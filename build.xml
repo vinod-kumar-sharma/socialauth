@@ -313,24 +313,40 @@
 		<javadoc destdir="${javadoc}/${project.socialauth}" 
 			sourcepath="${projects.path}/${project.socialauth}/src"
 			packagenames="*"
-			windowtitle="SocialAuth"/>
+			windowtitle="SocialAuth"
+			classpathref="libraries"/>
 	</target>
 	<target name="filterDoc" depends="springDoc">
 		<javadoc destdir="${javadoc}/${project.filter}" 
 			sourcepath="${projects.path}/${project.filter}/src"
 			packagenames="*"
-			windowtitle="SocialAuth Filter"/>
+			windowtitle="SocialAuth Filter">
+			<classpath>
+				<path refid="libraries"/>
+				<fileset dir="${projects.path}/${project.filter}/lib" includes="**/*.jar"/>
+			</classpath>
+		</javadoc>
 	</target>
 	<target name="springDoc" depends="seamDoc">
 		<javadoc destdir="${javadoc}/${project.spring}" 
 			sourcepath="${projects.path}/${project.spring}/src"
 			packagenames="*"
-			windowtitle="SocialAuth Spring"/>
+			windowtitle="SocialAuth Spring">
+			<classpath>
+				<path refid="libraries"/>
+				<fileset dir="${projects.path}/${project.spring}/lib" includes="**/*.jar"/>
+			</classpath>
+		</javadoc>
 	</target>
 	<target name="seamDoc">
 		<javadoc destdir="${javadoc}/${project.seam}" 
 			sourcepath="${projects.path}/${project.seam}/src"
 			packagenames="*"
-			windowtitle="SocialAuth Seam"/>
+			windowtitle="SocialAuth Seam">
+			<classpath>
+				<path refid="libraries"/>
+				<fileset dir="${projects.path}/${project.seam}/lib" includes="**/*.jar"/>
+			</classpath>
+		</javadoc>
 	</target>
 </project>
