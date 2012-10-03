@@ -25,6 +25,7 @@
 package com.auth.form;
 
 import org.apache.struts.action.ActionForm;
+import org.apache.struts.upload.FormFile;
 import org.brickred.socialauth.SocialAuthManager;
 
 /**
@@ -43,6 +44,16 @@ public class AuthForm extends ActionForm {
 	 * The SocialAuth Manager
 	 */
 	SocialAuthManager socialAuthManager;
+
+	/**
+	 * Image File
+	 */
+	FormFile imageFile;
+
+	/**
+	 * Message
+	 */
+	String message;
 
 	/**
 	 * Retrieves the id
@@ -81,4 +92,41 @@ public class AuthForm extends ActionForm {
 	public void setSocialAuthManager(final SocialAuthManager socialAuthManager) {
 		this.socialAuthManager = socialAuthManager;
 	}
+
+	/**
+	 * Retrieves image file
+	 * 
+	 * @return imageFile
+	 */
+	public FormFile getImageFile() {
+		return imageFile;
+	}
+
+	/**
+	 * Stores the uploaded image
+	 * 
+	 * @param imageFile
+	 */
+	public void setImageFile(final FormFile imageFile) {
+		this.imageFile = imageFile;
+	}
+
+	/**
+	 * Retrieves message
+	 * 
+	 * @return message
+	 */
+	public String getMessage() {
+		return message;
+	}
+
+	/**
+	 * Updates message
+	 * 
+	 * @param message
+	 */
+	public void setMessage(final String message) {
+		this.message = message;
+	}
+
 }
