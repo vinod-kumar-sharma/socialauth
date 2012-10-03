@@ -358,7 +358,7 @@ public class HttpUtil {
 	 * It decodes the given string
 	 * 
 	 * @param encodedURI
-	 * @return
+	 * @return decoded string
 	 */
 	public static String decodeURIComponent(final String encodedURI) {
 		char actualChar;

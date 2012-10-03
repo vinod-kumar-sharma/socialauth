@@ -60,7 +60,7 @@ public class Response {
 	/**
 	 * Gets the response content via InputStream.
 	 * 
-	 * @return
+	 * @return response input stream
 	 * @throws IOException
 	 */
 	public InputStream getInputStream() throws IOException {
