@@ -20,9 +20,9 @@ Authenticating using the external oAuth providers requires that we register our 
 
 == Include jars ==
 
-Download [http://socialauth.googlecode.com/files/socialauth-java-sdk-2.3.zip socialauth-java-sdk-2.3.zip] and include the following in your project from dist and dependencies folder
+Download [http://socialauth.googlecode.com/files/socialauth-java-sdk-3.0.zip socialauth-java-sdk-3.0.zip] and include the following in your project from dist and dependencies folder
 
-  # socialauth-2.3.jar
+  # socialauth-3.0.jar
   # socialauth-spring-2.0-beta2.jar
   # jars from dependencies folder
  
