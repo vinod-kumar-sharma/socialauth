@@ -155,7 +155,7 @@
 					<tr class="sectiontableentry2">
 						<td>Select File:</td>
 						<td>
-							<html:file property="imageFile" styleId="imageFile"/>  (JPG, JPEG, PNG, GIF only.)
+							<html:file property="imageFile" styleId="imageFile"/>  <span style="font-size:11px;font-weight:bold;">(JPG, JPEG, PNG, GIF only.)</span>
 						</td>
 					</tr>
 					<tr class="sectiontableentry2">
