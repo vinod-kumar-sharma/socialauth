@@ -1,5 +1,5 @@
 ===============================================================================
-WELCOME to SocialAuth Java SDK version 2.3
+WELCOME to SocialAuth Java SDK version 3.0
 ===============================================================================
 
 The SDK contains all the material you need to use SocialAuth java library.
