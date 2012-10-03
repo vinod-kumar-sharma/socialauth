@@ -165,7 +165,7 @@ public class AccessGrant implements Serializable {
 
 	/**
 	 * 
-	 * @param scope
+	 * @param permission
 	 *            Permission object which can be Permission.AUHTHENTICATE_ONLY,
 	 *            Permission.ALL, Permission.DEFAULT
 	 */

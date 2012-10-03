@@ -464,7 +464,7 @@ public class OAuthConsumer implements Serializable, Constants {
 	 * @param token
 	 * @param callbackUrl
 	 *            Callback URL
-	 * @return
+	 * @return url with query string of parameters
 	 * @throws Exception
 	 */
 	public StringBuilder buildAuthUrl(final String authUrl,

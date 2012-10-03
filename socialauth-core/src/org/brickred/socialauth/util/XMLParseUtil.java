@@ -42,41 +42,34 @@ import org.w3c.dom.NodeList;
  * 
  * @author Tarun Nagpal
  */
-public class XMLParseUtil
-{
-
+public class XMLParseUtil {
 
 	/**
 	 * Static helper function to get the element data of the specified node.
-	 *
-	 * @param node the node where the text data resides; may be <code>null</code>
-	 *           in which case this funtion will return ""
-	 *
-	 * @return the complete text of the specified node, or an empty string if the
-	 *         node has no text or is <code>null</code>
+	 * 
+	 * @param node
+	 *            the node where the text data resides; may be <code>null</code>
+	 *            in which case this funtion will return ""
+	 * 
+	 * @return the complete text of the specified node, or an empty string if
+	 *         the node has no text or is <code>null</code>
 	 */
-	public static String getElementData(final Node node)
-	{
+	public static String getElementData(final Node node) {
 		StringBuffer ret = new StringBuffer();
 
-		if (node != null)
-		{
+		if (node != null) {
 			Node text;
 			for (text = node.getFirstChild(); text != null; text = text
-			.getNextSibling())
-			{
+					.getNextSibling()) {
 				/**
 				 * the item's value is in one or more text nodes which are its
 				 * immediate children
 				 */
-				if (text.getNodeType() == Node.TEXT_NODE || text.getNodeType() == Node.CDATA_SECTION_NODE)
-				{
+				if (text.getNodeType() == Node.TEXT_NODE
+						|| text.getNodeType() == Node.CDATA_SECTION_NODE) {
 					ret.append(text.getNodeValue());
-				}
-				else
-				{
-					if (text.getNodeType() == Node.ENTITY_REFERENCE_NODE)
-					{
+				} else {
+					if (text.getNodeType() == Node.ENTITY_REFERENCE_NODE) {
 						ret.append(getElementData(text));
 					}
 				}
@@ -97,10 +90,10 @@ public class XMLParseUtil
 	 * @return the retrieved text value of the specified element or null if root
 	 *         has no given element.
 	 */
-	public static String getElementData(final Element root, final String elementName)
-	{
+	public static String getElementData(final Element root,
+			final String elementName) {
 		NodeList nodes = root.getElementsByTagName(elementName);
-		if (nodes.getLength() < 1){
+		if (nodes.getLength() < 1) {
 			return null;
 		}
 
@@ -108,18 +101,19 @@ public class XMLParseUtil
 	}
 
 	/**
-	 * Loads the xml file into an xml document and returns the
-	 * root element.
-	 *
-	 * @param name the fully qualified name of the XML file to load; assumed not
-	 *   to be <code>null</code>.
-	 *
+	 * Loads the xml file into an xml document and returns the root element.
+	 * 
+	 * @param fileName
+	 *            the fully qualified name of the XML file to load; assumed not
+	 *            to be <code>null</code>.
+	 * 
 	 * @return root element of the xml document, never <code>null</code>.
-	 *
-	 * @throws Exception on any error
+	 * 
+	 * @throws Exception
+	 *             on any error
 	 */
-	public static Element loadXmlResource(final String fileName) throws Exception
-	{
+	public static Element loadXmlResource(final String fileName)
+			throws Exception {
 		File file = new File(fileName);
 		DocumentBuilder db = getDocumentBuilder();
 		Document doc = db.parse(file);
@@ -129,7 +123,7 @@ public class XMLParseUtil
 	/**
 	 * Loads the imput stream and returns the root element.
 	 * 
-	 * @param name
+	 * @param in
 	 *            Input Stream.
 	 * 
 	 * @return root element of the xml document, never <code>null</code>.
@@ -138,7 +132,7 @@ public class XMLParseUtil
 	 *             on any error
 	 */
 	public static Element loadXmlResource(final InputStream in)
-	throws Exception {
+			throws Exception {
 		DocumentBuilder db = getDocumentBuilder();
 		Document doc = db.parse(in);
 		return doc.getDocumentElement();
@@ -148,24 +142,17 @@ public class XMLParseUtil
 	 * Returns a <code>DocumentBuilder</code>, which is used for parsing XML
 	 * documents.
 	 * 
-	 * @param validating if <code>true</code> sets the validation feature to on;
-	 *    any other value sets the validation feature to off.
-	 *
 	 * @return a <code>DocumentBuilder</code> which is used for parsing XML
 	 *         documents. Never <code>null</code>.
 	 */
-	public static DocumentBuilder getDocumentBuilder()
-	{
-		try
-		{
+	public static DocumentBuilder getDocumentBuilder() {
+		try {
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			dbf.setNamespaceAware(true);
 			dbf.setValidating(false);
 
 			return dbf.newDocumentBuilder();
-		}
-		catch (ParserConfigurationException e)
-		{
+		} catch (ParserConfigurationException e) {
 			e.printStackTrace();
 			throw new RuntimeException(e.getMessage());
 		}
