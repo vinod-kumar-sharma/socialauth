@@ -309,6 +309,40 @@ public class SocialAuthConfig implements Serializable {
 						conf.setCustomPermissions(perms);
 					}
 				}
+				if (applicationProperties.containsKey(value
+						+ ".request_token_url")) {
+					String reqUrl = applicationProperties.getProperty(
+							value + ".request_token_url").trim();
+					if (reqUrl.length() > 0) {
+						conf.setRequestTokenUrl(reqUrl);
+					}
+				}
+				if (applicationProperties.containsKey(value
+						+ ".authentication_url")) {
+					String authUrl = applicationProperties.getProperty(
+							value + ".authentication_url").trim();
+					if (authUrl.length() > 0) {
+						conf.setAuthenticationUrl(authUrl);
+					}
+				}
+				if (applicationProperties.containsKey(value
+						+ ".access_token_url")) {
+					String tokenUrl = applicationProperties.getProperty(
+							value + ".access_token_url").trim();
+					if (tokenUrl.length() > 0) {
+						conf.setAccessTokenUrl(tokenUrl);
+					}
+				}
+				if (applicationProperties.containsKey(value + ".plugins")) {
+					String pluginsStr = applicationProperties.getProperty(
+							value + ".plugins").trim();
+					if (pluginsStr.length() > 0) {
+						String plugins[] = pluginsStr.split(",");
+						if (plugins.length > 0) {
+							conf.setRegisteredPlugins(plugins);
+						}
+					}
+				}
 				providersConfig.put(key, conf);
 			} else {
 				LOG.debug("Configuration for provider " + key
