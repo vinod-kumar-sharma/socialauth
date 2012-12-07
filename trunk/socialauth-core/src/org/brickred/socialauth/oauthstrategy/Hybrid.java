@@ -239,4 +239,9 @@ public class Hybrid implements OAuthStrategyBase {
 		return oauth.uploadImage(url, params, headerParams, inputStream,
 				fileParamName, fileName, methodType, accessToken, true);
 	}
+
+	@Override
+	public AccessGrant getAccessGrant() {
+		return accessToken;
+	}
 }

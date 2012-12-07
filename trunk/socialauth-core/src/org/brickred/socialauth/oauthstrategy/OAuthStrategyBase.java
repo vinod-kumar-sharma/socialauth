@@ -164,4 +164,11 @@ public interface OAuthStrategyBase extends Serializable {
 			final Map<String, String> headerParams, final String fileName,
 			final InputStream inputStream, final String fileParamName)
 			throws Exception;
+
+	/**
+	 * Retrieves the AccessGrant object.
+	 * 
+	 * @return AccessGrant object.
+	 */
+	public AccessGrant getAccessGrant();
 }
