@@ -267,6 +267,12 @@ public class SocialAuthManager implements Serializable {
 		} catch (Exception e) {
 			throw new SocialAuthConfigurationException(e);
 		}
+		try {
+			provider.registerPlugins();
+		} catch (Exception e) {
+			throw new SocialAuthConfigurationException(e);
+		}
+
 		return provider;
 	}
 
