@@ -30,12 +30,11 @@ import java.io.Serializable;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,6 +48,7 @@ import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthConfigurationException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.exception.UserDeniedPermissionException;
+import org.brickred.socialauth.oauthstrategy.OAuthStrategyBase;
 import org.brickred.socialauth.util.AccessGrant;
 import org.brickred.socialauth.util.BirthDate;
 import org.brickred.socialauth.util.Constants;
@@ -79,6 +79,7 @@ public class YammerImpl extends AbstractProvider implements AuthProvider,
 	private AccessGrant accessGrant;
 	private Profile userProfile;
 	private String profileId;
+	private boolean providerState = false;
 
 	/**
 	 * Stores configuration for the provider
@@ -120,7 +121,7 @@ public class YammerImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getLoginRedirectURL(final String successUrl) throws Exception {
 		LOG.info("Determining URL for redirection");
-		setProviderState(true);
+		providerState = true;
 		try {
 			this.successUrl = URLEncoder.encode(successUrl, Constants.ENCODING);
 		} catch (UnsupportedEncodingException e) {
@@ -134,24 +135,6 @@ public class YammerImpl extends AbstractProvider implements AuthProvider,
 		}
 		LOG.info("Redirection to following URL should happen : " + url);
 		return url;
-	}
-
-	/**
-	 * Verifies the user when the external provider redirects back to our
-	 * application.
-	 * 
-	 * @return Profile object containing the profile information
-	 * @param httpReq
-	 *            Request object the request is received from the provider
-	 * @throws Exception
-	 */
-
-	@Override
-	public Profile verifyResponse(final HttpServletRequest httpReq)
-			throws Exception {
-		Map<String, String> params = SocialAuthUtil
-				.getRequestParametersMap(httpReq);
-		return doVerifyResponse(params);
 	}
 
 	/**
@@ -183,7 +166,7 @@ public class YammerImpl extends AbstractProvider implements AuthProvider,
 				&& "access_denied".equals(requestParams.get("error"))) {
 			throw new UserDeniedPermissionException();
 		}
-		if (!isProviderState()) {
+		if (!providerState) {
 			throw new ProviderStateException();
 		}
 		String code = requestParams.get("code");
@@ -527,7 +510,7 @@ public class YammerImpl extends AbstractProvider implements AuthProvider,
 			final InputStream inputStream) throws Exception {
 		LOG.warn("WARNING: Not implemented for Yammer");
 		throw new SocialAuthException(
-				"Update Status is not implemented for Yammer");
+				"Upload Image is not implemented for Yammer");
 	}
 
 	private String getScope() {
@@ -539,4 +522,20 @@ public class YammerImpl extends AbstractProvider implements AuthProvider,
 		}
 		return scopeStr;
 	}
+
+	@Override
+	protected List<String> getPluginsList() {
+		List<String> list = new ArrayList<String>();
+		if (config.getRegisteredPlugins() != null
+				&& config.getRegisteredPlugins().length > 0) {
+			list.addAll(Arrays.asList(config.getRegisteredPlugins()));
+		}
+		return list;
+	}
+
+	@Override
+	protected OAuthStrategyBase getOauthStrategy() {
+		return null;
+	}
+
 }

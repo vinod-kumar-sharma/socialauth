@@ -99,7 +99,12 @@ public class MySpaceImpl extends AbstractProvider {
 		authenticationStrategy = new OAuth1(config, ENDPOINTS);
 		authenticationStrategy.setPermission(scope);
 		authenticationStrategy.setScope(getScope());
-
+		config.setRequestTokenUrl(ENDPOINTS
+				.get(Constants.OAUTH_REQUEST_TOKEN_URL));
+		config.setAuthenticationUrl(ENDPOINTS
+				.get(Constants.OAUTH_AUTHORIZATION_URL));
+		config.setAccessTokenUrl(ENDPOINTS
+				.get(Constants.OAUTH_ACCESS_TOKEN_URL));
 	}
 
 	/**

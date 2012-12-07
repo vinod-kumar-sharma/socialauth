@@ -109,6 +109,10 @@ public class HotmailImpl extends AbstractProvider {
 		authenticationStrategy = new OAuth2(config, ENDPOINTS);
 		authenticationStrategy.setPermission(scope);
 		authenticationStrategy.setScope(getScope());
+		config.setAuthenticationUrl(ENDPOINTS
+				.get(Constants.OAUTH_AUTHORIZATION_URL));
+		config.setAccessTokenUrl(ENDPOINTS
+				.get(Constants.OAUTH_ACCESS_TOKEN_URL));
 	}
 
 	/**

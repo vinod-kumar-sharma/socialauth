@@ -98,6 +98,10 @@ public class GoogleImpl extends AbstractProvider {
 		authenticationStrategy = new Hybrid(config, ENDPOINTS);
 		authenticationStrategy.setPermission(scope);
 		authenticationStrategy.setScope(getScope());
+		config.setAuthenticationUrl(ENDPOINTS
+				.get(Constants.OAUTH_REQUEST_TOKEN_URL));
+		config.setAccessTokenUrl(ENDPOINTS
+				.get(Constants.OAUTH_ACCESS_TOKEN_URL));
 	}
 
 	/**

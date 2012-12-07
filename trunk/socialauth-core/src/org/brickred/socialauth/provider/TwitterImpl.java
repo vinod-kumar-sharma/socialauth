@@ -29,12 +29,11 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.net.URLEncoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -53,7 +52,6 @@ import org.brickred.socialauth.util.Constants;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.Response;
-import org.brickred.socialauth.util.SocialAuthUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -73,10 +71,12 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	private static final String LOOKUP_URL = "http://api.twitter.com/1/users/lookup.json?user_id=";
 	private static final String UPDATE_STATUS_URL = "http://api.twitter.com/1/statuses/update.json?status=";
 	private static final String IMAGE_UPLOAD_URL = "https://upload.twitter.com/1/statuses/update_with_media.json";
+
 	private static final String PROPERTY_DOMAIN = "twitter.com";
 	private static final Map<String, String> ENDPOINTS;
 	private static final Pattern IMAGE_FILE_PATTERN = Pattern.compile(
 			"(jpg|jpeg|gif|png)$", Pattern.CASE_INSENSITIVE);
+
 	private final Log LOG = LogFactory.getLog(TwitterImpl.class);
 
 	private Permission scope;
@@ -107,6 +107,12 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	public TwitterImpl(final OAuthConfig providerConfig) throws Exception {
 		config = providerConfig;
 		authenticationStrategy = new OAuth1(config, ENDPOINTS);
+		config.setRequestTokenUrl(ENDPOINTS
+				.get(Constants.OAUTH_REQUEST_TOKEN_URL));
+		config.setAuthenticationUrl(ENDPOINTS
+				.get(Constants.OAUTH_AUTHORIZATION_URL));
+		config.setAccessTokenUrl(ENDPOINTS
+				.get(Constants.OAUTH_ACCESS_TOKEN_URL));
 	}
 
 	/**
@@ -134,24 +140,6 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	public String getLoginRedirectURL(final String successUrl) throws Exception {
 		LOG.info("Determining URL for redirection");
 		return authenticationStrategy.getLoginRedirectURL(successUrl);
-	}
-
-	/**
-	 * Verifies the user when the external provider redirects back to our
-	 * application.
-	 * 
-	 * @return Profile object containing the profile information
-	 * @param request
-	 *            Request object the request is received from the provider
-	 * @throws Exception
-	 */
-
-	@Override
-	public Profile verifyResponse(final HttpServletRequest request)
-			throws Exception {
-		Map<String, String> params = SocialAuthUtil
-				.getRequestParametersMap(request);
-		return doVerifyResponse(params);
 	}
 
 	/**
@@ -497,5 +485,21 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 				fileName, inputStream, fileNameParam);
 		LOG.info("Upload Image status::" + response.getStatus());
 		return response;
+	}
+
+	@Override
+	protected List<String> getPluginsList() {
+		List<String> list = new ArrayList<String>();
+		list.add("org.brickred.socialauth.plugin.twitter.FeedPluginImpl");
+		if (config.getRegisteredPlugins() != null
+				&& config.getRegisteredPlugins().length > 0) {
+			list.addAll(Arrays.asList(config.getRegisteredPlugins()));
+		}
+		return list;
+	}
+
+	@Override
+	protected OAuthStrategyBase getOauthStrategy() {
+		return authenticationStrategy;
 	}
 }
