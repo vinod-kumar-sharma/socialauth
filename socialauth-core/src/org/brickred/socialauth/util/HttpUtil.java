@@ -123,9 +123,9 @@ public class HttpUtil {
 				conn = (HttpURLConnection) url.openConnection();
 			}
 
-			if (requestMethod.equalsIgnoreCase(MethodType.POST.toString())
-					|| requestMethod
-							.equalsIgnoreCase(MethodType.PUT.toString())) {
+			if (MethodType.POST.toString().equalsIgnoreCase(requestMethod)
+					|| MethodType.PUT.toString()
+							.equalsIgnoreCase(requestMethod)) {
 				conn.setDoOutput(true);
 			}
 
