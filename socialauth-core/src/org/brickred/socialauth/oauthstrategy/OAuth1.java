@@ -187,4 +187,9 @@ public class OAuth1 implements OAuthStrategyBase {
 				fileParamName, fileName, methodType, accessToken, true);
 	}
 
+	@Override
+	public AccessGrant getAccessGrant() {
+		return accessToken;
+	}
+
 }

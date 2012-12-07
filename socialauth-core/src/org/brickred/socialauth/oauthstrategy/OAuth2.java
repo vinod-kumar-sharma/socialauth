@@ -319,4 +319,9 @@ public class OAuth2 implements OAuthStrategyBase {
 		return HttpUtil.doHttpRequest(url, methodType, map, headerParams,
 				inputStream, fileName, null);
 	}
+
+	@Override
+	public AccessGrant getAccessGrant() {
+		return accessGrant;
+	}
 }
