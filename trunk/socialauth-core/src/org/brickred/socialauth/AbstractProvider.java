@@ -24,6 +24,16 @@
 package org.brickred.socialauth;
 
 import java.io.Serializable;
+import java.lang.reflect.Constructor;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.brickred.socialauth.oauthstrategy.OAuthStrategyBase;
+import org.brickred.socialauth.plugin.Plugin;
+import org.brickred.socialauth.util.ProviderSupport;
 
 /**
  * It maintains the state of provider. State shows that whether the connection
@@ -32,27 +42,60 @@ import java.io.Serializable;
  * @author tarunn@brickred.com
  * 
  */
-public class AbstractProvider implements Serializable {
+public abstract class AbstractProvider implements AuthProvider, Serializable {
 
 	private static final long serialVersionUID = -7827145708317886744L;
 
-	private boolean providerState;
+	private Map<Class<? extends Plugin>, Class<? extends Plugin>> pluginsMap;
 
-	/**
-	 * Returns the provider state.
-	 * 
-	 * @return providerState
-	 */
-	public boolean isProviderState() {
-		return providerState;
+	private final Log LOG = LogFactory.getLog(this.getClass());
+
+	public AbstractProvider() throws Exception {
+		pluginsMap = new HashMap<Class<? extends Plugin>, Class<? extends Plugin>>();
 	}
 
-	/**
-	 * Updates the provider state.
-	 * 
-	 * @param providerState
-	 */
-	protected void setProviderState(final boolean providerState) {
-		this.providerState = providerState;
+	@Override
+	public <T> T getPlugin(final Class<T> clazz) throws Exception {
+		Class<? extends Plugin> plugin = pluginsMap.get(clazz);
+		Constructor<? extends Plugin> cons = plugin
+				.getConstructor(ProviderSupport.class);
+		ProviderSupport support = new ProviderSupport(getOauthStrategy());
+		Plugin obj = cons.newInstance(support);
+		return (T) obj;
 	}
+
+	@Override
+	public boolean isSupportedPlugin(final Class<? extends Plugin> clazz) {
+		if (pluginsMap.containsKey(clazz)) {
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	@Override
+	public final void registerPlugins() throws Exception {
+		LOG.info("Loading plugins");
+		List<String> pluginsList = getPluginsList();
+		if (pluginsList != null && !pluginsList.isEmpty()) {
+			for (String s : pluginsList) {
+				LOG.info("Loading plugin :: " + s);
+				Class<? extends Plugin> clazz = Class.forName(s).asSubclass(
+						Plugin.class);
+				// getting constructor only for checking
+				Constructor<? extends Plugin> cons = clazz
+						.getConstructor(ProviderSupport.class);
+				Class<?> interfaces[] = clazz.getInterfaces();
+				for (Class<?> c : interfaces) {
+					if (Plugin.class.isAssignableFrom(c)) {
+						pluginsMap.put(c.asSubclass(Plugin.class), clazz);
+					}
+				}
+			}
+		}
+	}
+
+	protected abstract List<String> getPluginsList();
+
+	protected abstract OAuthStrategyBase getOauthStrategy();
 }
