@@ -43,6 +43,10 @@ public class OAuthConfig implements Serializable {
 	private String id;
 	private Class<?> providerImplClass;
 	private String customPermissions;
+	private String requestTokenUrl;
+	private String authenticationUrl;
+	private String accessTokenUrl;
+	private String[] registeredPlugins;
 
 	/**
 	 * 
@@ -174,6 +178,38 @@ public class OAuthConfig implements Serializable {
 
 	public void setCustomPermissions(final String customPermissions) {
 		this.customPermissions = customPermissions;
+	}
+
+	public String getAuthenticationUrl() {
+		return authenticationUrl;
+	}
+
+	public void setAuthenticationUrl(final String authenticationUrl) {
+		this.authenticationUrl = authenticationUrl;
+	}
+
+	public String getAccessTokenUrl() {
+		return accessTokenUrl;
+	}
+
+	public void setAccessTokenUrl(final String accessTokenUrl) {
+		this.accessTokenUrl = accessTokenUrl;
+	}
+
+	public String getRequestTokenUrl() {
+		return requestTokenUrl;
+	}
+
+	public void setRequestTokenUrl(final String requestTokenUrl) {
+		this.requestTokenUrl = requestTokenUrl;
+	}
+
+	public String[] getRegisteredPlugins() {
+		return registeredPlugins;
+	}
+
+	public void setRegisteredPlugins(final String[] registeredPlugins) {
+		this.registeredPlugins = registeredPlugins;
 	}
 
 }
