@@ -27,11 +27,11 @@ package org.brickred.socialauth.provider;
 
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -49,7 +49,6 @@ import org.brickred.socialauth.util.Constants;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.Response;
-import org.brickred.socialauth.util.SocialAuthUtil;
 import org.json.JSONObject;
 
 /**
@@ -126,30 +125,11 @@ public class SalesForceImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getLoginRedirectURL(final String successUrl) throws Exception {
 		LOG.info("Determining URL for redirection");
-		setProviderState(true);
 		if (!successUrl.startsWith("https")) {
 			throw new SocialAuthException(
 					"To implement SalesForce provider your web application should run on a secure port. Please use an https URL instead of http.");
 		}
 		return authenticationStrategy.getLoginRedirectURL(successUrl);
-	}
-
-	/**
-	 * Verifies the user when the external provider redirects back to our
-	 * application.
-	 * 
-	 * @return Profile object containing the profile information
-	 * @param httpReq
-	 *            Request object the request is received from the provider
-	 * @throws Exception
-	 */
-
-	@Override
-	public Profile verifyResponse(final HttpServletRequest httpReq)
-			throws Exception {
-		Map<String, String> params = SocialAuthUtil
-				.getRequestParametersMap(httpReq);
-		return doVerifyResponse(params);
 	}
 
 	/**
@@ -383,7 +363,7 @@ public class SalesForceImpl extends AbstractProvider implements AuthProvider,
 			final InputStream inputStream) throws Exception {
 		LOG.warn("WARNING: Not implemented for SalesForce");
 		throw new SocialAuthException(
-				"Update Status is not implemented for SalesForce");
+				"Upload Image is not implemented for SalesForce");
 	}
 
 	private String getScope() {
@@ -398,4 +378,18 @@ public class SalesForceImpl extends AbstractProvider implements AuthProvider,
 		return scopeStr;
 	}
 
+	@Override
+	protected List<String> getPluginsList() {
+		List<String> list = new ArrayList<String>();
+		if (config.getRegisteredPlugins() != null
+				&& config.getRegisteredPlugins().length > 0) {
+			list.addAll(Arrays.asList(config.getRegisteredPlugins()));
+		}
+		return list;
+	}
+
+	@Override
+	protected OAuthStrategyBase getOauthStrategy() {
+		return authenticationStrategy;
+	}
 }

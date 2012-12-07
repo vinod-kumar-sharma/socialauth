@@ -32,8 +32,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.AbstractProvider;
@@ -43,6 +41,7 @@ import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
 import org.brickred.socialauth.exception.ProviderStateException;
 import org.brickred.socialauth.exception.SocialAuthException;
+import org.brickred.socialauth.oauthstrategy.OAuthStrategyBase;
 import org.brickred.socialauth.util.AccessGrant;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.Response;
@@ -76,14 +75,17 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider,
 	private AccessGrant accessGrant;
 	private String successUrl;
 	private Profile userProfile;
+	private boolean providerState = false;
 
-	public OpenIdImpl(final Properties props) throws ConsumerException {
+	public OpenIdImpl(final Properties props) throws ConsumerException,
+			Exception {
 		manager = new ConsumerManager();
 		discovered = null;
 		this.id = props.getProperty("id");
 	}
 
-	public OpenIdImpl(final OAuthConfig config) throws ConsumerException {
+	public OpenIdImpl(final OAuthConfig config) throws ConsumerException,
+			Exception {
 		manager = new ConsumerManager();
 		this.id = config.getId();
 		discovered = null;
@@ -107,7 +109,7 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getLoginRedirectURL(final String successUrl)
 			throws IOException {
-		setProviderState(true);
+		providerState = true;
 		String url = authRequest(id, successUrl);
 		this.successUrl = successUrl;
 		LOG.info("Redirection to following URL should happen : " + url);
@@ -174,86 +176,6 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider,
 	 * Verifies the user when the external provider redirects back to our
 	 * application.
 	 * 
-	 * @param httpReq
-	 *            Request object the request is received from the provider
-	 * @return Profile object containing the profile information
-	 * 
-	 * @throws Exception
-	 */
-
-	@Override
-	public Profile verifyResponse(final HttpServletRequest httpReq)
-			throws Exception {
-		if (!isProviderState()) {
-			throw new ProviderStateException();
-		}
-		try {
-			// extract the parameters from the authentication response
-			// (which comes in as a HTTP request from the OpenID provider)
-			ParameterList response = new ParameterList(
-					httpReq.getParameterMap());
-
-			// extract the receiving URL from the HTTP request
-			StringBuffer receivingURL = httpReq.getRequestURL();
-			String queryString = httpReq.getQueryString();
-			if (queryString != null && queryString.length() > 0) {
-				receivingURL.append("?").append(httpReq.getQueryString());
-			}
-
-			// verify the response; ConsumerManager needs to be the same
-			// (static) instance used to place the authentication request
-			VerificationResult verification = manager.verify(
-					receivingURL.toString(), response, discovered);
-
-			// examine the verification result and extract the verified
-			// identifier
-			Identifier verified = verification.getVerifiedId();
-			if (verified != null) {
-				LOG.debug("Verified Id : " + verified.getIdentifier());
-				Profile p = new Profile();
-				p.setValidatedId(verified.getIdentifier());
-				AuthSuccess authSuccess = (AuthSuccess) verification
-						.getAuthResponse();
-
-				if (authSuccess.hasExtension(AxMessage.OPENID_NS_AX)) {
-					FetchResponse fetchResp = (FetchResponse) authSuccess
-							.getExtension(AxMessage.OPENID_NS_AX);
-
-					p.setEmail(fetchResp.getAttributeValue("email"));
-					p.setFirstName(fetchResp.getAttributeValue("firstname"));
-					p.setLastName(fetchResp.getAttributeValue("lastname"));
-					p.setFullName(fetchResp.getAttributeValue("fullname"));
-
-					// also use the ax namespace for compatibility
-					if (p.getEmail() == null) {
-						p.setEmail(fetchResp.getAttributeValue("emailax"));
-					}
-					if (p.getFirstName() == null) {
-						p.setFirstName(fetchResp
-								.getAttributeValue("firstnameax"));
-					}
-					if (p.getLastName() == null) {
-						p.setLastName(fetchResp.getAttributeValue("lastnameax"));
-					}
-					if (p.getFullName() == null) {
-						p.setFullName(fetchResp.getAttributeValue("fullnameax"));
-					}
-
-				}
-				userProfile = p;
-				return p;
-			}
-		} catch (OpenIDException e) {
-			throw e;
-		}
-
-		return null;
-	}
-
-	/**
-	 * Verifies the user when the external provider redirects back to our
-	 * application.
-	 * 
 	 * 
 	 * @param requestParams
 	 *            request parameters, received from the provider
@@ -264,7 +186,7 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public Profile verifyResponse(final Map<String, String> requestParams)
 			throws Exception {
-		if (!isProviderState()) {
+		if (!providerState) {
 			throw new ProviderStateException();
 		}
 		try {
@@ -422,6 +344,17 @@ public class OpenIdImpl extends AbstractProvider implements AuthProvider,
 			final InputStream inputStream) throws Exception {
 		LOG.warn("WARNING: Not implemented for OpenId");
 		throw new SocialAuthException(
-				"Update Status is not implemented for OpenId");
+				"Upload Image is not implemented for OpenId");
+	}
+
+	@Override
+	protected OAuthStrategyBase getOauthStrategy() {
+		return null;
+	}
+
+	@Override
+	protected List<String> getPluginsList() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
