@@ -26,18 +26,15 @@
 package org.brickred.socialauth.provider;
 
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.AbstractProvider;
-import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
@@ -52,7 +49,6 @@ import org.brickred.socialauth.util.Constants;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.Response;
-import org.brickred.socialauth.util.SocialAuthUtil;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -62,8 +58,7 @@ import org.json.JSONObject;
  * @author Abhinav Maheshwari
  * 
  */
-public class FacebookImpl extends AbstractProvider implements AuthProvider,
-		Serializable {
+public class FacebookImpl extends AbstractProvider {
 
 	private static final long serialVersionUID = 8644510564735754296L;
 	private static final String PROFILE_URL = "https://graph.facebook.com/me";
@@ -111,6 +106,10 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 		authenticationStrategy = new OAuth2(config, ENDPOINTS);
 		authenticationStrategy.setPermission(scope);
 		authenticationStrategy.setScope(getScope());
+		config.setAuthenticationUrl(ENDPOINTS
+				.get(Constants.OAUTH_AUTHORIZATION_URL));
+		config.setAccessTokenUrl(ENDPOINTS
+				.get(Constants.OAUTH_ACCESS_TOKEN_URL));
 	}
 
 	/**
@@ -135,24 +134,6 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getLoginRedirectURL(final String successUrl) throws Exception {
 		return authenticationStrategy.getLoginRedirectURL(successUrl);
-	}
-
-	/**
-	 * Verifies the user when the external provider redirects back to our
-	 * application.
-	 * 
-	 * @return Profile object containing the profile information
-	 * @param httpReq
-	 *            Request object the request is received from the provider
-	 * @throws Exception
-	 */
-
-	@Override
-	public Profile verifyResponse(final HttpServletRequest httpReq)
-			throws Exception {
-		Map<String, String> params = SocialAuthUtil
-				.getRequestParametersMap(httpReq);
-		return doVerifyResponse(params);
 	}
 
 	/**
@@ -204,9 +185,15 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 			JSONObject resp = new JSONObject(presp);
 			Profile p = new Profile();
 			p.setValidatedId(resp.getString("id"));
-			p.setFirstName(resp.getString("first_name"));
-			p.setLastName(resp.getString("last_name"));
-			p.setEmail(resp.getString("email"));
+			if (resp.has("first_name")) {
+				p.setFirstName(resp.getString("first_name"));
+			}
+			if (resp.has("last_name")) {
+				p.setLastName(resp.getString("last_name"));
+			}
+			if (resp.has("email")) {
+				p.setEmail(resp.getString("email"));
+			}
 			if (resp.has("location")) {
 				p.setLocation(resp.getJSONObject("location").getString("name"));
 			}
@@ -441,4 +428,22 @@ public class FacebookImpl extends AbstractProvider implements AuthProvider,
 		}
 		return result.toString();
 	}
+
+	@Override
+	protected List<String> getPluginsList() {
+		List<String> list = new ArrayList<String>();
+		list.add("org.brickred.socialauth.plugin.facebook.AlbumsPluginImpl");
+		list.add("org.brickred.socialauth.plugin.facebook.FeedPluginImpl");
+		if (config.getRegisteredPlugins() != null
+				&& config.getRegisteredPlugins().length > 0) {
+			list.addAll(Arrays.asList(config.getRegisteredPlugins()));
+		}
+		return list;
+	}
+
+	@Override
+	protected OAuthStrategyBase getOauthStrategy() {
+		return authenticationStrategy;
+	}
+
 }

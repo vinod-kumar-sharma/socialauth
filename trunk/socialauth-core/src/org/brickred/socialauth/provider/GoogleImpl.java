@@ -26,18 +26,15 @@
 package org.brickred.socialauth.provider;
 
 import java.io.InputStream;
-import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.AbstractProvider;
-import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
@@ -52,7 +49,6 @@ import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.OpenIdConsumer;
 import org.brickred.socialauth.util.Response;
-import org.brickred.socialauth.util.SocialAuthUtil;
 import org.brickred.socialauth.util.XMLParseUtil;
 import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
@@ -63,8 +59,7 @@ import org.w3c.dom.NodeList;
  * @author abhinavm@brickred.com
  * 
  */
-public class GoogleImpl extends AbstractProvider implements AuthProvider,
-		Serializable {
+public class GoogleImpl extends AbstractProvider {
 	private static final long serialVersionUID = -6075582192266022341L;
 	private static final String OAUTH_SCOPE = "http://www.google.com/m8/feeds/";
 	private static final String CONTACTS_FEED_URL = "http://www.google.com/m8/feeds/contacts/default/full/?max-results=1000";
@@ -138,23 +133,6 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	 * application.
 	 * 
 	 * @return Profile object containing the profile information
-	 * @param request
-	 *            Request object the request is received from the provider
-	 * @throws Exception
-	 */
-	@Override
-	public Profile verifyResponse(final HttpServletRequest request)
-			throws Exception {
-		Map<String, String> params = SocialAuthUtil
-				.getRequestParametersMap(request);
-		return doVerifyResponse(params);
-	}
-
-	/**
-	 * Verifies the user when the external provider redirects back to our
-	 * application.
-	 * 
-	 * @return Profile object containing the profile information
 	 * @param requestParams
 	 *            Request Parameters, received from the provider
 	 * @throws Exception
@@ -189,7 +167,7 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 	public void updateStatus(final String msg) throws Exception {
 		LOG.warn("WARNING: Not implemented for Google");
 		throw new SocialAuthException(
-				"Update Status is not implemented for Gmail");
+				"Update Status is not implemented for Google");
 	}
 
 	/**
@@ -407,5 +385,20 @@ public class GoogleImpl extends AbstractProvider implements AuthProvider,
 			scopeStr = OAUTH_SCOPE;
 		}
 		return scopeStr;
+	}
+
+	@Override
+	protected List<String> getPluginsList() {
+		List<String> list = new ArrayList<String>();
+		if (config.getRegisteredPlugins() != null
+				&& config.getRegisteredPlugins().length > 0) {
+			list.addAll(Arrays.asList(config.getRegisteredPlugins()));
+		}
+		return list;
+	}
+
+	@Override
+	protected OAuthStrategyBase getOauthStrategy() {
+		return authenticationStrategy;
 	}
 }
