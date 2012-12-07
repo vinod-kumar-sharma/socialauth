@@ -26,21 +26,19 @@
 package org.brickred.socialauth.provider;
 
 import java.io.InputStream;
-import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.AbstractProvider;
-import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
@@ -55,7 +53,6 @@ import org.brickred.socialauth.util.Constants;
 import org.brickred.socialauth.util.MethodType;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.Response;
-import org.brickred.socialauth.util.SocialAuthUtil;
 import org.json.JSONObject;
 
 /**
@@ -64,8 +61,7 @@ import org.json.JSONObject;
  * @author tarunn
  * 
  */
-public class RunkeeperImpl extends AbstractProvider implements AuthProvider,
-		Serializable {
+public class RunkeeperImpl extends AbstractProvider {
 
 	private static final long serialVersionUID = 8644510564735754296L;
 	private static final String PROFILE_URL = "http://api.runkeeper.com/profile";
@@ -126,24 +122,6 @@ public class RunkeeperImpl extends AbstractProvider implements AuthProvider,
 	@Override
 	public String getLoginRedirectURL(final String successUrl) throws Exception {
 		return authenticationStrategy.getLoginRedirectURL(successUrl);
-	}
-
-	/**
-	 * Verifies the user when the external provider redirects back to our
-	 * application.
-	 * 
-	 * @return Profile object containing the profile information
-	 * @param httpReq
-	 *            Request object the request is received from the provider
-	 * @throws Exception
-	 */
-
-	@Override
-	public Profile verifyResponse(final HttpServletRequest httpReq)
-			throws Exception {
-		Map<String, String> params = SocialAuthUtil
-				.getRequestParametersMap(httpReq);
-		return doVerifyResponse(params);
 	}
 
 	/**
@@ -357,10 +335,26 @@ public class RunkeeperImpl extends AbstractProvider implements AuthProvider,
 			final InputStream inputStream) throws Exception {
 		LOG.warn("WARNING: Not implemented for Runkeeper");
 		throw new SocialAuthException(
-				"Update Status is not implemented for Runkeeper");
+				"Upload Image is not implemented for Runkeeper");
 	}
 
 	private String getScope() {
 		return null;
 	}
+
+	@Override
+	protected List<String> getPluginsList() {
+		List<String> list = new ArrayList<String>();
+		if (config.getRegisteredPlugins() != null
+				&& config.getRegisteredPlugins().length > 0) {
+			list.addAll(Arrays.asList(config.getRegisteredPlugins()));
+		}
+		return list;
+	}
+
+	@Override
+	protected OAuthStrategyBase getOauthStrategy() {
+		return authenticationStrategy;
+	}
+
 }
