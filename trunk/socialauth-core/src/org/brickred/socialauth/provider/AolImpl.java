@@ -41,14 +41,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.brickred.socialauth.AuthProvider;
+import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
+import org.brickred.socialauth.oauthstrategy.OAuthStrategyBase;
 import org.brickred.socialauth.util.AccessGrant;
 import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.Response;
@@ -61,7 +60,7 @@ import org.brickred.socialauth.util.Response;
  * @author abhinavm@brickred.com
  * 
  */
-public class AolImpl implements AuthProvider, Serializable {
+public class AolImpl extends AbstractProvider implements Serializable {
 
 	private static final long serialVersionUID = -7393140704663678118L;
 
@@ -80,7 +79,7 @@ public class AolImpl implements AuthProvider, Serializable {
 	 * @param providerConfig
 	 *            Properties for consumer key
 	 */
-	public AolImpl(final OAuthConfig providerConfig) {
+	public AolImpl(final OAuthConfig providerConfig) throws Exception {
 		config = providerConfig;
 		dev_id = config.get_consumerKey();
 	}
@@ -101,48 +100,6 @@ public class AolImpl implements AuthProvider, Serializable {
 		this.redirectUri = redirectUri;
 		return "https://api.screenname.aol.com/auth/login?f=qs" + "&succUrl="
 				+ redirectUri + "&devId=" + dev_id;
-	}
-
-	/**
-	 * Verifies the user when the external provider redirects back to our
-	 * application.
-	 * 
-	 * @return Profile object containing the profile information
-	 * @param request
-	 *            Request object the request is received from the provider
-	 * @throws Exception
-	 */
-
-	@Override
-	public Profile verifyResponse(final HttpServletRequest request) {
-		try {
-			// retrieve and validate the token by calling OpenAuth getInfo
-			token = request.getParameter("token_a");
-			String encodedToken = URLEncoder.encode(token, "UTF-8");
-
-			String getInfoUrl = "https://api.screenname.aol.com/auth/getInfo?"
-					+ "f=qs" + "&devId=" + dev_id + "&referer=" + redirectUri
-					+ "&a=" + encodedToken;
-			Map responseParamMap = getHttpResponseParameters(getInfoUrl);
-			String statusCode = (String) responseParamMap.get("statusCode");
-			if ((statusCode != null) && (statusCode.equals("200"))) {
-				Profile p = new Profile();
-				p.setFullName((String) responseParamMap
-						.get("userData_displayName"));
-				String[] str = p.getFullName().split(" ");
-				p.setFirstName(str[0]);
-				p.setLastName(str.length > 1 ? str[1] : " ");
-				p.setEmail((String) responseParamMap.get("userData_loginId"));
-				p.setValidatedId((String) responseParamMap
-						.get("userData_loginId"));
-				return p;
-			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return null;
 	}
 
 	private Map getHttpResponseParameters(final String Url)
@@ -272,6 +229,18 @@ public class AolImpl implements AuthProvider, Serializable {
 	public Response uploadImage(final String message, final String fileName,
 			final InputStream inputStream) throws Exception {
 		LOG.warn("Update status not implemented");
+		return null;
+	}
+
+	@Override
+	protected List<String> getPluginsList() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	protected OAuthStrategyBase getOauthStrategy() {
+		// TODO Auto-generated method stub
 		return null;
 	}
 }
