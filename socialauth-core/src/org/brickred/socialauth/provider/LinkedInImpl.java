@@ -98,7 +98,10 @@ public class LinkedInImpl extends AbstractProvider {
 	public LinkedInImpl(final OAuthConfig providerConfig) throws Exception {
 		config = providerConfig;
 		authenticationStrategy = new OAuth1(config, ENDPOINTS);
-		registerPlugins();
+		config.setAuthenticationUrl(ENDPOINTS
+				.get(Constants.OAUTH_AUTHORIZATION_URL));
+		config.setAccessTokenUrl(ENDPOINTS
+				.get(Constants.OAUTH_ACCESS_TOKEN_URL));
 	}
 
 	/**
