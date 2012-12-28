@@ -70,7 +70,7 @@ public class OAuth1 implements OAuthStrategyBase {
 				endpoints.get(Constants.OAUTH_REQUEST_TOKEN_URL), successUrl);
 		String authUrl = endpoints.get(Constants.OAUTH_AUTHORIZATION_URL);
 		if (scope != null) {
-			authUrl += scope;
+			authUrl += "?scope=" + scope;
 		}
 		StringBuilder urlBuffer = oauth.buildAuthUrl(authUrl, requestToken,
 				successUrl);
