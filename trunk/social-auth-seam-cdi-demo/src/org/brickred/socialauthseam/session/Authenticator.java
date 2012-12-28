@@ -127,7 +127,7 @@ public class Authenticator implements Serializable{
 				.getCurrentInstance().getPartialViewContext().isAjaxRequest();
 		if (!ajaxRequest) {
 						try {
-				socialauth.verify();
+				socialauth.connect();
 			} catch (Exception e) {
 				log.warn(e);
 			}
