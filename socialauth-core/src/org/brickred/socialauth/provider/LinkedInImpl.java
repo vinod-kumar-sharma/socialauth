@@ -66,7 +66,7 @@ public class LinkedInImpl extends AbstractProvider {
 	private static final long serialVersionUID = -6141448721085510813L;
 	private static final String CONNECTION_URL = "http://api.linkedin.com/v1/people/~/connections:(id,first-name,last-name,public-profile-url)";
 	private static final String UPDATE_STATUS_URL = "http://api.linkedin.com/v1/people/~/shares";
-	private static final String PROFILE_URL = "http://api.linkedin.com/v1/people/~:(id,first-name,last-name,languages,date-of-birth,picture-url,location:(name))";
+	private static final String PROFILE_URL = "http://api.linkedin.com/v1/people/~:(id,first-name,last-name,languages,date-of-birth,picture-url,email-address,location:(name))";
 	private static final String STATUS_BODY = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><share><comment>%1$s</comment><visibility><code>anyone</code></visibility></share>";
 	private static final Map<String, String> ENDPOINTS;
 	private final Log LOG = LogFactory.getLog(LinkedInImpl.class);
@@ -76,6 +76,11 @@ public class LinkedInImpl extends AbstractProvider {
 	private OAuthConfig config;
 	private Profile userProfile;
 	private OAuthStrategyBase authenticationStrategy;
+
+	private static final String[] AllPerms = new String[] { "r_fullprofile",
+			"r_emailaddress", "r_network", "r_contactinfo", "rw_nus" };
+	private static final String[] AuthPerms = new String[] { "r_fullprofile",
+			"r_emailaddress" };
 
 	static {
 		ENDPOINTS = new HashMap<String, String>();
@@ -97,7 +102,21 @@ public class LinkedInImpl extends AbstractProvider {
 	 */
 	public LinkedInImpl(final OAuthConfig providerConfig) throws Exception {
 		config = providerConfig;
+		// Need to pass scope while fetching RequestToken from LinkedIn for new
+		// keys
+		if (config.getCustomPermissions() != null) {
+			scope = Permission.CUSTOM;
+		}
+		String perms = getScope();
+		if (perms != null) {
+			String rURL = ENDPOINTS.get(Constants.OAUTH_REQUEST_TOKEN_URL);
+			rURL += "?scope=" + perms;
+			ENDPOINTS.put(Constants.OAUTH_REQUEST_TOKEN_URL, rURL);
+
+		}
 		authenticationStrategy = new OAuth1(config, ENDPOINTS);
+		config.setRequestTokenUrl(ENDPOINTS
+				.get(Constants.OAUTH_REQUEST_TOKEN_URL));
 		config.setAuthenticationUrl(ENDPOINTS
 				.get(Constants.OAUTH_AUTHORIZATION_URL));
 		config.setAccessTokenUrl(ENDPOINTS
@@ -269,7 +288,7 @@ public class LinkedInImpl extends AbstractProvider {
 					"Failed to retrieve the user profile from  " + PROFILE_URL
 							+ ". Staus :" + serviceResponse.getStatus());
 		}
-
+		
 		Element root;
 		try {
 			root = XMLParseUtil.loadXmlResource(serviceResponse
@@ -308,6 +327,10 @@ public class LinkedInImpl extends AbstractProvider {
 			if (picUrl != null) {
 				profile.setProfileImageURL(picUrl);
 			}
+			String email = XMLParseUtil.getElementData(root, "email-address");
+			if (email != null) {
+				profile.setEmail(email);
+			}
 			NodeList location = root.getElementsByTagName("location");
 			if (location != null && location.getLength() > 0) {
 				Element locationEl = (Element) location.item(0);
@@ -336,6 +359,7 @@ public class LinkedInImpl extends AbstractProvider {
 	public void setPermission(final Permission p) {
 		LOG.debug("Permission requested : " + p.toString());
 		this.scope = p;
+		authenticationStrategy.setPermission(this.scope);
 	}
 
 	/**
@@ -411,5 +435,23 @@ public class LinkedInImpl extends AbstractProvider {
 	@Override
 	protected OAuthStrategyBase getOauthStrategy() {
 		return authenticationStrategy;
+	}
+
+	private String getScope() {
+		StringBuffer result = new StringBuffer();
+		String arr[] = null;
+		if (Permission.AUTHENTICATE_ONLY.equals(scope)) {
+			arr = AuthPerms;
+		} else if (Permission.CUSTOM.equals(scope)
+				&& config.getCustomPermissions() != null) {
+			arr = config.getCustomPermissions().split(",");
+		} else {
+			arr = AllPerms;
+		}
+		result.append(arr[0]);
+		for (int i = 1; i < arr.length; i++) {
+			result.append(" ").append(arr[i]);
+		}
+		return result.toString();
 	}
 }
