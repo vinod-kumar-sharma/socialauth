@@ -165,10 +165,28 @@ public class OAuthConsumer implements Serializable, Constants {
 		LOG.debug("Given Request Token URL : " + reqTokenURL);
 		LOG.debug("Given CallBack URL : " + callbackURL);
 		AccessGrant token = null;
+
+		// Changes for LinkedIn. We have to pass scope while fetching
+		// RequestToken from LinkedIn
+		String reqURL = reqTokenURL;
 		Map<String, String> params = new HashMap<String, String>();
+		if (reqTokenURL.indexOf('?') > 0) {
+			reqURL = reqTokenURL.substring(0, reqTokenURL.indexOf('?'));
+			String query = reqTokenURL.substring(reqTokenURL.indexOf('?') + 1,
+					reqTokenURL.length());
+			String[] pairs = query.split("&");
+
+			for (String pair : pairs) {
+				String[] kv = pair.split("=");
+				if (kv.length == 2) {
+					params.put(kv[0], kv[1]);
+				}
+			}
+		}
+
 		params.put(OAUTH_CALLBACK, callbackURL);
 		putOauthParams(params);
-		String reqURL = reqTokenURL;
+
 		String sig = generateSignature(config.get_signatureMethod(),
 				config.get_transportName(), reqURL, params, null);
 		LOG.debug(config.get_signatureMethod()
