@@ -41,7 +41,6 @@ import org.brickred.socialauth.Feed;
 import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.plugin.FeedPlugin;
-import org.brickred.socialauth.util.Constants;
 import org.brickred.socialauth.util.ProviderSupport;
 import org.brickred.socialauth.util.Response;
 import org.brickred.socialauth.util.XMLParseUtil;
@@ -162,8 +161,6 @@ public class FeedPluginImpl implements FeedPlugin, Serializable {
 			throw new SocialAuthException("Failed to retrieve the feeds from  "
 					+ FEED_URL + ". Staus :" + serviceResponse.getStatus());
 		}
-		System.out.println(serviceResponse
-				.getResponseBodyAsString(Constants.ENCODING));
 		Element root;
 		try {
 			root = XMLParseUtil.loadXmlResource(serviceResponse
