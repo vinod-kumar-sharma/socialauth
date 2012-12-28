@@ -40,6 +40,9 @@ import org.brickred.socialauth.AuthProvider;
 import org.brickred.socialauth.AuthProviderFactory;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Profile;
+import org.brickred.socialauth.SocialAuthConfig;
+import org.brickred.socialauth.SocialAuthManager;
+import org.brickred.socialauth.util.SocialAuthUtil;
 
 /**
  * This is a JBoss Seam component that allows us to delegate authentication to
@@ -69,16 +72,29 @@ public class SocialAuth implements Serializable {
 	private String status;
 	private String viewUrl;
 	
+	
+	private SocialAuthManager manager;
+	private SocialAuthConfig config;
+
+	
+	public void init() {
+		id = null;
+		provider = null;
+		config = new SocialAuthConfig();
+		try {
+			config.load();
+			manager = new SocialAuthManager();
+			manager.setSocialAuthConfig(config);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
+	
 	public SocialAuth() {
 		init();
 	}
 	
-	public void init() {
-		id = null;
-		profile = null;
-		provider = null;
-	}
-
 	public String getId() {
 		return id;
 	}
@@ -145,17 +161,11 @@ public class SocialAuth implements Serializable {
 	 * @throws Exception
 	 */
 	public void login() throws Exception {
-
 		provider = AuthProviderFactory.getInstance(id);
 		String returnToUrl = returnToUrl();
-
-		String url = provider.getLoginRedirectURL(returnToUrl);
+		String url = manager.getAuthenticationUrl(id, returnToUrl);
 		log.info("Redirecting to:" + url);
-
 		if (url != null) {
-//			Redirect redirect = Redirect.instance();
-//			redirect.captureCurrentView();
-//			FacesManager.instance().redirectToExternalURL(url);
 			FacesContext.getCurrentInstance().getExternalContext().redirect(url);
 		}
 	}
@@ -166,29 +176,15 @@ public class SocialAuth implements Serializable {
 	 * 
 	 * @throws Exception
 	 */
-	public void verify() throws Exception {
-		log.info("Verifying authentication information from:" + id);
+	public void connect() throws Exception {
+		log.info("Connecting Provider:" + id);
 		ExternalContext context = javax.faces.context.FacesContext
-		.getCurrentInstance().getExternalContext();
+				.getCurrentInstance().getExternalContext();
 		HttpServletRequest request = (HttpServletRequest) context.getRequest();
 
-		profile = provider.verifyResponse(request);
+		provider = manager.connect(SocialAuthUtil.getRequestParametersMap(request));
+		profile= provider.getUserProfile();
 	}
-
-	/**
-	 * Creates the identity in the Seam framework
-	 * 
-	 * @return boolean value indicating if the user was validated
-	 */
-//	public boolean loginImmediately() {
-//		if (profile != null) {
-//			Identity.instance().acceptExternallyAuthenticatedPrincipal(
-//					(new OpenIdPrincipal(profile.getValidatedId())));
-//			return true;
-//		}
-//
-//		return false;
-//	}
 
 	/**
 	 * Reinitializes the bean
@@ -250,8 +246,9 @@ public class SocialAuth implements Serializable {
 	 * Retrieves the user profile from the provider.
 	 * 
 	 * @return Profile object containing the profile information.
+	 * @throws Exception 
 	 */
-	public Profile getUserProfile() {
+	public Profile getUserProfile() throws Exception {
 		return provider.getUserProfile();
 	}
 }
