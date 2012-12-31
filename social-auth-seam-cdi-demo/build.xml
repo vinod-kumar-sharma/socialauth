@@ -5,7 +5,7 @@
 	<property name="sourceDir" value="${basedir}/src" />
 	<property name="distDir" value="${basedir}/dist" />
 	<property name="webDir" value="${basedir}/WebContent" />
-	<property name="buildDir" value="${webDir}/WEB-INF/classes" />
+	<property name="buildDir" value="${basedir}/build" />
 	<property name="libDir" value="${webDir}/WEB-INF/lib" />
 	<property name="metainfDir" value="${webDir}/WEB-INF/META-INF" />
 	<property name="deployDir" value="${jboss.home}/server/default/deploy" />	
@@ -45,7 +45,10 @@
 	</target>
 	
 	<target name="copyTask" depends="compile">		
-		<copy  todir="${buildDir}" file="${sourceDir}/oauth_consumer.properties"/> 		
+		<copy  todir="${buildDir}" file="${sourceDir}/oauth_consumer.properties"/> 	
+		<copy todir="${buildDir}/org/brickred/socialauthseam/bundle">
+			<fileset dir="${sourceDir}/org/brickred/socialauthseam/bundle"/>
+		</copy>
 	</target>
 	
 	<target name="warInternal" depends="copyTask" >
