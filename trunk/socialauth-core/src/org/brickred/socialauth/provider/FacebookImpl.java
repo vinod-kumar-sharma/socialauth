@@ -185,6 +185,9 @@ public class FacebookImpl extends AbstractProvider {
 			JSONObject resp = new JSONObject(presp);
 			Profile p = new Profile();
 			p.setValidatedId(resp.getString("id"));
+			if (resp.has("name")) {
+				p.setFullName(resp.getString("name"));
+			}
 			if (resp.has("first_name")) {
 				p.setFirstName(resp.getString("first_name"));
 			}
