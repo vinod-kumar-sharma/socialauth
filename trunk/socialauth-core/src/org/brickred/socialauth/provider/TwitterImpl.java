@@ -491,6 +491,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	protected List<String> getPluginsList() {
 		List<String> list = new ArrayList<String>();
 		list.add("org.brickred.socialauth.plugin.twitter.FeedPluginImpl");
+		list.add("org.brickred.socialauth.plugin.twitter.AlbumsPluginImpl");
 		if (config.getRegisteredPlugins() != null
 				&& config.getRegisteredPlugins().length > 0) {
 			list.addAll(Arrays.asList(config.getRegisteredPlugins()));
