@@ -429,6 +429,10 @@ public class FacebookImpl extends AbstractProvider {
 		for (int i = 1; i < arr.length; i++) {
 			result.append(",").append(arr[i]);
 		}
+		String pluginScopes = getPluginsScope(config);
+		if (pluginScopes != null) {
+			result.append(",").append(pluginScopes);
+		}
 		return result.toString();
 	}
 
