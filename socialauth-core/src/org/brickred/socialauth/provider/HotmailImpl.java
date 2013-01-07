@@ -473,6 +473,14 @@ public class HotmailImpl extends AbstractProvider {
 		} else {
 			scopeStr = AllPerms;
 		}
+		String pluginScopes = getPluginsScope(config);
+		if (pluginScopes != null) {
+			if (scopeStr != null) {
+				scopeStr += "," + pluginScopes;
+			} else {
+				scopeStr = pluginScopes;
+			}
+		}
 		return scopeStr;
 	}
 
