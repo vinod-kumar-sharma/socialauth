@@ -419,6 +419,11 @@ public class MySpaceImpl extends AbstractProvider {
 		} else {
 			scopeStr = AllPerms;
 		}
+		String pluginScopes = getPluginsScope(config);
+		if (pluginScopes != null) {
+			pluginScopes = pluginScopes.replaceAll(",", "|");
+			scopeStr += "|" + pluginScopes;
+		}
 		return scopeStr;
 	}
 
