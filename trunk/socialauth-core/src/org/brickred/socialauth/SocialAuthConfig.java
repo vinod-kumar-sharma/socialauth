@@ -31,7 +31,10 @@ import java.io.InputStream;
 import java.io.Serializable;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
@@ -339,7 +342,24 @@ public class SocialAuthConfig implements Serializable {
 					if (pluginsStr.length() > 0) {
 						String plugins[] = pluginsStr.split(",");
 						if (plugins.length > 0) {
+							List<String> pluginScopes = new ArrayList<String>();
 							conf.setRegisteredPlugins(plugins);
+							for (String plugin : plugins) {
+								if (applicationProperties.containsKey(plugin
+										+ ".scope")) {
+									String pscope = applicationProperties
+											.getProperty(plugin + ".scope")
+											.trim();
+									if (pscope.length() > 0) {
+										String sarr[] = pscope.split(",");
+										pluginScopes
+												.addAll(Arrays.asList(sarr));
+									}
+								}
+							}
+							if (!pluginScopes.isEmpty()) {
+								conf.setPluginsScopes(pluginScopes);
+							}
 						}
 					}
 				}
