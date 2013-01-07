@@ -25,6 +25,7 @@
 package org.brickred.socialauth.util;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * It contains the configuration of application like consumer key and consumer
@@ -47,6 +48,7 @@ public class OAuthConfig implements Serializable {
 	private String authenticationUrl;
 	private String accessTokenUrl;
 	private String[] registeredPlugins;
+	private List<String> pluginsScopes;
 
 	/**
 	 * 
@@ -210,6 +212,14 @@ public class OAuthConfig implements Serializable {
 
 	public void setRegisteredPlugins(final String[] registeredPlugins) {
 		this.registeredPlugins = registeredPlugins;
+	}
+
+	public List<String> getPluginsScopes() {
+		return pluginsScopes;
+	}
+
+	public void setPluginsScopes(final List<String> pluginsScopes) {
+		this.pluginsScopes = pluginsScopes;
 	}
 
 }
