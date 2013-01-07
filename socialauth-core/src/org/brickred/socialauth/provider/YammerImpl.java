@@ -517,8 +517,6 @@ public class YammerImpl extends AbstractProvider implements AuthProvider,
 		String scopeStr = null;
 		if (Permission.CUSTOM.equals(scope)) {
 			scopeStr = config.getCustomPermissions();
-		} else {
-			scopeStr = null;
 		}
 		return scopeStr;
 	}
