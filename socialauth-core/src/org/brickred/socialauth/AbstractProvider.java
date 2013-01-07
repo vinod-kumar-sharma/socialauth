@@ -33,11 +33,12 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.brickred.socialauth.oauthstrategy.OAuthStrategyBase;
 import org.brickred.socialauth.plugin.Plugin;
+import org.brickred.socialauth.util.OAuthConfig;
 import org.brickred.socialauth.util.ProviderSupport;
 
 /**
- * It maintains the state of provider. State shows that whether the connection
- * has been made with the required provider or not.
+ * It implements AuthProvider interface and provides some methods for
+ * registering and getting plugins.
  * 
  * @author tarunn@brickred.com
  * 
@@ -95,7 +96,38 @@ public abstract class AbstractProvider implements AuthProvider, Serializable {
 		}
 	}
 
+	/**
+	 * Returns the scopes of custom plugins of a provider those are configured
+	 * in properties file
+	 * 
+	 * @param oauthConfig
+	 *            OAuthConfig object of that provider
+	 * @return String of comma separated scopes of all register plugins of a
+	 *         provider those are configured in properties file
+	 */
+	public String getPluginsScope(final OAuthConfig oauthConfig) {
+		List<String> scopes = oauthConfig.getPluginsScopes();
+		if (scopes != null && !scopes.isEmpty()) {
+			String scopesStr = scopes.get(0);
+			for (int i = 1; i < scopes.size(); i++) {
+				scopesStr += "," + scopes.get(i);
+			}
+			return scopesStr;
+		}
+		return null;
+	}
+
+	/**
+	 * Returns the list of plugins of a provider.
+	 * 
+	 * @return List of plugins of a provider
+	 */
 	protected abstract List<String> getPluginsList();
 
+	/**
+	 * Returns the OAuthStrategyBase of a provider.
+	 * 
+	 * @return OAuthStrategyBase of a provider.
+	 */
 	protected abstract OAuthStrategyBase getOauthStrategy();
 }
