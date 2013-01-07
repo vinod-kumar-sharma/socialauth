@@ -388,6 +388,14 @@ public class GoogleImpl extends AbstractProvider {
 		} else {
 			scopeStr = OAUTH_SCOPE;
 		}
+		String pluginScopes = getPluginsScope(config);
+		if (pluginScopes != null) {
+			if (scopeStr != null) {
+				scopeStr += "," + pluginScopes;
+			} else {
+				scopeStr = pluginScopes;
+			}
+		}
 		return scopeStr;
 	}
 
