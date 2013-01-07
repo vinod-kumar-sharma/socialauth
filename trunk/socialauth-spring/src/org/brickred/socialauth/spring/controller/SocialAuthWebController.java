@@ -164,7 +164,7 @@ public class SocialAuthWebController {
 	}
 
 	@SuppressWarnings("unused")
-	@RequestMapping(params = "openid.mode")
+	@RequestMapping(params = "openid.mode=cancel")
 	private String googleCancel(@RequestParam("openid.mode") final String error) {
 		LOG.debug("Google send an error : " + error);
 		if ("cancel".equals(error)) {
