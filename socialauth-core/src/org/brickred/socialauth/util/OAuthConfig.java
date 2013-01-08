@@ -158,6 +158,122 @@ public class OAuthConfig implements Serializable {
 		this.providerImplClass = providerImplClass;
 	}
 
+	/**
+	 * Retrieves custom permissions configured in properties file
+	 * 
+	 * @return String of custom permissions
+	 */
+	public String getCustomPermissions() {
+		return customPermissions;
+	}
+
+	/**
+	 * Updates custom permissions configured in properties file
+	 * 
+	 * @param customPermissions
+	 *            String of comma seperated custom permissions
+	 */
+	public void setCustomPermissions(final String customPermissions) {
+		this.customPermissions = customPermissions;
+	}
+
+	/**
+	 * Retrieves the authentication url
+	 * 
+	 * @return the authentication url string
+	 */
+	public String getAuthenticationUrl() {
+		return authenticationUrl;
+	}
+
+	/**
+	 * Updates the authentication url
+	 * 
+	 * @param authenticationUrl
+	 *            the authentication url string
+	 */
+	public void setAuthenticationUrl(final String authenticationUrl) {
+		this.authenticationUrl = authenticationUrl;
+	}
+
+	/**
+	 * Retrieves the access token url
+	 * 
+	 * @return the access token url string
+	 */
+	public String getAccessTokenUrl() {
+		return accessTokenUrl;
+	}
+
+	/**
+	 * Updates the access token url
+	 * 
+	 * @param accessTokenUrl
+	 *            the access token url string
+	 */
+	public void setAccessTokenUrl(final String accessTokenUrl) {
+		this.accessTokenUrl = accessTokenUrl;
+	}
+
+	/**
+	 * Retrieves the request token url
+	 * 
+	 * @return the request token url string
+	 */
+	public String getRequestTokenUrl() {
+		return requestTokenUrl;
+	}
+
+	/**
+	 * Updates the request token url
+	 * 
+	 * @param requestTokenUrl
+	 *            the request token url string
+	 */
+	public void setRequestTokenUrl(final String requestTokenUrl) {
+		this.requestTokenUrl = requestTokenUrl;
+	}
+
+	/**
+	 * Retrieves the registered plugins of a provider configured in properties
+	 * file. String contains the fully qualified plugin class name
+	 * 
+	 * @return String array of registered plugins
+	 */
+	public String[] getRegisteredPlugins() {
+		return registeredPlugins;
+	}
+
+	/**
+	 * Updates the registered plugins configured in properties file
+	 * 
+	 * @param registeredPlugins
+	 *            String array of plugins. String should contain fully qualified
+	 *            plugin class name
+	 */
+	public void setRegisteredPlugins(final String[] registeredPlugins) {
+		this.registeredPlugins = registeredPlugins;
+	}
+
+	/**
+	 * Retrieves the list of plugins scopes
+	 * 
+	 * @return list of plugins scope
+	 */
+	public List<String> getPluginsScopes() {
+		return pluginsScopes;
+	}
+
+	/**
+	 * Updates the plugins scopes
+	 * 
+	 * @param pluginsScopes
+	 *            list of plugins scopes
+	 */
+	public void setPluginsScopes(final List<String> pluginsScopes) {
+		this.pluginsScopes = pluginsScopes;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder result = new StringBuilder();
@@ -170,56 +286,12 @@ public class OAuthConfig implements Serializable {
 		result.append(" id: " + id + NEW_LINE);
 		result.append(" providerImplClass: " + providerImplClass + NEW_LINE);
 		result.append(" customPermissions: " + customPermissions + NEW_LINE);
+		result.append(" requestTokenUrl: " + requestTokenUrl + NEW_LINE);
+		result.append(" authenticationUrl: " + authenticationUrl + NEW_LINE);
+		result.append(" accessTokenUrl: " + accessTokenUrl + NEW_LINE);
+		result.append(" registeredPlugins: " + registeredPlugins + NEW_LINE);
+		result.append(" pluginsScopes: " + pluginsScopes + NEW_LINE);
 		result.append("}");
 		return result.toString();
 	}
-
-	public String getCustomPermissions() {
-		return customPermissions;
-	}
-
-	public void setCustomPermissions(final String customPermissions) {
-		this.customPermissions = customPermissions;
-	}
-
-	public String getAuthenticationUrl() {
-		return authenticationUrl;
-	}
-
-	public void setAuthenticationUrl(final String authenticationUrl) {
-		this.authenticationUrl = authenticationUrl;
-	}
-
-	public String getAccessTokenUrl() {
-		return accessTokenUrl;
-	}
-
-	public void setAccessTokenUrl(final String accessTokenUrl) {
-		this.accessTokenUrl = accessTokenUrl;
-	}
-
-	public String getRequestTokenUrl() {
-		return requestTokenUrl;
-	}
-
-	public void setRequestTokenUrl(final String requestTokenUrl) {
-		this.requestTokenUrl = requestTokenUrl;
-	}
-
-	public String[] getRegisteredPlugins() {
-		return registeredPlugins;
-	}
-
-	public void setRegisteredPlugins(final String[] registeredPlugins) {
-		this.registeredPlugins = registeredPlugins;
-	}
-
-	public List<String> getPluginsScopes() {
-		return pluginsScopes;
-	}
-
-	public void setPluginsScopes(final List<String> pluginsScopes) {
-		this.pluginsScopes = pluginsScopes;
-	}
-
 }
