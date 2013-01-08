@@ -34,7 +34,7 @@ import java.util.Map;
  */
 public class Photo {
 	private String id;
-	private String name;
+	private String title;
 	private String largeImage;
 	private String mediumImage;
 	private String smallImage;
@@ -137,8 +137,8 @@ public class Photo {
 	 * 
 	 * @return photo caption
 	 */
-	public String getName() {
-		return name;
+	public String getTitle() {
+		return title;
 	}
 
 	/**
@@ -146,8 +146,8 @@ public class Photo {
 	 * 
 	 * @param name
 	 */
-	public void setName(final String name) {
-		this.name = name;
+	public void setTitle(final String title) {
+		this.title = title;
 	}
 
 	/**
@@ -188,7 +188,7 @@ public class Photo {
 		String NEW_LINE = System.getProperty("line.separator");
 		result.append(this.getClass().getName() + " Object {" + NEW_LINE);
 		result.append(" id: " + id + NEW_LINE);
-		result.append(" name: " + name + NEW_LINE);
+		result.append(" title: " + title + NEW_LINE);
 		result.append(" largeImage: " + largeImage + NEW_LINE);
 		result.append(" mediumImage: " + mediumImage + NEW_LINE);
 		result.append(" smallImage: " + smallImage + NEW_LINE);
