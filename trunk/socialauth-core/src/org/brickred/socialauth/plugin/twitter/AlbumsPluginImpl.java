@@ -28,6 +28,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,7 +52,7 @@ public class AlbumsPluginImpl implements AlbumsPlugin, Serializable {
 	private static final long serialVersionUID = -4810906169491380470L;
 	private static final String FEED_URL = "https://api.twitter.com/1.1/statuses/home_timeline.json?include_entities=true&count=100";
 	private final Log LOG = LogFactory.getLog(this.getClass());
-	private static HashMap<String, List<String>> photo_data = new HashMap<String, List<String>>();
+	private static HashMap<String, List<Photo>> photo_data = new HashMap<String, List<Photo>>();
 
 	private ProviderSupport providerSupport;
 
@@ -88,19 +89,44 @@ public class AlbumsPluginImpl implements AlbumsPlugin, Serializable {
 										"photo")) {
 							if (userObj.has("name")
 									&& mediaObj.has("media_url")) {
-								List<String> photos = photo_data.get(userObj
+								List<Photo> photos = photo_data.get(userObj
 										.getString("name"));
 								if (photos == null) {
-									photos = new ArrayList<String>();
+									photos = new ArrayList<Photo>();
 									photo_data.put(userObj.getString("name"),
 											photos);
 
 									album.setName(userObj.getString("name"));
-									album.setCoverPhoto(userObj
-											.getString("profile_image_url"));
+									album.setCoverPhoto(userObj.getString(
+											"profile_image_url").replaceAll(
+											"_normal", "_reasonably_small"));
 									albums.add(album);
 								}
-								photos.add(mediaObj.getString("media_url"));
+								Photo photo = new Photo();
+								String photoURL = mediaObj
+										.getString("media_url");
+								photo.setThumbImage(photoURL + ":thumb");
+								photo.setSmallImage(photoURL + ":small");
+								photo.setMediumImage(photoURL);
+								photo.setLargeImage(photoURL + ":large");
+								if (jobj.has("text")) {
+									photo.setTitle(jobj.getString("text"));
+								}
+								if (mediaObj.has("id_str")) {
+									photo.setId(mediaObj.getString("id_str"));
+								}
+								if (mediaObj.has("expanded_url")) {
+									photo.setLink(mediaObj
+											.getString("expanded_url"));
+								}
+								if (jobj.has("retweet_count")) {
+									Map<String, String> map = new HashMap<String, String>();
+									map.put("retweet_count", String
+											.valueOf(jobj
+													.getInt("retweet_count")));
+									photo.setMetaData(map);
+								}
+								photos.add(photo);
 							}
 						}
 					}
@@ -109,25 +135,11 @@ public class AlbumsPluginImpl implements AlbumsPlugin, Serializable {
 		}
 
 		for (Album album : albums) {
-			List<Photo> photos = getAlbumPhotos(album.getName());
+			List<Photo> photos = photo_data.get(album.getName());
 			album.setPhotos(photos);
 			album.setPhotosCount(photos.size());
 		}
 		return albums;
-	}
-
-	private List<Photo> getAlbumPhotos(final String id) throws Exception {
-		List<String> photo_list = photo_data.get(id);
-		List<Photo> photos = new ArrayList<Photo>();
-		for (String photoURL : photo_list) {
-			Photo photo = new Photo();
-			photo.setThumbImage(photoURL + ":thumb");
-			photo.setSmallImage(photoURL + ":small");
-			photo.setMediumImage(photoURL);
-			photo.setLargeImage(photoURL + ":large");
-			photos.add(photo);
-		}
-		return photos;
 	}
 
 	@Override
