@@ -24,6 +24,14 @@
  */
 package org.brickred.socialauth;
 
+import java.util.Map;
+
+/**
+ * Data bean for photo info
+ * 
+ * @author tarun.nagpal
+ * 
+ */
 public class Photo {
 	private String id;
 	private String name;
@@ -32,6 +40,7 @@ public class Photo {
 	private String smallImage;
 	private String thumbImage;
 	private String link;
+	private Map<String, String> metaData;
 
 	/**
 	 * Returns 600 X 600 image
@@ -160,6 +169,14 @@ public class Photo {
 		this.link = link;
 	}
 
+	public Map<String, String> getMetaData() {
+		return metaData;
+	}
+
+	public void setMetaData(final Map<String, String> metaData) {
+		this.metaData = metaData;
+	}
+
 	/**
 	 * Retrieves the Photo as a string
 	 * 
@@ -177,6 +194,7 @@ public class Photo {
 		result.append(" smallImage: " + smallImage + NEW_LINE);
 		result.append(" thumbImage: " + thumbImage + NEW_LINE);
 		result.append(" link: " + link + NEW_LINE);
+		result.append(" metadata: " + metaData + NEW_LINE);
 		result.append("}");
 		return result.toString();
 	}
