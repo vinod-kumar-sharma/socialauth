@@ -39,10 +39,12 @@ import org.brickred.socialauth.util.ProviderSupport;
 import org.brickred.socialauth.util.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
+
 /**
- *  Album Plugin implementation for Facebook
+ * Album Plugin implementation for Facebook
+ * 
  * @author tarun.nagpal
- *
+ * 
  */
 public class AlbumsPluginImpl implements AlbumsPlugin, Serializable {
 
@@ -110,7 +112,7 @@ public class AlbumsPluginImpl implements AlbumsPlugin, Serializable {
 			JSONObject obj = data.getJSONObject(i);
 			photo.setId(obj.getString("id"));
 			if (obj.has("name")) {
-				photo.setName(obj.getString("name"));
+				photo.setTitle(obj.getString("name"));
 			}
 			if (obj.has("link")) {
 				photo.setLink(obj.getString("link"));
