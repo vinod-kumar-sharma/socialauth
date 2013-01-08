@@ -5,7 +5,7 @@
    version="2.0">
    <application>
 	  <resource-bundle>
-		<base-name>org.brickred.socialauthseam.bundle.MessageResources</base-name>
+		<base-name>org.brickred.socialauthcdi.bundle.MessageResources</base-name>
 		<var>msg</var>
 	   </resource-bundle>
      </application>
