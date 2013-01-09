@@ -2,6 +2,12 @@
 
 = !SocialAuth History =
 
+== Whats new in Version 4.0 ? ==
+ # New Plugin Architecture
+ # Feeds Plugin for Facebook, Twitter and LinkedIn
+ # Album Plugin for Facebook and Twitter
+ # Changes in LinkedIn for passing scopes and getting user email
+
 == Whats new in Version 3.0 ? ==
 
  # Upload Photo option in Facebook and Twitter
