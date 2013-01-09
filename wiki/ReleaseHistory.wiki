@@ -4,7 +4,7 @@
 
 == Whats new in Version 4.0 ? ==
  # New Plugin Architecture
- # Feeds Plugin for Facebook, Twitter and *LinkedIn*
+ # Feeds Plugin for Facebook, Twitter and Linkedin
  # Album Plugin for Facebook and Twitter
  # Changes in LinkedIn for passing scopes and getting user email
 
