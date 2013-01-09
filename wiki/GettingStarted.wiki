@@ -151,6 +151,23 @@ Using the socialauth.jar consists of two main steps:
 		
 }}}
 
+== Step 4. Use Plugin ==
+SocialAuth library now has plugin for getting feeds from Facebook, Twitter and Linkedin. It also has plugin for getting Albums from Facebook and Twitter.
+
+{{{
+
+if (provider.isSupportedPlugin(org.brickred.socialauth.plugin.FeedPlugin.class)) {
+    FeedPlugin p = provider.getPlugin(org.brickred.socialauth.plugin.FeedPlugin.class);
+    List<Feed> feeds = p.getFeeds();
+}
+if (provider						.isSupportedPlugin(org.brickred.socialauth.plugin.AlbumsPlugin.class)) {
+    AlbumsPlugin p = provider.getPlugin(org.brickred.socialauth.plugin.AlbumsPlugin.class);
+    List<Album> albums = p.getAlbums();
+}
+
+}}}
+
+
 That is all you have to do, really. We have the following tracks available on how to use !SocialAuth with different frameworks.
 
  * [GettingStartedWithSeam Developing a JSF or JBoss Seam 2.0 application using socialauth]
