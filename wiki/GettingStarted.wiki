@@ -152,7 +152,7 @@ Using the socialauth.jar consists of two main steps:
 }}}
 
 == Step 4. Use Plugin ==
-SocialAuth library now has plugin for getting feeds from Facebook, Twitter and Linkedin. It also has plugin for getting Albums from Facebook and Twitter.
+!SocialAuth library now has plugin for getting feeds from Facebook, Twitter and Linkedin. It also has plugin for getting Albums from Facebook and Twitter.
 
 {{{
 
