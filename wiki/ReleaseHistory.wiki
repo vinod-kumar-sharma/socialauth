@@ -6,7 +6,7 @@
  # New Plugin Architecture
  # Feeds Plugin for Facebook, Twitter and Linkedin
  # Album Plugin for Facebook and Twitter
- # Changes in LinkedIn for passing scopes and getting user email
+ # Changes in Linkedin for passing scopes and getting user email
 
 == Whats new in Version 3.0 ? ==
 
