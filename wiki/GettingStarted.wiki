@@ -24,7 +24,7 @@ Authenticating using the external oAuth providers requires that we register our 
 
 == Step 2. Getting the library ==
 
-You can either download our SDK and use pre-built jars or use Maven to integrate socialauth in your project. You can download [http://socialauth.googlecode.com/files/socialauth-java-sdk-3.0.zip socialauth-java-sdk-3.0.zip] and following are the files that you would need to incorporate in your project from "dist" and "dependencies" directory of SDK.:
+You can either download our SDK and use pre-built jars or use Maven to integrate socialauth in your project. You can download [http://socialauth.googlecode.com/files/socialauth-java-sdk-4.0.zip socialauth-java-sdk-4.0.zip] and following are the files that you would need to incorporate in your project from "dist" and "dependencies" directory of SDK.:
 <table border=1 cellspacing=0 cellpadding=3>
   <tr>
     <th>Application Type</th><th colspan=3>Jars Required</th>
