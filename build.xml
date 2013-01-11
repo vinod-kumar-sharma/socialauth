@@ -14,12 +14,15 @@
 	<property name="project.filter" value="socialauth-filter"/>
 	<property name="project.spring" value="socialauth-spring"/>
 	<property name="project.seam" value="socialauth-seam"/>
+	<property name="project.cdi" value="socialauth-cdi"/>
 		
 	<property name="project.struts.demo" value="socialauth-struts-demo"/>
 	<property name="project.struts.filter.demo" value="socialauth-struts-filter-demo"/>
 	<property name="project.grails.demo" value="socialauth-grails-demo"/>
 	<property name="project.spring.demo" value="socialauth-spring-demo"/>
 	<property name="project.seam.demo" value="socialauth-seam-demo"/>
+	<property name="project.cdi.demo" value="socialauth-cdi-demo"/>
+	<property name="project.socialauth.demo" value="socialauthdemo"/>
 			
 	<path id="libraries">
 		<fileset dir="${dependencies}">
@@ -41,6 +44,7 @@
 		<delete dir="${projects.path}/${project.filter}/bin" failonerror="true" />
 		<delete dir="${projects.path}/${project.spring}/bin" failonerror="true" />
 		<delete dir="${projects.path}/${project.seam}/bin" failonerror="true" />
+		<delete dir="${projects.path}/${project.cdi}/bin" failonerror="true" />
 						
 		<delete>
 			<fileset dir="${projects.path}/${project.filter}/lib" includes="socialauth*.jar"/>
@@ -64,11 +68,17 @@
 			<fileset dir="${projects.path}/${project.seam.demo}/WebContent/WEB-INF/lib" includes="socialauth*.jar"/>
 		</delete>
 		<delete>
+			<fileset dir="${projects.path}/${project.cdi}/lib" includes="socialauth*.jar"/>
+		</delete>
+		<delete>
+			<fileset dir="${projects.path}/${project.cdi.demo}/WebContent/WEB-INF/lib" includes="socialauth*.jar"/>
+		</delete>
+		<delete>
 			<fileset dir="${projects.path}/${project.grails.demo}/socialauthdemo/lib" includes="socialauth*.jar"/>
 		</delete>
 	</target>
 	
-	<target name="init" depends="clean,copyDependencies,socialauthJar,filterJar,springJar,seamJar,doc,copyExamples,copySrc,copyPropertiesFile,copyReadMe,createZip"/>
+	<target name="init" depends="clean,copyDependencies,socialauthJar,filterJar,springJar,seamJar,cdiJar,doc,copyExamples,copySrc,copyPropertiesFile,copyReadMe,createZip"/>
 		
 	<target name="socialauthJar" depends="socialauthCompile">
 		<jar destfile="socialauth-${socialauth.core.version}.jar" basedir="${projects.path}/${project.socialauth}/bin">
@@ -114,6 +124,16 @@
 			</fileset>
 		</copy>
 		<copy todir="${projects.path}/${project.seam.demo}/WebContent/WEB-INF/lib">
+			 <fileset dir=".">
+				<filename name="/socialauth-${socialauth.core.version}.jar"/>
+			</fileset>
+		</copy>
+		<copy todir="${projects.path}/${project.cdi}/lib">
+			 <fileset dir=".">
+				<filename name="/socialauth.jar"/>
+			</fileset>
+		</copy>
+		<copy todir="${projects.path}/${project.cdi.demo}/WebContent/WEB-INF/lib">
 			 <fileset dir=".">
 				<filename name="/socialauth-${socialauth.core.version}.jar"/>
 			</fileset>
@@ -220,6 +240,34 @@
 		</javac>
 	</target>
 	
+	<target name="cdiJar" depends="compileCdi">
+		<jar destfile="${project.cdi}-${socialauth.cdi.version}.jar" basedir="${projects.path}/${project.cdi}/bin">
+			<include name="org/**" />
+		</jar>
+		<copy todir="${dist}">
+			 <fileset dir=".">
+				<filename name="/${project.cdi}-${socialauth.cdi.version}.jar"/>
+			</fileset>
+		</copy>
+		<copy todir="${projects.path}/${project.cdi.demo}/WebContent/WEB-INF/lib">
+			 <fileset dir=".">
+				<filename name="${project.cdi}-${socialauth.cdi.version}.jar"/>
+			</fileset>
+		</copy>
+		
+	</target>
+	
+	<target name="compileCdi">
+		<mkdir dir="${projects.path}/${project.cdi}/bin" />
+		<javac destdir="${projects.path}/${project.cdi}/bin" debug="true">			
+			<src location="${projects.path}/${project.cdi}/src" />
+			<classpath>
+				<path refid="libraries"/>
+				<fileset dir="${projects.path}/${project.cdi}/lib" includes="**/*.jar"/>
+			</classpath>
+		</javac>
+	</target>
+	
 	<target name="copyDependencies">
 	    <echo message="Copying jar in dependencies directory"/>
 	    <copy todir="${dependencies}">
@@ -249,6 +297,11 @@
 				<exclude name="**/.svn" />
 			</fileset>
 	    </copy>
+		<copy todir="${src}/${project.cdi}">
+	        <fileset dir="${projects.path}/${project.cdi}">
+				<exclude name="**/.svn" />
+			</fileset>
+	    </copy>
 	</target>
 	
 	<target name="copyExamples">
@@ -273,8 +326,18 @@
 				<exclude name="**/.svn" />
 			</fileset>
 	    </copy>
+		<copy todir="${examples}/${project.cdi.demo}">
+	        <fileset dir="${projects.path}/${project.cdi.demo}">
+				<exclude name="**/.svn" />
+			</fileset>
+	    </copy>
 		<copy todir="${examples}/${project.grails.demo}">
 	        <fileset dir="${projects.path}/${project.grails.demo}">
+				<exclude name="**/.svn" />
+			</fileset>
+	    </copy>
+		<copy todir="${examples}/${project.socialauth.demo}">
+	        <fileset dir="${projects.path}/${project.socialauth.demo}">
 				<exclude name="**/.svn" />
 			</fileset>
 	    </copy>
@@ -338,7 +401,7 @@
 			</classpath>
 		</javadoc>
 	</target>
-	<target name="seamDoc">
+	<target name="seamDoc" depends="cdiDoc">
 		<javadoc destdir="${javadoc}/${project.seam}" 
 			sourcepath="${projects.path}/${project.seam}/src"
 			packagenames="*"
@@ -346,6 +409,17 @@
 			<classpath>
 				<path refid="libraries"/>
 				<fileset dir="${projects.path}/${project.seam}/lib" includes="**/*.jar"/>
+			</classpath>
+		</javadoc>
+	</target>
+	<target name="cdiDoc">
+		<javadoc destdir="${javadoc}/${project.cdi}" 
+			sourcepath="${projects.path}/${project.cdi}/src"
+			packagenames="*"
+			windowtitle="SocialAuth CDI">
+			<classpath>
+				<path refid="libraries"/>
+				<fileset dir="${projects.path}/${project.cdi}/lib" includes="**/*.jar"/>
 			</classpath>
 		</javadoc>
 	</target>
