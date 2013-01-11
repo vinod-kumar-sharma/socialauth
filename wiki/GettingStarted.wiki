@@ -185,6 +185,7 @@ If you are new to these frameworks or face issues in following the above guides,
  * [SeamSample  Step by Step JSF or JBoss Seam 2.0 application using socialauth]
  * [StrutsSample Step by Step Struts application using socialauth]
  * [SpringSample  Step by Step Spring MVC application using socialauth]
+ * [CDISample  Step by Step CDI application using socialauth]
 
 
 Please keep in mind that all features may not be implemented in all providers, for example, you can’t update your status on Gmail and you can’t import contacts from Facebook yet. Some of the limitations are inherent, for example Twitter doesn’t give out the email address while giving other user details. 
