@@ -23,9 +23,8 @@ Authenticating using the external oAuth providers requires that we register our 
 
 
 == Download the jar ==
-  # Download the [http://socialauth.googlecode.com/files/socialauth-2.2.jar socialauth-2.2.jar] 
-  # Download the [http://socialauth.googlecode.com/files/dependencies-2.0.zip dependencies-2.0.zip] Please note that you may not need all of them - for example jboss-seam.jar is not needed if you are building a Struts application. jsf-api is not needed if your application is JSP based.
-  # Include all the jars in your project
+  # Download the [http://socialauth.googlecode.com/files/socialauth-java-sdk-4.0.zip socialauth-java-sdk-4.0.zip] 
+  # Include socialauth.jar and other required jar like socialauth-spring with jars from dependency folder in your project
 
 == Implementation ==
 
@@ -79,5 +78,21 @@ Using the socialauth.jar consists of three main steps:
   List<Contact> contactsList = provider.getContactList();
 		
 }}}
+
+ * Use Plugin - !SocialAuth library now has plugin for getting feeds from Facebook, Twitter and Linkedin. It also has plugin for getting Albums from Facebook and Twitter.
+
+{{{
+
+if (provider.isSupportedPlugin(org.brickred.socialauth.plugin.FeedPlugin.class)) {
+    FeedPlugin p = provider.getPlugin(org.brickred.socialauth.plugin.FeedPlugin.class);
+    List<Feed> feeds = p.getFeeds();
+}
+if (provider.isSupportedPlugin(org.brickred.socialauth.plugin.AlbumsPlugin.class)) {
+    AlbumsPlugin p = provider.getPlugin(org.brickred.socialauth.plugin.AlbumsPlugin.class);
+    List<Album> albums = p.getAlbums();
+}
+
+}}}
+
 
 That is all you have to do, really. But this is just a code snippet that we put in to show you how this works.
