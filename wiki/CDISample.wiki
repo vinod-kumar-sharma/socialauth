@@ -1,5 +1,7 @@
 #summary Shows how to create the sample CDI application
 
+<wiki:toc max_depth="1" />
+
 = Introduction =
 
 This is the step by step guide to show how to develop a CDI application using socialauth library. If you want demo application of CDI, you can get it from SDK.
@@ -738,4 +740,3 @@ http://[localhost or opensource.brickred.com]:8080/socialauth-cdi-demo/home.jsf
 
 Landing page: <br/>
 http://socialauth.googlecode.com/svn/wiki/images/cdi_demo5.jpg
-
