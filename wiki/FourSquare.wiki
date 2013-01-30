@@ -3,4 +3,4 @@
 Go to the URL: https://foursquare.com/developers/apps
 
 = Step 1=
-http://socialauth.googlecode.com/svn/wiki/images/foursquare-1.JPG
+http://socialauth.googlecode.com/svn/wiki/images/foursquare.JPG
