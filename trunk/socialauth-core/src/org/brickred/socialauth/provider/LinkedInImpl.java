@@ -110,7 +110,12 @@ public class LinkedInImpl extends AbstractProvider {
 		String perms = getScope();
 		if (perms != null) {
 			String rURL = ENDPOINTS.get(Constants.OAUTH_REQUEST_TOKEN_URL);
-			rURL += "?scope=" + perms;
+			if (!rURL.contains("scope=")) {
+				rURL += "?scope=" + perms;
+			} else {
+				rURL = rURL.substring(0, rURL.indexOf('?'));
+				rURL += "?scope=" + perms;
+			}
 			ENDPOINTS.put(Constants.OAUTH_REQUEST_TOKEN_URL, rURL);
 
 		}
