@@ -26,6 +26,7 @@
 package org.brickred.socialauth.provider;
 
 import java.io.InputStream;
+import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -252,7 +253,8 @@ public class FacebookImpl extends AbstractProvider {
 			throw new ServerDataException("Status cannot be blank");
 		}
 		StringBuilder strb = new StringBuilder();
-		strb.append("message=").append(msg);
+		strb.append("message=").append(
+				URLEncoder.encode(msg, Constants.ENCODING));
 		strb.append("&access_token").append("=").append(accessGrant.getKey());
 		Response serviceResponse;
 		try {
