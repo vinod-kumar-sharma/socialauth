@@ -260,10 +260,11 @@ public class HttpUtil {
 						Map.Entry<String, String> entry = entries.next();
 						write(out, boundary + "\r\n");
 						write(out, "Content-Disposition: form-data; name=\""
-								+ entry.getKey() + "\"\r\n");
-						write(out,
-								"Content-Type: text/plain; charset=UTF-8\r\n\r\n");
-						write(out, entry.getValue());
+								+ entry.getKey() + "\"\r\n\r\n");
+						// write(out,
+						// "Content-Type: text/plain;charset=UTF-8 \r\n\r\n");
+						LOG.debug(entry.getValue());
+						out.write(entry.getValue().getBytes("UTF-8"));
 						write(out, "\r\n");
 					}
 
