@@ -109,6 +109,27 @@ public class OAuth2 implements OAuthStrategyBase {
 		if (!providerState) {
 			throw new ProviderStateException();
 		}
+
+		if (requestParams.get("access_token") != null) {
+			LOG.debug("Creating Access Grant");
+			String accessToken = requestParams.get("access_token");
+			Integer expires = null;
+			if (requestParams.get(Constants.EXPIRES) != null) {
+				expires = new Integer(requestParams.get(Constants.EXPIRES));
+			}
+			accessGrant = new AccessGrant();
+			accessGrant.setKey(accessToken);
+			accessGrant.setAttribute(Constants.EXPIRES, expires);
+			if (permission != null) {
+				accessGrant.setPermission(permission);
+			} else {
+				accessGrant.setPermission(Permission.ALL);
+			}
+			accessGrant.setProviderId(providerId);
+			LOG.debug(accessGrant);
+			return accessGrant;
+		}
+
 		String code = requestParams.get("code");
 		if (code == null || code.length() == 0) {
 			throw new SocialAuthException("Verification code is null");
