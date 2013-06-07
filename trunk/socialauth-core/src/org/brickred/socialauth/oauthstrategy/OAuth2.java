@@ -106,9 +106,6 @@ public class OAuth2 implements OAuthStrategyBase {
 	public AccessGrant verifyResponse(final Map<String, String> requestParams,
 			final String methodType) throws Exception {
 		LOG.info("Verifying the authentication response from provider");
-		if (!providerState) {
-			throw new ProviderStateException();
-		}
 
 		if (requestParams.get("access_token") != null) {
 			LOG.debug("Creating Access Grant");
@@ -128,6 +125,10 @@ public class OAuth2 implements OAuthStrategyBase {
 			accessGrant.setProviderId(providerId);
 			LOG.debug(accessGrant);
 			return accessGrant;
+		}
+
+		if (!providerState) {
+			throw new ProviderStateException();
 		}
 
 		String code = requestParams.get("code");
@@ -193,6 +194,8 @@ public class OAuth2 implements OAuthStrategyBase {
 						accessToken = kv[1];
 					} else if (kv[0].equals("expires")) {
 						expires = Integer.valueOf(kv[1]);
+					} else if (kv[0].equals("expires_in")) {
+						expires = Integer.valueOf(kv[1]);
 					} else {
 						attributes.put(kv[0], kv[1]);
 					}
@@ -216,7 +219,7 @@ public class OAuth2 implements OAuthStrategyBase {
 						String key = keyItr.next();
 						if (!"access_token".equals(key)
 								&& !"expires_in".equals(key)) {
-							attributes.put(key, jObj.get(key));
+							attributes.put(key, jObj.optString(key));
 						}
 					}
 				}
