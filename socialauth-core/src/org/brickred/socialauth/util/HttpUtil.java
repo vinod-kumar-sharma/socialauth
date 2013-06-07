@@ -28,7 +28,6 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
@@ -167,11 +166,11 @@ public class HttpUtil {
 	 * @param header
 	 *            Header parameters
 	 * @return Response Object
-	 * @throws Exception
+	 * @throws SocialAuthException
 	 */
 	public static Response doHttpRequest(final String urlStr,
 			final String requestMethod, final String body,
-			final Map<String, String> header) throws Exception {
+			final Map<String, String> header) throws SocialAuthException {
 		HttpURLConnection conn;
 		try {
 
@@ -205,14 +204,15 @@ public class HttpUtil {
 			}
 
 			// If use POST or PUT must use this
-			OutputStreamWriter wr = null;
+			OutputStream os = null;
 			if (body != null) {
 				if (requestMethod != null
 						&& !MethodType.GET.toString().equals(requestMethod)
 						&& !MethodType.DELETE.toString().equals(requestMethod)) {
-					wr = new OutputStreamWriter(conn.getOutputStream());
-					wr.write(body);
-					wr.flush();
+					os = conn.getOutputStream();
+					DataOutputStream out = new DataOutputStream(os);
+					out.write(body.getBytes("UTF-8"));
+					out.flush();
 				}
 			}
 			conn.connect();
@@ -240,12 +240,13 @@ public class HttpUtil {
 	 * @param fileParamName
 	 *            Image Filename parameter. It requires in some provider.
 	 * @return Response object
-	 * @throws Exception
+	 * @throws SocialAuthException
 	 */
 	public static Response doHttpRequest(final String urlStr,
 			final String requestMethod, final Map<String, String> params,
 			final Map<String, String> header, final InputStream inputStream,
-			final String fileName, final String fileParamName) throws Exception {
+			final String fileName, final String fileParamName)
+			throws SocialAuthException {
 		HttpURLConnection conn;
 		try {
 
