@@ -108,6 +108,11 @@ public interface Constants {
 	public static final String OAUTH_ACCESS_TOKEN_URL = "accessTokenURL";
 
 	/**
+	 * refresh token url
+	 */
+	public static final String REFRESH_TOKEN_URL = "refreshTokenURL";
+
+	/**
 	 * token expires string
 	 */
 	public static final String EXPIRES = "expires";
@@ -180,7 +185,7 @@ public interface Constants {
 	/**
 	 * googlePlus
 	 */
-	public static final String GOOGLE_PLUS = "googlePlus";
+	public static final String GOOGLE_PLUS = "googleplus";
 
 	/**
 	 * access token parameter name
