@@ -286,12 +286,16 @@ public class SocialAuthConfig implements Serializable {
 		config.setId(providerId);
 		LOG.debug("Adding provider configuration :" + config);
 		providersConfig.put(providerId, config);
-		if (!providersImplMap.containsKey(providerId)) {
-			if (config.getProviderImplClass() != null) {
-				providersImplMap.put(providerId, config.getProviderImplClass());
-				domainMap.put(providerId, providerId);
-			}
+		if (config.getProviderImplClass() != null) {
+			providersImplMap.put(providerId, config.getProviderImplClass());
+			domainMap.put(providerId, providerId);
 		}
+		if (!providersImplMap.containsKey(providerId)) {
+			throw new SocialAuthException("Provider Impl class not found");
+		} else if (config.getProviderImplClass() == null) {
+			config.setProviderImplClass(providersImplMap.get(providerId));
+		}
+		configSetup = true;
 	}
 
 	private void loadProvidersConfig() {
@@ -381,9 +385,11 @@ public class SocialAuthConfig implements Serializable {
 	 * @param id
 	 *            the provider id
 	 * @return the configuration of given provider
-	 * @throws Exception
+	 * @throws SocialAuthException
+	 * @throws SocialAuthConfigurationException
 	 */
-	public OAuthConfig getProviderConfig(final String id) throws Exception {
+	public OAuthConfig getProviderConfig(final String id)
+			throws SocialAuthException, SocialAuthConfigurationException {
 		OAuthConfig config = providersConfig.get(id);
 		if (config == null) {
 			try {
@@ -440,4 +446,5 @@ public class SocialAuthConfig implements Serializable {
 			HttpUtil.setProxyConfig(proxyHost, port);
 		}
 	}
+
 }
