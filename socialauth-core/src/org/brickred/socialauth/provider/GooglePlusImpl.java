@@ -38,6 +38,7 @@ import org.brickred.socialauth.AbstractProvider;
 import org.brickred.socialauth.Contact;
 import org.brickred.socialauth.Permission;
 import org.brickred.socialauth.Profile;
+import org.brickred.socialauth.exception.AccessTokenExpireException;
 import org.brickred.socialauth.exception.ServerDataException;
 import org.brickred.socialauth.exception.SocialAuthException;
 import org.brickred.socialauth.exception.UserDeniedPermissionException;
@@ -79,9 +80,8 @@ public class GooglePlusImpl extends AbstractProvider {
 
 	static {
 		ENDPOINTS = new HashMap<String, String>();
-		ENDPOINTS
-				.put(Constants.OAUTH_AUTHORIZATION_URL,
-						"https://accounts.google.com/o/oauth2/auth?approval_prompt=force");
+		ENDPOINTS.put(Constants.OAUTH_AUTHORIZATION_URL,
+				"https://accounts.google.com/o/oauth2/auth");
 		ENDPOINTS.put(Constants.OAUTH_ACCESS_TOKEN_URL,
 				"https://accounts.google.com/o/oauth2/token");
 	}
@@ -99,13 +99,26 @@ public class GooglePlusImpl extends AbstractProvider {
 		if (config.getCustomPermissions() != null) {
 			scope = Permission.CUSTOM;
 		}
+
+		if (config.getAuthenticationUrl() != null) {
+			ENDPOINTS.put(Constants.OAUTH_AUTHORIZATION_URL,
+					config.getAuthenticationUrl());
+		} else {
+			config.setAuthenticationUrl(ENDPOINTS
+					.get(Constants.OAUTH_AUTHORIZATION_URL));
+		}
+
+		if (config.getAccessTokenUrl() != null) {
+			ENDPOINTS.put(Constants.OAUTH_ACCESS_TOKEN_URL,
+					config.getAccessTokenUrl());
+		} else {
+			config.setAccessTokenUrl(ENDPOINTS
+					.get(Constants.OAUTH_ACCESS_TOKEN_URL));
+		}
+
 		authenticationStrategy = new OAuth2(config, ENDPOINTS);
 		authenticationStrategy.setPermission(scope);
 		authenticationStrategy.setScope(getScope());
-		config.setAuthenticationUrl(ENDPOINTS
-				.get(Constants.OAUTH_AUTHORIZATION_URL));
-		config.setAccessTokenUrl(ENDPOINTS
-				.get(Constants.OAUTH_ACCESS_TOKEN_URL));
 	}
 
 	/**
@@ -113,10 +126,11 @@ public class GooglePlusImpl extends AbstractProvider {
 	 * 
 	 * @param accessGrant
 	 *            It contains the access token and other information
-	 * @throws Exception
+	 * @throws AccessTokenExpireException
 	 */
 	@Override
-	public void setAccessGrant(final AccessGrant accessGrant) throws Exception {
+	public void setAccessGrant(final AccessGrant accessGrant)
+			throws AccessTokenExpireException {
 		this.accessGrant = accessGrant;
 		authenticationStrategy.setAccessGrant(accessGrant);
 	}
@@ -224,7 +238,7 @@ public class GooglePlusImpl extends AbstractProvider {
 	 */
 
 	@Override
-	public void updateStatus(final String msg) throws Exception {
+	public Response updateStatus(final String msg) throws Exception {
 		LOG.warn("WARNING: Not implemented for GooglePlus");
 		throw new SocialAuthException(
 				"Update Status is not implemented for GooglePlus");
