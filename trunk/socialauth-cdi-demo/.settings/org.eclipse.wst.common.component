@@ -1,10 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project-modules id="moduleCoreId" project-version="1.5.0">
-    <wb-module deploy-name="social-auth-seam-cdi-demo">
-        <wb-resource deploy-path="/" source-path="/WebContent"/>
-        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src"/>
-        <wb-resource deploy-path="/WEB-INF/classes/" source-path="/ImportedClasses"/>
-        <property name="java-output-path" value="/seam-javaee-booking/build/classes"/>
-        <property name="context-root" value="social-auth-seam-cdi-demo"/>
+    <wb-module deploy-name="socialauth-cdi-demo">
+        <wb-resource deploy-path="/" source-path="/target/m2e-wtp/web-resources"/>
+        <wb-resource deploy-path="/" source-path="/src/main/webapp" tag="defaultRootSource"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/java"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/main/resources"/>
+        <wb-resource deploy-path="/WEB-INF/classes" source-path="/src/test/java"/>
+        <dependent-module archiveName="socialauth-cdi-1.1.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/socialauth-cdi/socialauth-cdi">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <dependent-module archiveName="socialauth-4.0.jar" deploy-path="/WEB-INF/lib" handle="module:/resource/socialauth-core/socialauth-core">
+            <dependency-type>uses</dependency-type>
+        </dependent-module>
+        <property name="context-root" value="socialauth-cdi-demo"/>
+        <property name="java-output-path" value="/socialauth-cdi-demo/target/classes"/>
     </wb-module>
 </project-modules>
