@@ -26,15 +26,10 @@
 		</developer>
 	</developers>
 	<properties>
-		<org.brickred.socialauth-version>4.0</org.brickred.socialauth-version>
+		<org.brickred.socialauth-version>4.1</org.brickred.socialauth-version>
 		<org.springframework-version>3.1.2.RELEASE</org.springframework-version>
 	</properties>
 	<dependencies>
-		<dependency>
-			<groupId>javax.servlet</groupId>
-			<artifactId>servlet-api</artifactId>
-			<version>[2.5,)</version>
-		</dependency>
 		<dependency>
 			<groupId>org.brickred</groupId>
 			<artifactId>socialauth</artifactId>
