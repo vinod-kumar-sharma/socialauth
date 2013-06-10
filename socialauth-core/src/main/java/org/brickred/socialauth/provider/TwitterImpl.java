@@ -72,6 +72,7 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 	private static final String LOOKUP_URL = "http://api.twitter.com/1/users/lookup.json?user_id=";
 	private static final String UPDATE_STATUS_URL = "http://api.twitter.com/1/statuses/update.json?status=";
 	private static final String IMAGE_UPLOAD_URL = "https://upload.twitter.com/1/statuses/update_with_media.json";
+	private static final String CONTACT_PROFILE_IMAGE_URL = "https://api.twitter.com/1/users/profile_image?screen_name=%1$s";
 
 	private static final String PROPERTY_DOMAIN = "twitter.com";
 	private static final Map<String, String> ENDPOINTS;
@@ -392,6 +393,9 @@ public class TwitterImpl extends AbstractProvider implements AuthProvider,
 					cont.setDisplayName(jobj.getString("screen_name"));
 					cont.setProfileUrl("http://" + PROPERTY_DOMAIN + "/"
 							+ jobj.getString("screen_name"));
+					cont.setProfileImageURL(String.format(
+							CONTACT_PROFILE_IMAGE_URL,
+							jobj.getString("screen_name")));
 				}
 				if (jobj.has("id_str")) {
 					cont.setId(jobj.getString("id_str"));

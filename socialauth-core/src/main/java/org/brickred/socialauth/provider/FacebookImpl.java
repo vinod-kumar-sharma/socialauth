@@ -339,6 +339,8 @@ public class FacebookImpl extends AbstractProvider {
 				}
 				p.setId(obj.getString("id"));
 				p.setProfileUrl(PUBLIC_PROFILE_URL + obj.getString("id"));
+				p.setProfileImageURL(String.format(PROFILE_IMAGE_URL,
+						obj.getString("id")));
 				plist.add(p);
 			}
 		} catch (Exception e) {
