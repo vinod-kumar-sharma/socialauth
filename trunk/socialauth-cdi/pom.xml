@@ -27,7 +27,7 @@
 	</developers>
 
 	<properties>
-		<org.brickred.socialauth-version>4.0</org.brickred.socialauth-version>
+		<org.brickred.socialauth-version>4.1</org.brickred.socialauth-version>
 	</properties>
 
 	<dependencies>
