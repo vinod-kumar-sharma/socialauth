@@ -25,17 +25,17 @@
 			<email>tsg@brickred.com</email>
 		</developer>
 	</developers>
-	
+
 	<properties>
-		<org.brickred.socialauth-version>3.0</org.brickred.socialauth-version>
+		<org.brickred.socialauth-version>4.0</org.brickred.socialauth-version>
 	</properties>
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>javax.faces</groupId>
 			<artifactId>jsf-api</artifactId>
 			<version>1.2</version>
-	</dependency>
+		</dependency>
 		<dependency>
 			<groupId>org.brickred</groupId>
 			<artifactId>socialauth</artifactId>
@@ -47,66 +47,40 @@
 			<version>1.1</version>
 		</dependency>
 		<dependency>
-	      <groupId>javax.enterprise</groupId>
-	      <artifactId>cdi-api</artifactId>
-	      <version>1.0</version>
-	      <scope>provided</scope>
-    	</dependency>
+			<groupId>javax.enterprise</groupId>
+			<artifactId>cdi-api</artifactId>
+			<version>1.0</version>
+			<scope>provided</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
-		<sourceDirectory>${basedir}/src</sourceDirectory>
-		<resources>
-	      <resource>
-	        <directory>${basedir}/META-INF</directory>
-	        <targetPath>META-INF</targetPath>
-	      </resource>
-    	</resources>
-		
 		<plugins>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.0</version>
+				<version>2.5.1</version>
 				<configuration>
 					<source>1.6</source>
 					<target>1.6</target>
 				</configuration>
 			</plugin>
 		</plugins>
-		<extensions>
-			<extension>
-				<groupId>org.apache.maven.wagon</groupId>
-				<artifactId>wagon-scm</artifactId>
-				<version>1.0-beta-6</version>
-			</extension>
-			<extension>
-				<groupId>org.apache.maven.scm</groupId>
-				<artifactId>maven-scm-manager-plexus</artifactId>
-				<version>1.0</version>
-			</extension>
-			<extension>
-				<groupId>org.apache.maven.scm</groupId>
-				<artifactId>maven-scm-provider-svnexe</artifactId>
-				<version>1.0</version>
-			</extension>
-
-		</extensions>
 	</build>
 
 	<repositories>
 		<repository>
 			<id>jboss-repo</id>
-			<url>http://repository.jboss.org/maven2</url>
+			<url>http://repository.jboss.org/nexus/content/groups/public/</url>
 		</repository>
 		<repository>
-       		<id>sonatype-oss-public</id>
-          	<url>https://oss.sonatype.org/content/groups/public/</url>
-          	<releases>
-            	<enabled>true</enabled>
-          	</releases>
-   		 </repository>
+			<id>sonatype-oss-public</id>
+			<url>https://oss.sonatype.org/content/groups/public/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+		</repository>
 	</repositories>
-	
+
 
 </project>
