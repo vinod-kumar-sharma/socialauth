@@ -4,6 +4,7 @@
 
 == Whats new in Version 4.1 ? ==
  # Refresh token functionality for Facebook
+ # Added !GooglePlus provider
  # Added Instagram provider
  # Command line utility to generate and save access token
  # All core projects are maven-ise now and jars are available on maven repository.
