@@ -2,6 +2,14 @@
 
 = !SocialAuth History =
 
+== Whats new in Version 4.1 ? ==
+ # Refresh token functionality for Facebook
+ # Added Instagram provider
+ # Command line utility to generate and save access token
+ # All core projects are maven-ise now and jars are available on maven repository.
+ # All demos except seam and grails are maven-ise now.
+ # Bug fixes
+
 == Whats new in Version 4.0 ? ==
  # New Plugin Architecture
  # Feeds Plugin for Facebook, Twitter and Linkedin
