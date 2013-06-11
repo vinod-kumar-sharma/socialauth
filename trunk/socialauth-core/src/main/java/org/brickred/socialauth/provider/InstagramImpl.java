@@ -52,13 +52,13 @@ import org.brickred.socialauth.util.Response;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
+/**
+ * Provider implementation for Instagram
+ * 
+ * @author Psychas Konstantinos
+ */
 public class InstagramImpl extends AbstractProvider {
 
-	/**
-	 * Provider implementation for Instagram
-	 * 
-	 * @author Psychas Konstantinos
-	 */
 	private static final long serialVersionUID = 6073346132625871229L;
 	public static final String CLASSID = "instagram";
 
