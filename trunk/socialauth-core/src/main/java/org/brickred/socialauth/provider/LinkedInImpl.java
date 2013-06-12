@@ -280,6 +280,7 @@ public class LinkedInImpl extends AbstractProvider {
 			message = msg.substring(0, 700);
 		}
 		// message = URLEncoder.encode(message, Constants.ENCODING);
+		message = message.replace("&", "&amp;");
 		LOG.info("Updating status " + message + " on " + UPDATE_STATUS_URL);
 		Map<String, String> headerParams = new HashMap<String, String>();
 		headerParams.put("Content-Type", "text/xml;charset=UTF-8");
