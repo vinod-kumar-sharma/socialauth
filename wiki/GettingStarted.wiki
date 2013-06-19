@@ -39,10 +39,10 @@ You can either download our SDK and use pre-built jars or use Maven to integrate
     <td>Seam Application</td><td>socialauth-4.2.jar</td><td>Files from dependencies folder</td><td>socialauth-seam-2.1.jar</td>
   </tr>
   <tr>
-    <td>CDI Application</td><td>socialauth-4.0.jar</td><td>Files from dependencies folder</td><td>socialauth-cdi-2.1.jar</td>
+    <td>CDI Application</td><td>socialauth-4.2.jar</td><td>Files from dependencies folder</td><td>socialauth-cdi-2.1.jar</td>
   </tr>
    <tr>
-    <td>Using Filter</td><td>socialauth-4.0.jar</td><td>Files from dependencies folder</td><td>socialauth-filter-2.2.jar</td>
+    <td>Using Filter</td><td>socialauth-4.2.jar</td><td>Files from dependencies folder</td><td>socialauth-filter-2.2.jar</td>
   </tr>
    <tr>
     <td>Grails Application</td><td>socialauth-4.2.jar</td><td>Files from dependencies folder</td><td>socialauth-filter-2.4.jar</td>
