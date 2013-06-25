@@ -10,6 +10,7 @@
  # Command line utility to generate and save access token
  # All core projects are maven-ise now and jars are available on maven repository.
  # All demos except seam and grails are maven-ise now.
+ # Struts2 socialauth demo.
  # OAuth endpoint (!RequestToken URL, Authorization URL and !AccessToken URL) can be configured through properties file now.
  # Response object returned by !UpdateStatus method. 
  # Bug fixes
