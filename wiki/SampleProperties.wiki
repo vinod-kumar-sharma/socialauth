@@ -29,7 +29,7 @@ twitter.com.consumer_secret = SGKNuXyybt0iDdgsuzVbFHOaemV7V6pr0wKwbaT2MH0
 graph.facebook.com.consumer_key =	152190004803645
 graph.facebook.com.consumer_secret = 64c94bd02180b0ade85889b44b2ba7c4
 #you can set custom permission by using custom_permissions with provider prefix.
-#graph.facebook.com.custom_permission = publish_stream,email,user_birthday,user_location,offline_access
+#graph.facebook.com.custom_permissions = publish_stream,email,user_birthday,user_location,offline_access
 
 #hotmail
 consent.live.com.consumer_key = 000000004403D60E
