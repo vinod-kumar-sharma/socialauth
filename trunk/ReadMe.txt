@@ -1,12 +1,12 @@
 ===============================================================================
-WELCOME to SocialAuth Java SDK version 4.0
+WELCOME to SocialAuth Java SDK version 4.2
 ===============================================================================
 
 The SDK contains all the material you need to use SocialAuth java library.
 The directories are as follows:
 
 1. dist - This contains socialauth-x.x.jar, socialauth-filter-x.x.jar, 
-socialauth-seam-x.x.jar, socialauth-cdi-x.x.jar and socialauth-spring-x.x.jar. 
+socialauth-seam-x.x.jar, socialauth-cdi-x.x.jar, socialauth-spring-x.x.jar and socialauth-cmd-utility.
 While creating java application you have to include socialauth-x.x.jar in your application. 
 Rest depends on what type of java application you are building. It also includes properties 
 file. oauth_consumer.properties is also necessary to configure application key/secret 
