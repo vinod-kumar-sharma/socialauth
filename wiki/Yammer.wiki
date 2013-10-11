@@ -1,7 +1,0 @@
-#summary step by step guide for obtaining consumer key and secret
-
-Open the URL:-
-https://www.yammer.com/client_applications
-
-= Step 1 =
-http://socialauth.googlecode.com/svn/wiki/images/yammer_registration.jpg
